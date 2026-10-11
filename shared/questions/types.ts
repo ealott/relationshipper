@@ -33,4 +33,9 @@ export interface QuestionSeed {
   /** May contain `{partner}`, replaced with the partner's name at render time. */
   text: string;
   audience?: Audience;
+  /**
+   * The migration that adds it to live databases, for questions written after launch.
+   * Unset means the original bank (0002_seed_questions). See scripts/build-seed.mjs.
+   */
+  addedIn?: string;
 }

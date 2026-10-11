@@ -19,7 +19,7 @@ export const CATEGORIES: Category[] = [
   { id: 'security', name: 'Emotional Safety', color: '#3F7F7A', description: 'Feeling safe to reach out, be comforted, and be fully yourself.' },
   { id: 'trust', name: 'Trust & Commitment', color: '#3D6E91', description: 'Reliability, loyalty, and the long view of “us”.' },
   { id: 'conflict', name: 'Conflict & Repair', color: '#6A5A9E', description: 'How you disagree, what lies underneath, and how you find your way back.' },
-  { id: 'dreams', name: 'Dreams & Aspirations', color: '#9B5794', description: 'The hopes you carry, and how you help each other reach them.' },
+  { id: 'dreams', name: 'Dreams & Aspirations', color: '#9B5794', description: 'The hopes you carry, the future you want together, and how you help each other get there.' },
   { id: 'meaning', name: 'Shared Meaning', color: '#A3536A', description: 'Rituals, values, faith and purpose — the culture you’re building together.' },
   { id: 'growth', name: 'Growth & Adventure', color: '#5E8D5B', description: 'Who you’re becoming, and the new experiences that keep you close.' },
   { id: 'origins', name: 'Where We Come From', color: '#8D6B4F', description: 'Family, upbringing, and the patterns you inherited or left behind.' },
