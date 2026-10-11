@@ -85,6 +85,7 @@ describe('push subscriptions', () => {
     expect(push!.endpoint).toBe(endpoint);
     expect(push!.headers.get('content-encoding')).toBe('aes128gcm');
     expect(push!.headers.get('ttl')).toBe('86400');
+    expect(push!.headers.get('urgency')).toBe('high');
     expect(push!.headers.get('authorization')).toMatch(new RegExp(`^vapid t=[\\w-]+\\.[\\w-]+\\.[\\w-]+, k=${vapidPublicKey}$`));
     expect(push!.payload).toMatchObject({ title: 'Notifications are on ✅', url: '/settings' });
   });
@@ -118,6 +119,8 @@ describe('partner activity notifications', () => {
     expect(pushes).toHaveLength(1);
     expect(pushes[0]!.endpoint).toBe(bDevice);
     expect(pushes[0]!.payload).toMatchObject({ title: 'Alex answered today’s question', url: `/q/${q}`, tag: `q-${q}`, badge: 1 });
+    // Delivered right away, not held for the phone's power considerations.
+    expect(pushes[0]!.headers.get('urgency')).toBe('high');
     expect(pushes[0]!.payload.body).toContain('Write yours to read theirs.');
     // Notifications never include what anyone wrote.
     expect(JSON.stringify(pushes[0]!.payload)).not.toContain('NOT-IN-PUSH');
@@ -207,6 +210,7 @@ describe('daily reminders (cron)', () => {
     expect(daily.day).toBe('2026-10-12');
     expect(pushes[0]!.payload).toMatchObject({ title: 'Today’s question', url: '/today', tag: 'daily-2026-10-12' });
     expect(pushes[0]!.headers.get('topic')).toBe('daily');
+    expect(pushes[0]!.headers.get('urgency')).toBe('high');
     expect(await sendDailyReminders(t.env, at('2026-10-12T19:05:00Z'))).toBe(0); // already reminded today
 
     // Next day: Alex has answered, so the reminder says so.
