@@ -14,6 +14,7 @@ It runs as an installable web app (PWA) at **https://relationshipper.evanlott.co
 - **Your own questions.** Either partner can write a question for both of you. These are labelled as written by you or your partner, apart from the research-based bank. You can also suggest one for the shared bank, where an admin reviews it.
 - **An app on your Home Screen.** Today shows how to install it (Settings too, until it's installed). On iPhone, that's also what makes reminders possible.
 - **Keep a copy.** Settings → Keep a copy downloads your whole journal as a readable file.
+- **Make it comfortable.** Settings → Appearance sets the theme (light, dark, or the device's own), a larger text size for questions and answers, reduced motion, and whether to show writing tips and days in a row. Each device keeps its own.
 - **Reminders, not pressure.** An optional daily reminder at a time you choose, plus notifications when your partner answers or responds. Notifications never include what anyone wrote. There are no compatibility scores and no "you matched!".
 
 ## The research
@@ -160,7 +161,8 @@ worker/            API (Hono), auth, reveal rules, daily question, reminders, We
 src/               Preact client: pages/, components/, lib/, sw.ts (service worker)
 shared/            types shared by client and Worker, themes, research notes, time helpers
   questions/       the research-based question bank, one file per theme
-migrations/        D1 schema (0001), the generated question bank (0002), drafts (0003)
+migrations/        D1 schema (0001), the generated question bank (0002, 0004), drafts (0003)
+public/            icons, manifest, _headers (CSP), prefs.js (applies display preferences before the first paint)
 scripts/           seed builder, VAPID keys, icon renderer, service worker build, restore-backup, deploy-inline
 test/              API tests (Vitest)
 e2e/               two-partner browser tests (Playwright)

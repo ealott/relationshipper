@@ -105,3 +105,26 @@ export function Switch({
     </button>
   );
 }
+
+/** A row of mutually exclusive choices, styled as a segmented control. */
+export function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div class="segmented" role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button type="button" role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
