@@ -43,6 +43,8 @@ export interface MeResponse {
 
 export interface AuthConfigResponse {
   google: boolean;
+  /** Name + shared password sign-in for a fixed list of people. */
+  password: boolean;
   /** Local development only: sign in without Google. */
   dev: boolean;
 }

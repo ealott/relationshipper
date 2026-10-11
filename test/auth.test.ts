@@ -156,11 +156,11 @@ describe('Google sign-in', () => {
   });
 
   it('reports configuration, and redirects when Google isn’t set up', async () => {
-    expect((await new TestClient(t.env, t.ctx).get('/api/auth/config')).body).toEqual({ google: true, dev: true });
+    expect((await new TestClient(t.env, t.ctx).get('/api/auth/config')).body).toEqual({ google: true, password: false, dev: true });
     const bare = await createTestEnv({ GOOGLE_CLIENT_ID: undefined, GOOGLE_CLIENT_SECRET: undefined, DEV_LOGIN: undefined });
     try {
       const client = new TestClient(bare.env, bare.ctx);
-      expect((await client.get('/api/auth/config')).body).toEqual({ google: false, dev: false });
+      expect((await client.get('/api/auth/config')).body).toEqual({ google: false, password: false, dev: false });
       expect((await client.get('/api/auth/google')).headers.get('location')).toBe('/?auth_error=google_not_configured');
       expect((await client.get('/api/auth/dev?email=a@example.com')).status).toBe(404);
     } finally {

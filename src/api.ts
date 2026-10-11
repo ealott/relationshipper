@@ -72,6 +72,8 @@ export interface AdminQuestionInput {
 
 export const api = {
   authConfig: () => request<AuthConfigResponse>('GET', '/auth/config'),
+  signIn: (name: string, password: string) =>
+    request<MeResponse>('POST', '/auth/password', { name, password, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
   me: () => request<MeResponse>('GET', '/me'),
   logout: () => request<void>('POST', '/auth/logout', {}),
   updateMe: (body: Partial<{ name: string; timezone: string; reminderEnabled: boolean; reminderTime: string; notifyPartner: boolean }>) =>

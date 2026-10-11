@@ -432,6 +432,36 @@ fieldset {
   text-align: center;
 }
 
+.signin__form {
+  display: grid;
+  gap: 12px;
+}
+
+.password {
+  position: relative;
+  display: block;
+}
+
+.password .input {
+  padding-right: 48px;
+}
+
+.password__toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
 .devsignin {
   display: grid;
   gap: 6px;

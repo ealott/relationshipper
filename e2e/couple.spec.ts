@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
 // Set SCREENSHOTS=1 to save screenshots of each step to docs/screenshots.
@@ -18,11 +19,12 @@ async function newPage(browser: Browser, colorScheme: 'light' | 'dark' = 'light'
   return { page, apiBodies };
 }
 
-/** The local-only sign-in form (stands in for Google on localhost). */
+/** The local-only test sign-in form, which can create any number of accounts. */
 async function devSignIn(page: Page, name: string, email: string) {
-  await page.getByLabel('Name').fill(name);
-  await page.getByLabel('Email').fill(email);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  const form = page.locator('.devsignin');
+  await form.getByLabel('Name').fill(name);
+  await form.getByLabel('Email').fill(email);
+  await form.getByRole('button', { name: 'Sign in' }).click();
 }
 
 async function write(page: Page, text: string, button: RegExp) {
@@ -37,7 +39,7 @@ test('two partners pair up, write privately, and talk about their answers', asyn
 
   // Alex signs in and gets an invite code.
   await alex.page.goto('/');
-  await expect(alex.page.getByRole('link', { name: 'Continue with Google' })).toBeVisible();
+  await expect(alex.page.getByRole('heading', { name: 'Relationshipper' })).toBeVisible();
   await shot(alex.page, '01-welcome');
   await devSignIn(alex.page, 'Alex', `alex.${stamp}@example.com`);
   const code = alex.page.locator('.invite__code');
@@ -119,6 +121,31 @@ test('two partners pair up, write privately, and talk about their answers', asyn
   await tab(alex.page, 'Settings').click();
   await expect(alex.page.getByText('Alex & Sam')).toBeVisible();
   await shot(alex.page, '12-settings');
+});
+
+/** Settings from .dev.vars, which the preview server reads too. */
+function devVars(): Record<string, string> {
+  try {
+    const lines = readFileSync('.dev.vars', 'utf8').split('\n').filter((l) => /^[A-Z_]+=/.test(l));
+    return Object.fromEntries(lines.map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]));
+  } catch {
+    return {};
+  }
+}
+
+test('simple sign-in takes the two configured people straight in, already paired', async ({ browser }) => {
+  const { LOGIN_USERS = '', LOGIN_PASSWORD = '' } = devVars();
+  const names = LOGIN_USERS.split(',').map((n) => n.trim()).filter(Boolean);
+  test.skip(names.length !== 2 || !LOGIN_PASSWORD, 'Needs two LOGIN_USERS names and a LOGIN_PASSWORD in .dev.vars');
+  const { page } = await newPage(browser);
+  await page.goto('/');
+  const form = page.locator('.signin__form');
+  await form.getByLabel('Name').fill(names[0]!.toLowerCase());
+  await form.getByLabel('Password', { exact: true }).fill(LOGIN_PASSWORD);
+  await shot(page, '00-sign-in');
+  await form.getByRole('button', { name: 'Sign in' }).click();
+  // No invite code: straight to setting up the couple (or Today, once that's done).
+  await expect(page.getByRole('heading', { name: 'About the two of you' }).or(page.getByRole('heading', { name: 'Today' }))).toBeVisible();
 });
 
 test('admin console', async ({ browser }) => {

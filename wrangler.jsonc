@@ -19,9 +19,10 @@
   // Daily reminders: every 5 minutes, send to anyone whose reminder time has passed today.
   "triggers": { "crons": ["*/5 * * * *"] },
   // Secrets (set with `wrangler secret put NAME` or in the Cloudflare dashboard; never committed):
-  //   GOOGLE_CLIENT_ID / _SECRET      Google OAuth client, Web application type (see README)
+  //   LOGIN_USERS / LOGIN_PASSWORD    simple sign-in: comma-separated names sharing one password
+  //   GOOGLE_CLIENT_ID / _SECRET      optional Google sign-in, Web application client (see README)
   //   VAPID_PUBLIC_KEY / _PRIVATE_KEY Web Push keys (`npm run vapid` prints the commands)
-  //   ADMIN_EMAILS                    comma-separated Google emails with admin access
+  //   ADMIN_EMAILS                    comma-separated admins: Google emails or LOGIN_USERS names
   "vars": {
     // Contact URL or mailto: for push services.
     "VAPID_SUBJECT": "https://relationshipper.evanlott.com"

@@ -34,7 +34,15 @@ function statements(file: string): string[] {
  */
 export async function createTestEnv(overrides: Partial<AppEnv> = {}, opts: { fullBank?: boolean } = {}) {
   const proxy = await getPlatformProxy<AppEnv>({ configPath: 'wrangler.jsonc', persist: false });
-  const env: AppEnv = { ...proxy.env, DEV_LOGIN: 'true', ADMIN_EMAILS: 'admin@example.com', ...overrides };
+  // Tests choose their own sign-in settings, whatever is in the local .dev.vars.
+  const env: AppEnv = {
+    ...proxy.env,
+    DEV_LOGIN: 'true',
+    ADMIN_EMAILS: 'admin@example.com',
+    LOGIN_USERS: undefined,
+    LOGIN_PASSWORD: undefined,
+    ...overrides,
+  };
   const migrations = readdirSync('migrations')
     .filter((f) => f.endsWith('.sql'))
     .sort()

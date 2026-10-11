@@ -22,7 +22,7 @@ The app shows a plain-language version, with links to every source, at `/researc
 
 ## Privacy
 
-- **Google sign-in only.** No passwords are stored. Sessions are random tokens, stored only as SHA-256 hashes.
+- **Simple sign-in.** A fixed list of people (`LOGIN_USERS`) sign in with their name and one shared password (`LOGIN_PASSWORD`). Both are Cloudflare secrets, so neither is in the code or the database. With exactly two names, the accounts are created and paired on first sign-in, so there's no invite code to exchange. Guessing is rate-limited, per device and overall. Google sign-in also works if it's configured. Sessions are random tokens, stored only as SHA-256 hashes.
 - **Answers belong to the couple.** Only the two partners can read their answers and responses. The admin console shows counts, questions, suggestions and accounts, but never answers or responses.
 - **Leaving deletes.** If either partner leaves the couple, its answers, responses and custom questions are deleted. Deleting your account (Settings → Account) also ends the pairing and deletes everything the two of you wrote.
 
@@ -46,7 +46,7 @@ npm run db:migrate:local   # creates the local D1 database and loads the questio
 npm run dev                # http://localhost:5173
 ```
 
-On localhost with `DEV_LOGIN=true` in `.dev.vars`, the welcome screen adds a local sign-in form (any name and email) next to the Google button. To try both partners at once, use two browser profiles. To open the admin console at `/admin`, sign in with an email listed in `ADMIN_EMAILS`.
+Sign in with a name from `LOGIN_USERS` and the `LOGIN_PASSWORD` from `.dev.vars`. On localhost with `DEV_LOGIN=true`, the welcome screen also has a test sign-in form that accepts any name and email, so you can create as many couples as you like. To try both partners at once, use two browser profiles. To open the admin console at `/admin`, sign in as someone listed in `ADMIN_EMAILS`.
 
 To test real Google sign-in locally, add `http://localhost:5173/api/auth/google/callback` to your OAuth client's redirect URIs. Then put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.dev.vars`.
 
@@ -68,7 +68,7 @@ The research-based questions live in `shared/questions/` as one TypeScript file 
 
 ## Admin console
 
-Anyone whose Google email is in `ADMIN_EMAILS` gets an Admin console link in Settings. It covers:
+Anyone listed in `ADMIN_EMAILS` (by Google email, or by their name from `LOGIN_USERS`) gets an Admin console link in Settings. It covers:
 
 - **Overview:** counts of users, couples (and how many were active this week), answers, responses, custom questions, pending suggestions and devices with notifications on.
 - **Questions:** search, add, edit or retire questions. A retired question is no longer offered, but stays readable for couples who already answered it.
@@ -85,26 +85,28 @@ npx wrangler d1 create relationshipper     # only on a new account: put its data
 npm run db:migrate:remote
 
 npm run vapid                              # then run the two `wrangler secret put` lines it prints
-npx wrangler secret put ADMIN_EMAILS       # e.g. you@gmail.com
-npx wrangler secret put GOOGLE_CLIENT_ID
-npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put LOGIN_USERS        # e.g. Alex,Sam
+npx wrangler secret put LOGIN_PASSWORD
+npx wrangler secret put ADMIN_EMAILS       # e.g. alex
 
 npm run deploy
 ```
 
-After that, deploying is `npm run db:migrate:remote` (if there are new migrations) followed by `npm run deploy`. Keep the VAPID keys once people subscribe: new keys invalidate every existing notification subscription. Never set `DEV_LOGIN` in production; it only works on localhost anyway.
+You can change the names or password at any time with `wrangler secret put`, or in the Cloudflare dashboard (**Workers & Pages → relationshipper → Settings → Variables and Secrets**). Secrets survive deploys, and existing sessions stay signed in. After that, deploying is `npm run db:migrate:remote` (if there are new migrations) followed by `npm run deploy`. Keep the VAPID keys once people subscribe: new keys invalidate every existing notification subscription. Never set `DEV_LOGIN` in production; it only works on localhost anyway.
 
 If the static-asset upload step fails with `401 Unauthorized`, use `npm run deploy:inline` instead. This happens behind proxies that replace the upload's own short-lived token with an API token. The inline deploy ships the same build with the client files embedded in the Worker, and serves them with the same headers and fallback rules. Each static file then counts as a Worker request, which is fine at this scale.
 
-### Setting up Google sign-in
+### Optional: Google sign-in
+
+To let people sign in with Google instead of (or as well as) the shared password:
 
 1. In the [Google Cloud console](https://console.cloud.google.com/), create or pick a project, then open **Google Auth Platform**.
 2. Under **Branding**, enter the app name and a support email, and add `evanlott.com` as an authorized domain. Under **Audience**, choose **External** and publish the app. Without publishing, only listed test users can sign in. The app asks only for `openid`, `email` and `profile`, which don't need Google's review. Adding a logo does trigger brand verification.
 3. Under **Clients**, create a client of type **Web application** with this authorized redirect URI:
    `https://relationshipper.evanlott.com/api/auth/google/callback`
-4. Store the client ID and secret as the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets, either with `wrangler secret put` or in the Cloudflare dashboard (**Workers & Pages → relationshipper → Settings → Variables and Secrets**, type **Secret**). Secrets survive deploys.
+4. Store the client ID and secret as the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets, either with `wrangler secret put` or in the dashboard as above.
 
-Until both secrets are set, the welcome screen says that Google sign-in isn't set up yet, and nobody can sign in.
+The "Continue with Google" button appears once both secrets are set. Google accounts pair with an invite code.
 
 ## Project layout
 

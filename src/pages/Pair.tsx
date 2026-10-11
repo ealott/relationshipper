@@ -6,6 +6,7 @@ import { Spinner } from '../components/Feedback';
 import { useQuery } from '../lib/query';
 import { refreshMe, setMe, useMe } from '../lib/session';
 import { toast, toastError } from '../lib/toast';
+import { accountLabel } from '../lib/format';
 import { disablePushOnDevice } from '../lib/push';
 import { signOut } from './Settings';
 
@@ -140,7 +141,7 @@ export function Pair() {
       </section>
 
       <p class="switch-auth">
-        Signed in as {me.user.email}.{' '}
+        Signed in as {accountLabel(me.user)}.{' '}
         <button
           class="link-button"
           onClick={async () => {

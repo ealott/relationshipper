@@ -9,6 +9,7 @@ import { installPrompt, isIOS, isStandalone, promptInstall } from '../lib/platfo
 import { checkDeviceSubscription, deviceSubscribed, disablePushOnDevice, enablePushOnDevice, pushSupport } from '../lib/push';
 import { setMe, signedOut, useMe } from '../lib/session';
 import { useStore } from '../lib/store';
+import { accountLabel } from '../lib/format';
 import { toast, toastError } from '../lib/toast';
 
 export async function signOut() {
@@ -392,7 +393,7 @@ function Account() {
         </form>
       ) : (
         <div class="stack">
-          <p class="muted">Signed in with Google as {me.user.email}</p>
+          <p class="muted">Signed in as {accountLabel(me.user)}</p>
           <button class="btn btn--ghost btn--block" onClick={() => signOut().catch(toastError)}>
             Sign out
           </button>

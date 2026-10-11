@@ -21,3 +21,6 @@ export function relativeTime(ms: number): string {
 export function wordCount(text: string): number {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
+
+/** Who's signed in: the email, or the name for name-and-password accounts. */
+export const accountLabel = (user: { email: string; name: string }) => (user.email.includes('@') ? user.email : user.name);

@@ -1,12 +1,15 @@
 import { Hono, type Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { LIMITS, type AuthConfigResponse } from '../../shared/api';
+import { LIMITS, type AuthConfigResponse, type MeResponse } from '../../shared/api';
 import { isValidTimeZone } from '../../shared/time';
 import { exchangeCode, googleAuthUrl, verifyIdToken } from '../auth/google';
+import { toMeResponse } from '../dto';
 import type { AppEnv, HonoEnv } from '../env';
+import { ApiError, readJson, str } from '../http';
 import { base64url, fromBase64url } from '../lib/encoding';
 import { randomId, randomToken, sha256Bytes } from '../lib/crypto';
-import { cookieName, endSession, startSession } from '../session';
+import { clientIp, rateLimit } from '../rateLimit';
+import { cookieName, endSession, reloadAuth, startSession } from '../session';
 
 const OAUTH_COOKIE = 'rs_oauth';
 const CALLBACK_PATH = '/api/auth/google/callback';
@@ -19,7 +22,58 @@ interface OAuthState {
   tz: string;
 }
 
+const MINUTE = 60 * 1000;
+
 const googleConfigured = (env: AppEnv) => Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+
+/** Simple sign-in: a fixed list of names (LOGIN_USERS) sharing one password (LOGIN_PASSWORD). */
+const passwordUsers = (env: AppEnv) => (env.LOGIN_USERS ?? '').split(',').map((n) => n.trim()).filter(Boolean);
+const passwordConfigured = (env: AppEnv) => Boolean(env.LOGIN_PASSWORD) && passwordUsers(env).length > 0;
+
+/** Compares two secrets in constant time (by comparing their hashes). */
+async function sameSecret(a: string, b: string): Promise<boolean> {
+  const [x, y] = await Promise.all([sha256Bytes(a), sha256Bytes(b)]);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i]! ^ y[i]!;
+  return diff === 0;
+}
+
+/**
+ * Creates the configured accounts on first sign-in and, when there are exactly two, pairs
+ * them, so the couple never needs an invite code. Returns the id of the person signing in.
+ */
+async function ensurePasswordAccounts(env: AppEnv, names: string[], who: string, timezone: string): Promise<string> {
+  const ids = new Map<string, string>();
+  for (const name of names) {
+    const login = name.toLowerCase();
+    ids.set(name, await signInIdentity(env, { provider: 'password', subject: login, email: login, name, timezone }));
+  }
+  if (names.length === 2) {
+    const db = env.DB;
+    const [a, b] = names.map((n) => ids.get(n)!);
+    const { results } = await db.prepare('SELECT couple_id FROM users WHERE id IN (?, ?)').bind(a, b).all<{ couple_id: string | null }>();
+    if (results.length === 2 && results.every((u) => u.couple_id === null)) {
+      const coupleId = randomId();
+      await db.batch([
+        db.prepare('INSERT INTO couples (id, timezone, include_intimacy, created_at) VALUES (?, ?, 0, ?)').bind(
+          coupleId,
+          isValidTimeZone(timezone) ? timezone : 'UTC',
+          Date.now(),
+        ),
+        db.prepare('UPDATE users SET couple_id = ? WHERE id IN (?, ?) AND couple_id IS NULL').bind(coupleId, a, b),
+      ]);
+      // If a simultaneous sign-in paired them first, drop the empty couple.
+      const members = await db.prepare('SELECT COUNT(*) AS n FROM users WHERE couple_id = ?').bind(coupleId).first<{ n: number }>();
+      if (members?.n !== 2) {
+        await db.batch([
+          db.prepare('UPDATE users SET couple_id = NULL WHERE couple_id = ?').bind(coupleId),
+          db.prepare('DELETE FROM couples WHERE id = ?').bind(coupleId),
+        ]);
+      }
+    }
+  }
+  return ids.get(who)!;
+}
 
 /** Test sign-in, only for local development: needs DEV_LOGIN=true *and* a localhost request. */
 function devLoginAllowed(c: Context<HonoEnv>): boolean {
@@ -79,7 +133,29 @@ export async function signInIdentity(
 }
 
 export const authRoutes = new Hono<HonoEnv>()
-  .get('/config', (c) => c.json<AuthConfigResponse>({ google: googleConfigured(c.env), dev: devLoginAllowed(c) }))
+  .get('/config', (c) =>
+    c.json<AuthConfigResponse>({ google: googleConfigured(c.env), password: passwordConfigured(c.env), dev: devLoginAllowed(c) }),
+  )
+
+  // Simple sign-in with a name and the shared password.
+  .post('/password', async (c) => {
+    if (!passwordConfigured(c.env)) return c.notFound();
+    const body = await readJson(c);
+    const name = str(body, 'name', { max: 60, label: 'Name' });
+    const password = str(body, 'password', { max: 200, label: 'Password', trim: false });
+    const timezone = typeof body.timezone === 'string' ? body.timezone : 'UTC';
+    // Slow down guessing: per device, and across everyone (sessions last 90 days, so real
+    // sign-ins are rare).
+    await rateLimit(c.env.DB, `login:${clientIp(c.req.raw)}`, 10, 15 * MINUTE);
+    await rateLimit(c.env.DB, 'login:all', 60, 60 * MINUTE);
+    const names = passwordUsers(c.env);
+    const who = names.find((n) => n.toLowerCase() === name.toLowerCase());
+    const passwordOk = await sameSecret(password, c.env.LOGIN_PASSWORD!);
+    if (!who || !passwordOk) throw new ApiError(401, 'wrong_password', 'That name and password don’t match.');
+    const userId = await ensurePasswordAccounts(c.env, names, who, timezone);
+    const sessionId = await startSession(c, userId);
+    return c.json<MeResponse>(toMeResponse(await reloadAuth(c.env, userId, sessionId), c.env));
+  })
 
   // Step 1: send the browser to Google.
   .get('/google', async (c) => {
