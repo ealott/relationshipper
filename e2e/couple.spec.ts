@@ -148,6 +148,37 @@ test('simple sign-in takes the two configured people straight in, already paired
   await expect(page.getByRole('heading', { name: 'About the two of you' }).or(page.getByRole('heading', { name: 'Today' }))).toBeVisible();
 });
 
+test('keeps the line being typed in view as an answer grows on a short screen', async ({ browser }) => {
+  const stamp = Date.now();
+  const call = (page: Page, method: string, path: string, body?: unknown) =>
+    page.evaluate(
+      async ([m, p, b]) => (await fetch(`/api${p}`, { method: m, headers: { 'content-type': 'application/json' }, body: b === undefined ? undefined : JSON.stringify(b) })).json(),
+      [method, path, body] as const,
+    );
+  const signIn = async (name: string) => {
+    const { page } = await newPage(browser);
+    await page.goto(`/api/auth/dev?email=${name}.${stamp}@example.com&name=${name}&returnTo=/`);
+    return page;
+  };
+  const kai = await signIn('Kai');
+  const { code } = await call(kai, 'POST', '/invite', {});
+  const noor = await signIn('Noor');
+  await call(noor, 'POST', '/pair', { code });
+  await call(noor, 'PATCH', '/couple', { married: false, livingTogether: false, hasKids: false });
+
+  await kai.goto('/');
+  const box = kai.getByLabel('Your answer');
+  // Roughly the space left above a phone's on-screen keyboard.
+  await kai.setViewportSize({ width: 412, height: 400 });
+  await box.click();
+  for (let line = 1; line <= 25; line++) {
+    await kai.keyboard.type(`Line ${line} of a long answer that keeps going and going`);
+    await kai.keyboard.press('Enter');
+    const { bottom, height } = await box.evaluate((el) => ({ bottom: el.getBoundingClientRect().bottom, height: innerHeight }));
+    expect(bottom, `after line ${line}`).toBeLessThanOrEqual(height);
+  }
+});
+
 test('admin console', async ({ browser }) => {
   const { page } = await newPage(browser);
   await page.goto('/');

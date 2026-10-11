@@ -37,7 +37,19 @@ export function PasswordInput(props: Omit<InputHTMLAttributes<HTMLInputElement>,
   );
 }
 
-/** A textarea that grows with its content. */
+/**
+ * When typing at the end of a growing textarea, scrolls just enough to keep the last line in
+ * view. The visual viewport is the part of the page the on-screen keyboard leaves visible.
+ */
+function keepCaretInView(el: HTMLTextAreaElement) {
+  if (document.activeElement !== el || el.selectionEnd !== el.value.length) return;
+  const visible = window.visualViewport;
+  const visibleBottom = visible ? visible.offsetTop + visible.height : window.innerHeight;
+  const hidden = el.getBoundingClientRect().bottom + 12 - visibleBottom;
+  if (hidden > 0) window.scrollBy(0, hidden);
+}
+
+/** A textarea that grows with its content, keeping what you're typing in view. */
 export function AutoTextarea({
   value,
   onValue,
@@ -47,8 +59,15 @@ export function AutoTextarea({
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Measuring means collapsing the textarea for a moment. Hold the parent's height meanwhile,
+    // so the page never gets shorter: if it did, the browser would clamp the scroll position
+    // and the text would jump, often behind the keyboard.
+    const parent = el.parentElement;
+    if (parent) parent.style.minHeight = `${parent.offsetHeight}px`;
     el.style.height = 'auto';
     el.style.height = `${el.scrollHeight + 2}px`;
+    if (parent) parent.style.minHeight = '';
+    keepCaretInView(el);
   }, [value]);
   return (
     <textarea
