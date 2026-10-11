@@ -37,6 +37,10 @@ The app shows a plain-language version, with links to every source, at `/researc
 - TypeScript throughout. Shared types and the question bank live in `shared/`.
 - The raccoon is drawn once, in `shared/raccoon.ts`. The in-app illustrations and the app icons both use it; after changing it, run `node scripts/generate-icons.mjs` to re-render the icons.
 
+## How work is tracked
+
+In GitHub issues, following [AGENTS.md](AGENTS.md): one branch and one PR per issue, with decisions and questions recorded as issue comments. Start with the pinned [Start here](https://github.com/ealott/relationshipper/issues/13) issue, which lists what's waiting on a person.
+
 ## Running it locally
 
 You need Node 22 or later.
