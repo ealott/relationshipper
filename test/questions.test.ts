@@ -65,9 +65,17 @@ describe('research question bank (seed)', () => {
     expect(inCategory('kids').filter((q) => q.audience === 'no-kids').length).toBeGreaterThan(inCategory('kids').filter((q) => q.audience === 'parents').length);
   });
 
-  it('matches the generated seed migration', () => {
-    const sql = readFileSync('migrations/0002_seed_questions.sql', 'utf8');
-    expect(sql).toContain(`-- ${SEED_QUESTIONS.length} research-based prompts.`);
-    for (const q of SEED_QUESTIONS) expect(sql, `${q.id} missing — run npm run seed`).toContain(`'${q.id}'`);
+  it('matches the generated seed migrations, one per batch', () => {
+    const batches = new Map<string, typeof SEED_QUESTIONS>();
+    for (const q of SEED_QUESTIONS) {
+      const migration = q.addedIn ?? '0002_seed_questions';
+      batches.set(migration, [...(batches.get(migration) ?? []), q]);
+    }
+    expect([...batches.keys()]).toContain('0002_seed_questions');
+    for (const [migration, questions] of batches) {
+      const sql = readFileSync(`migrations/${migration}.sql`, 'utf8');
+      expect(sql, migration).toContain(`-- ${questions.length} research-based prompts.`);
+      for (const q of questions) expect(sql, `${q.id} missing from ${migration} — run npm run seed`).toContain(`'${q.id}'`);
+    }
   });
 });

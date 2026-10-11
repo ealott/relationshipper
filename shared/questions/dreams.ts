@@ -26,4 +26,18 @@ export default [
   { id: 'dreams-023', depth: 3, text: 'Which dream of yours do you sometimes feel guilty for wanting, and where does that guilt come from?' },
   { id: 'dreams-024', depth: 3, text: 'What do you hope will outlast you—something you made, someone you helped shape, a way of treating people—and why that?' },
   { id: 'dreams-025', depth: 3, text: 'When we’re very old and looking back, what do you hope we’ll say we gave each other?' },
+  // Added after launch: the future you want together (issue #4).
+  { id: 'dreams-026', depth: 1, text: 'Picture a really good year for us, a year from now. What did we do, what did we change, and what stayed the same?', addedIn: '0004_future_questions' },
+  { id: 'dreams-027', depth: 1, text: 'Where in the world could you picture us making a life, and what pulls you toward each place?', addedIn: '0004_future_questions' },
+  { id: 'dreams-028', depth: 1, text: 'What’s an adventure you’d love for us to have in the next five years, and what would make it feel like ours?', addedIn: '0004_future_questions' },
+  { id: 'dreams-029', depth: 1, text: 'Five years from now, what do you hope our life has more of, and what do you hope it has less of?', addedIn: '0004_future_questions' },
+  { id: 'dreams-030', depth: 2, text: 'Who do you hope is around us in the years ahead—friends, family, a community—and how could we make room for them now?', addedIn: '0004_future_questions' },
+  { id: 'dreams-031', depth: 2, text: 'When you think about our future, what are you most excited about, and what do you quietly worry about?', addedIn: '0004_future_questions' },
+  { id: 'dreams-032', depth: 2, text: 'How do you want us to make the big decisions ahead of us—where to live, work, family—so that we choose on purpose instead of drifting?', addedIn: '0004_future_questions' },
+  { id: 'dreams-033', depth: 2, text: 'If one of us got a big opportunity that upended our plans, how would you want us to weigh it together?', addedIn: '0004_future_questions' },
+  { id: 'dreams-034', depth: 2, text: 'What does enough look like to you—enough money, success, adventure—and how would we know we’d reached it?', addedIn: '0004_future_questions' },
+  { id: 'dreams-035', depth: 2, text: 'Ten years from now, what would you want our work to make possible for us, and what would you never want it to cost us?', addedIn: '0004_future_questions' },
+  { id: 'dreams-036', depth: 3, text: 'What hope for our future have you never said out loud, and what has kept you from saying it?', addedIn: '0004_future_questions' },
+  { id: 'dreams-037', depth: 3, text: 'How do you picture us growing old together—our days, our health, the ways we look after each other?', addedIn: '0004_future_questions' },
+  { id: 'dreams-038', depth: 3, text: 'If our hopes for the future pulled in different directions, how would you want us to find a path that honors both of us?', addedIn: '0004_future_questions' },
 ] satisfies QuestionSeed[];

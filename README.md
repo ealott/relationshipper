@@ -18,7 +18,7 @@ It runs as an installable web app (PWA) at **https://relationshipper.evanlott.co
 
 ## The research
 
-The 502 questions, grouped into 17 themes, and the design choices above draw on relationship science. That includes Gottman's work on love maps, turning toward and conflict; Aron's escalating self-disclosure; responsiveness and capitalization research (Reis, Gable); the Marriage Checkup (Cordova); "sliding vs. deciding" (Stanley, Rhoades); and expressive writing (Pennebaker). The write-up is in [docs/research.md](docs/research.md). It rates the evidence for each claim as Strong, Moderate or Emerging, and flags popular claims that lack peer-reviewed support. Its 71 sources were each checked against Crossref, PubMed or library records.
+The 515 questions, grouped into 17 themes, and the design choices above draw on relationship science. That includes Gottman's work on love maps, turning toward and conflict; Aron's escalating self-disclosure; responsiveness and capitalization research (Reis, Gable); the Marriage Checkup (Cordova); "sliding vs. deciding" (Stanley, Rhoades); and expressive writing (Pennebaker). The write-up is in [docs/research.md](docs/research.md). It rates the evidence for each claim as Strong, Moderate or Emerging, and flags popular claims that lack peer-reviewed support. Its 71 sources were each checked against Crossref, PubMed or library records.
 
 The app shows a plain-language version, with links to every source, at `/research` and on each theme page (from `shared/research.ts`; `npm test` checks it against the write-up). Relationshipper is a reflection tool, not therapy, and no study has tested the app itself.
 
@@ -71,7 +71,7 @@ The end-to-end suite checks the privacy rule directly: it fails if the second pa
 
 The research-based questions live in `shared/questions/` as one TypeScript file per theme. Each question has an `id`, a `depth` (1 Opener, 2 Reflective, 3 Deep) and, if it only suits some couples, an `audience` (for example `unmarried`, `parents` or `apart`). `npm test` checks the bank for duplicates, length and valid tags.
 
-`npm run seed` regenerates `migrations/0002_seed_questions.sql` from those files. A migration runs once per database, so once a database is live, edit its questions in the admin console instead. You can also add a new migration.
+`npm run seed` regenerates the question-bank migrations from those files. A migration runs only once per database, so the original bank (`0002_seed_questions.sql`) never changes. A question written later sets `addedIn` to the migration that adds it, such as `0004_future_questions`, and `npm run seed` writes that file. You can also edit live questions in the admin console.
 
 ## Admin console
 
