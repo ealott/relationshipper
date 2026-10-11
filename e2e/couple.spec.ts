@@ -27,6 +27,27 @@ async function devSignIn(page: Page, name: string, email: string) {
   await form.getByRole('button', { name: 'Sign in' }).click();
 }
 
+/** Calls the API from inside a signed-in page, with its cookies. */
+const call = (page: Page, method: string, path: string, body?: unknown) =>
+  page.evaluate(
+    async ([m, p, b]) => (await fetch(`/api${p}`, { method: m, headers: { 'content-type': 'application/json' }, body: b === undefined ? undefined : JSON.stringify(b) })).json(),
+    [method, path, body] as const,
+  );
+
+/** A fresh browser signed in through the local-only test route. The same name and stamp is the same account. */
+async function signInAs(browser: Browser, name: string, stamp: number, colorScheme: 'light' | 'dark' = 'light') {
+  const { page } = await newPage(browser, colorScheme);
+  await page.goto(`/api/auth/dev?email=${name}.${stamp}@example.com&name=${name}&returnTo=/`);
+  return page;
+}
+
+/** Pairs two signed-in partners and answers the questions about their stage. */
+async function pair(a: Page, b: Page) {
+  const { code } = await call(a, 'POST', '/invite', {});
+  await call(b, 'POST', '/pair', { code });
+  await call(b, 'PATCH', '/couple', { married: false, livingTogether: false, hasKids: false });
+}
+
 async function write(page: Page, text: string, button: RegExp) {
   await page.getByLabel('Your answer').fill(text);
   await page.getByRole('button', { name: button }).click();
@@ -150,21 +171,8 @@ test('simple sign-in takes the two configured people straight in, already paired
 
 test('keeps the line being typed in view as an answer grows on a short screen', async ({ browser }) => {
   const stamp = Date.now();
-  const call = (page: Page, method: string, path: string, body?: unknown) =>
-    page.evaluate(
-      async ([m, p, b]) => (await fetch(`/api${p}`, { method: m, headers: { 'content-type': 'application/json' }, body: b === undefined ? undefined : JSON.stringify(b) })).json(),
-      [method, path, body] as const,
-    );
-  const signIn = async (name: string) => {
-    const { page } = await newPage(browser);
-    await page.goto(`/api/auth/dev?email=${name}.${stamp}@example.com&name=${name}&returnTo=/`);
-    return page;
-  };
-  const kai = await signIn('Kai');
-  const { code } = await call(kai, 'POST', '/invite', {});
-  const noor = await signIn('Noor');
-  await call(noor, 'POST', '/pair', { code });
-  await call(noor, 'PATCH', '/couple', { married: false, livingTogether: false, hasKids: false });
+  const kai = await signInAs(browser, 'Kai', stamp);
+  await pair(kai, await signInAs(browser, 'Noor', stamp));
 
   await kai.goto('/');
   const box = kai.getByLabel('Your answer');
@@ -181,21 +189,9 @@ test('keeps the line being typed in view as an answer grows on a short screen', 
 
 test('an unsent draft follows you to another device, and the journal downloads', async ({ browser }) => {
   const stamp = Date.now();
-  const call = (page: Page, method: string, path: string, body?: unknown) =>
-    page.evaluate(
-      async ([m, p, b]) => (await fetch(`/api${p}`, { method: m, headers: { 'content-type': 'application/json' }, body: b === undefined ? undefined : JSON.stringify(b) })).json(),
-      [method, path, body] as const,
-    );
-  const signIn = async (name: string) => {
-    const { page } = await newPage(browser);
-    await page.goto(`/api/auth/dev?email=${name}.${stamp}@example.com&name=${name}&returnTo=/`);
-    return page;
-  };
-  const phone = await signIn('Ari');
-  const { code } = await call(phone, 'POST', '/invite', {});
-  const partner = await signIn('Bea');
-  await call(partner, 'POST', '/pair', { code });
-  await call(partner, 'PATCH', '/couple', { married: false, livingTogether: false, hasKids: false });
+  const phone = await signInAs(browser, 'Ari', stamp);
+  const partner = await signInAs(browser, 'Bea', stamp);
+  await pair(phone, partner);
 
   await phone.goto('/');
   await phone.getByLabel('Your answer').fill('Started on my phone, to finish later.');
@@ -203,7 +199,7 @@ test('an unsent draft follows you to another device, and the journal downloads',
   await phone.waitForResponse((r) => r.url().includes('/drafts/answer') && r.request().method() === 'PUT');
 
   // Same account, a different device (fresh browser storage).
-  const laptop = await signIn('Ari');
+  const laptop = await signInAs(browser, 'Ari', stamp);
   await laptop.goto('/');
   await expect(laptop.getByLabel('Your answer')).toHaveValue('Started on my phone, to finish later.');
   // …and the partner sees nothing of it.
@@ -237,4 +233,82 @@ test('research page and dark mode', async ({ browser }) => {
   await page.goto('/research');
   await expect(page.getByRole('heading', { name: 'Why Relationshipper works the way it does' })).toBeVisible();
   await shot(page, '16-research-dark');
+});
+
+test('display preferences apply before the first paint and stay with the device', async ({ browser }) => {
+  const stamp = Date.now();
+  const page = await signInAs(browser, 'Cam', stamp, 'dark'); // this device is set to dark mode
+  const partner = await signInAs(browser, 'Dee', stamp);
+  await pair(page, partner);
+
+  // Record the theme as the page's <body> first appears, before anything can be painted.
+  await page.addInitScript(() => {
+    new MutationObserver((_, observer) => {
+      if (!document.body) return;
+      document.documentElement.dataset.themeAtBody = document.documentElement.dataset.theme ?? 'unset';
+      observer.disconnect();
+    }).observe(document, { childList: true, subtree: true });
+  });
+  const html = page.locator('html');
+  const appearance = page.locator('section', { has: page.getByRole('heading', { name: 'Appearance' }) });
+  const option = (group: string, name: string) => appearance.getByRole('radiogroup', { name: group }).getByRole('radio', { name });
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const themeColor = page.locator('meta[name="theme-color"]');
+
+  // System follows the device, and Light overrides it, from the first paint after a reload.
+  await page.goto('/settings');
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  await expect(option('Theme', 'System')).toHaveAttribute('aria-checked', 'true');
+  expect(await background()).toBe('rgb(21, 18, 15)');
+  await option('Theme', 'Light').click();
+  await expect(html).toHaveAttribute('data-theme', 'light');
+  expect(await background()).toBe('rgb(248, 244, 238)');
+  await expect(themeColor).toHaveAttribute('content', '#f8f4ee');
+  await page.reload();
+  await expect(html).toHaveAttribute('data-theme-at-body', 'light');
+  await expect(option('Theme', 'Light')).toHaveAttribute('aria-checked', 'true');
+  await shot(page, '17-appearance');
+
+  // Dark, then back to System, which follows the device as it changes.
+  await option('Theme', 'Dark').click();
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  await expect(themeColor).toHaveAttribute('content', '#15120f');
+  await option('Theme', 'System').click();
+  await page.emulateMedia({ colorScheme: 'light' });
+  await expect(html).toHaveAttribute('data-theme', 'light');
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+
+  // Text size scales the writing, and the writing tips can be hidden.
+  await tab(page, 'Today').click();
+  const answer = page.getByLabel('Your answer');
+  const fontSize = async () => parseFloat(await answer.evaluate((el) => getComputedStyle(el).fontSize));
+  expect(await fontSize()).toBe(18);
+  await expect(page.locator('.composer__tip')).toBeVisible();
+  await tab(page, 'Settings').click();
+  await option('Text size', 'Larger').click();
+  await appearance.getByRole('switch', { name: 'Writing tips' }).click();
+  await tab(page, 'Today').click();
+  expect(await fontSize()).toBeCloseTo(23.4, 1);
+  await expect(page.locator('.composer__tip')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Save answer' })).toBeVisible();
+
+  // Reduced motion turns off transitions even though the device doesn't ask for it.
+  await tab(page, 'Settings').click();
+  const tips = appearance.getByRole('switch', { name: 'Writing tips' });
+  const transition = () => tips.evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration));
+  expect(await transition()).toBe(0.2);
+  await option('Motion', 'Reduced').click();
+  await expect(html).toHaveAttribute('data-motion', 'reduced');
+  expect(await transition()).toBeLessThan(0.001);
+
+  // All of it survives a reload, and it belongs to this device only.
+  await page.reload();
+  await expect(html).toHaveAttribute('data-text', 'larger');
+  await expect(html).toHaveAttribute('data-tips', 'off');
+  await expect(option('Text size', 'Larger')).toHaveAttribute('aria-checked', 'true');
+  await expect(tips).toHaveAttribute('aria-checked', 'false');
+  await partner.goto('/');
+  await expect(partner.locator('html')).toHaveAttribute('data-text', 'default');
+  await expect(partner.locator('html')).toHaveAttribute('data-tips', 'on');
 });

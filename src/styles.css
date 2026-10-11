@@ -1,6 +1,6 @@
 /* ---------- Tokens ---------- */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --bg: #f8f4ee;
   --surface: #fffdf9;
   --surface-2: #f2ece4;
@@ -28,32 +28,56 @@
   --rc-face: #fffdf9;
   --rc-nose: #9d3b55;
   --rc-paw: #6a615b;
+  /* Text size for questions, answers and replies */
+  --text-scale: 1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #15120f;
-    --surface: #1f1b17;
-    --surface-2: #2a2520;
-    --text: #f1ebe3;
-    --text-muted: #b1a69c;
-    --border: #3a332c;
-    --primary: #d9768f;
-    --primary-strong: #e891a7;
-    --primary-soft: #3b2229;
-    --accent: #d99668;
-    --me: #d9768f;
-    --partner: #8fadd0;
-    --success: #74b98f;
-    --danger: #f07c72;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.25);
-    --rc-fur: #9b938c;
-    --rc-fur-dark: #574f4a;
-    --rc-mask: #12100e;
-    --rc-face: #f1ebe3;
-    --rc-nose: #d9768f;
-    --rc-paw: #776e67;
-  }
+/* Display preferences: public/prefs.js sets these attributes on <html> before the first paint,
+   from the device's settings or the choices in Settings → Appearance. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #15120f;
+  --surface: #1f1b17;
+  --surface-2: #2a2520;
+  --text: #f1ebe3;
+  --text-muted: #b1a69c;
+  --border: #3a332c;
+  --primary: #d9768f;
+  --primary-strong: #e891a7;
+  --primary-soft: #3b2229;
+  --accent: #d99668;
+  --me: #d9768f;
+  --partner: #8fadd0;
+  --success: #74b98f;
+  --danger: #f07c72;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.25);
+  --rc-fur: #9b938c;
+  --rc-fur-dark: #574f4a;
+  --rc-mask: #12100e;
+  --rc-face: #f1ebe3;
+  --rc-nose: #d9768f;
+  --rc-paw: #776e67;
+}
+
+:root[data-text='large'] {
+  --text-scale: 1.15;
+}
+
+:root[data-text='larger'] {
+  --text-scale: 1.3;
+}
+
+:root[data-tips='off'] .composer__tip,
+:root[data-streak='off'] .streak {
+  display: none;
+}
+
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }
 
 /* ---------- Base ---------- */
@@ -846,7 +870,7 @@ select.input {
 
 .qcard__text {
   font-family: var(--font-serif);
-  font-size: clamp(1.35rem, 5.4vw, 1.7rem);
+  font-size: calc(clamp(1.35rem, 5.4vw, 1.7rem) * var(--text-scale));
   line-height: 1.3;
   font-weight: 600;
   text-wrap: pretty;
@@ -914,7 +938,7 @@ select.input {
 
 .journal-input {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
   line-height: 1.65;
   min-height: 170px;
   background: color-mix(in srgb, var(--surface-2) 45%, var(--surface));
@@ -938,6 +962,15 @@ select.input {
 
 .composer__tip {
   font-style: italic;
+}
+
+/* With the tips hidden, keep the buttons on the right. */
+:root[data-tips='off'] .composer__footer > :last-child {
+  margin-left: auto;
+}
+
+.composer--reply .textarea {
+  font-size: calc(16px * var(--text-scale));
 }
 
 /* Journal entries */
@@ -977,7 +1010,7 @@ select.input {
 
 .entry__text {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
   line-height: 1.65;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -1053,6 +1086,7 @@ select.input {
 }
 
 .message__text {
+  font-size: calc(16px * var(--text-scale));
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1106,7 +1140,7 @@ select.input {
 .qrow__text {
   flex: 1;
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: calc(16px * var(--text-scale));
   line-height: 1.4;
 }
 
@@ -1569,6 +1603,16 @@ select.input {
   font-size: 13px;
 }
 
+/* A line of question text in Settings → Appearance, at the chosen text size */
+.text-sample {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-family: var(--font-serif);
+  font-size: calc(18px * var(--text-scale));
+  line-height: 1.5;
+}
+
 .prompt {
   display: flex;
   gap: 14px;
@@ -1873,16 +1917,6 @@ select.input {
   from {
     opacity: 0;
     transform: translateY(8px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 }
 

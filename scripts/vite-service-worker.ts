@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { build } from 'esbuild';
 import type { Plugin, ResolvedConfig } from 'vite';
@@ -74,6 +74,11 @@ export function serviceWorker({ entry }: { entry: string }): Plugin {
         const chunk = bundle[file]!;
         hash.update(file);
         hash.update(chunk.type === 'chunk' ? chunk.code : typeof chunk.source === 'string' ? chunk.source : Buffer.from(chunk.source));
+      }
+      // Files from public/ aren't in the bundle, but a change to one (like prefs.js) needs a new worker too.
+      for (const file of [...extra].sort()) {
+        hash.update(file);
+        hash.update(readFileSync(join(config.publicDir, file)));
       }
       const version = hash.digest('hex').slice(0, 12);
       this.emitFile({ type: 'asset', fileName: 'sw.js', source: await compile(precache, version, true) });

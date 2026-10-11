@@ -2,11 +2,12 @@ import { useEffect, useState } from 'preact/hooks';
 import { LIMITS, type CoupleStage } from '../../shared/api';
 import { api, JOURNAL_EXPORT_URL } from '../api';
 import { CoupleAvatars } from '../components/Avatar';
-import { Switch } from '../components/Field';
+import { Segmented, Switch } from '../components/Field';
 import { InstallSteps } from '../components/Install';
 import { BookIcon, DownloadIcon, ShareIcon, ShieldIcon } from '../components/Icons';
 import { StageFields } from './Stage';
 import { isStandalone } from '../lib/platform';
+import { getPref, setPref, type Prefs } from '../lib/prefs';
 import { checkDeviceSubscription, deviceSubscribed, disablePushOnDevice, enablePushOnDevice, pushSupport } from '../lib/push';
 import { setMe, signedOut, useMe } from '../lib/session';
 import { useStore } from '../lib/store';
@@ -75,6 +76,8 @@ export function Settings() {
       <Relationship saving={saving} update={update} />
 
       <Notifications saving={saving} update={update} />
+
+      <Appearance />
 
       <section class="card settings">
         <a class="setting setting--link" href="/research">
@@ -220,6 +223,79 @@ function Notifications({ saving, update }: { saving: boolean; update: (fn: () =>
           disabled={!canToggle}
           onChange={(v) => update(() => api.updateMe({ notifyPartner: v }))}
         />
+      </div>
+    </section>
+  );
+}
+
+const THEMES = [
+  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+] as const;
+
+const TEXT_SIZES = [
+  { value: 'default', label: 'Default' },
+  { value: 'large', label: 'Large' },
+  { value: 'larger', label: 'Larger' },
+] as const;
+
+const MOTION = [
+  { value: 'system', label: 'System' },
+  { value: 'full', label: 'Full' },
+  { value: 'reduced', label: 'Reduced' },
+] as const;
+
+function Appearance() {
+  const [prefs, setPrefs] = useState<Prefs>(() => ({
+    theme: getPref('theme'),
+    text: getPref('text'),
+    motion: getPref('motion'),
+    tips: getPref('tips'),
+    streak: getPref('streak'),
+  }));
+
+  function change<K extends keyof Prefs>(name: K, value: Prefs[K]) {
+    setPref(name, value);
+    setPrefs((p) => ({ ...p, [name]: value }));
+  }
+
+  return (
+    <section class="card settings">
+      <h2 class="card__title">Appearance</h2>
+      <p class="muted">These apply to this device.</p>
+      <div class="setting setting--stacked">
+        <span class="setting__label">Theme</span>
+        <Segmented label="Theme" value={prefs.theme} options={THEMES} onChange={(v) => change('theme', v)} />
+      </div>
+      <div class="setting setting--stacked">
+        <div class="setting__text">
+          <span class="setting__label">Text size</span>
+          <span class="setting__hint">For questions, answers and replies.</span>
+        </div>
+        <Segmented label="Text size" value={prefs.text} options={TEXT_SIZES} onChange={(v) => change('text', v)} />
+        <p class="text-sample">What’s something small I did lately that meant a lot to you?</p>
+      </div>
+      <div class="setting setting--stacked">
+        <div class="setting__text">
+          <span class="setting__label">Motion</span>
+          <span class="setting__hint">Reduced turns off animations, like the reveal. System follows this device’s setting.</span>
+        </div>
+        <Segmented label="Motion" value={prefs.motion} options={MOTION} onChange={(v) => change('motion', v)} />
+      </div>
+      <div class="setting">
+        <div class="setting__text">
+          <span class="setting__label">Writing tips</span>
+          <span class="setting__hint">A gentle prompt under the answer and reply boxes.</span>
+        </div>
+        <Switch label="Writing tips" checked={prefs.tips === 'on'} onChange={(v) => change('tips', v ? 'on' : 'off')} />
+      </div>
+      <div class="setting">
+        <div class="setting__text">
+          <span class="setting__label">Days in a row</span>
+          <span class="setting__hint">On Today, how many days in a row you’ve both answered.</span>
+        </div>
+        <Switch label="Days in a row" checked={prefs.streak === 'on'} onChange={(v) => change('streak', v ? 'on' : 'off')} />
       </div>
     </section>
   );
