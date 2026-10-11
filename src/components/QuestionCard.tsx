@@ -60,7 +60,7 @@ export function QuestionCard({ question, state, onChange, daily }: Props) {
       {!state ? (
         <div class="qcard__skeleton" aria-hidden="true" />
       ) : revealed ? (
-        <Revealed question={question} state={state} onChange={onChange} />
+        <Revealed key={question.id} question={question} state={state} onChange={onChange} />
       ) : state.mine && !editing ? (
         <Waiting state={state} daily={daily} onEdit={() => setEditing(true)} />
       ) : (
