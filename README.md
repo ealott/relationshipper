@@ -93,6 +93,8 @@ npm run deploy
 
 After that, deploying is `npm run db:migrate:remote` (if there are new migrations) followed by `npm run deploy`. Keep the VAPID keys once people subscribe: new keys invalidate every existing notification subscription. Never set `DEV_LOGIN` in production; it only works on localhost anyway.
 
+If the static-asset upload step fails with `401 Unauthorized`, use `npm run deploy:inline` instead. This happens behind proxies that replace the upload's own short-lived token with an API token. The inline deploy ships the same build with the client files embedded in the Worker, and serves them with the same headers and fallback rules. Each static file then counts as a Worker request, which is fine at this scale.
+
 ### Setting up Google sign-in
 
 1. In the [Google Cloud console](https://console.cloud.google.com/), create or pick a project, then open **Google Auth Platform**.

@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler deploy",
+    "deploy:inline": "npm run build && node scripts/deploy-inline.mjs",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:e2e": "playwright test",
