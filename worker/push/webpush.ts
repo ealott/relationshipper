@@ -109,6 +109,11 @@ export async function encryptPayload(
 export interface SendOptions {
   /** Seconds the push service should keep trying to deliver. */
   ttl?: number;
+  /**
+   * Defaults to `high`: every notification here is a visible alert someone turned on. With
+   * `normal`, Apple's push service may hold a notification for the phone's power considerations
+   * instead of delivering it immediately.
+   */
   urgency?: 'very-low' | 'low' | 'normal' | 'high';
   /** Replaces an undelivered message with the same topic (≤ 32 URL-safe base64 chars). */
   topic?: string;
@@ -128,7 +133,7 @@ export async function sendPush(target: PushTarget, payload: unknown, vapid: Vapi
     'Content-Encoding': 'aes128gcm',
     'Content-Type': 'application/octet-stream',
     TTL: String(opts.ttl ?? 24 * 60 * 60),
-    Urgency: opts.urgency ?? 'normal',
+    Urgency: opts.urgency ?? 'high',
   };
   if (opts.topic) headers.Topic = opts.topic;
   const res = await fetch(target.endpoint, { method: 'POST', headers, body });
