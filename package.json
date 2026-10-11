@@ -1,0 +1,40 @@
+{
+  "name": "relationshipper",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Questions for two: a PWA where couples answer relationship questions privately and reveal their answers together.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && wrangler deploy",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "cf-typegen": "wrangler types --strict-vars=false",
+    "seed": "node scripts/build-seed.mjs",
+    "vapid": "node scripts/generate-vapid-keys.mjs"
+  },
+  "dependencies": {
+    "hono": "^4.13.13",
+    "preact": "^11.0.1",
+    "preact-iso": "^2.12.2"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.63.1",
+    "@playwright/test": "^1.64.0",
+    "@preact/preset-vite": "^2.10.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.149.0",
+    "esbuild": "^0.28.2",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

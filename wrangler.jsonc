@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "relationshipper",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    // Client routes fall back to index.html; API requests always reach the Worker.
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "relationshipper",
+      "database_id": "8940c9a6-dc64-4a5a-96ae-80c7a334c491",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Daily reminders: every 5 minutes, send to anyone whose reminder time has passed today.
+  "triggers": { "crons": ["*/5 * * * *"] },
+  // Secrets (set with `wrangler secret put NAME` or in the Cloudflare dashboard; never committed):
+  //   GOOGLE_CLIENT_ID / _SECRET      Google OAuth client, Web application type (see README)
+  //   VAPID_PUBLIC_KEY / _PRIVATE_KEY Web Push keys (`npm run vapid` prints the commands)
+  //   ADMIN_EMAILS                    comma-separated Google emails with admin access
+  "vars": {
+    // Contact URL or mailto: for push services.
+    "VAPID_SUBJECT": "https://relationshipper.evanlott.com"
+  },
+  // Served only on its own domain (one origin for cookies and the OAuth redirect).
+  "routes": [{ "pattern": "relationshipper.evanlott.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true }
+}
