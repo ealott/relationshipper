@@ -1,9 +1,11 @@
 // Admin console API. Admins manage the shared question bank and review suggestions.
 // By design there is no endpoint that returns anyone's answers or responses.
 import { Hono } from 'hono';
-import { LIMITS, type AdminQuestion, type AdminStats, type AdminSuggestion, type AdminUser } from '../../shared/api';
+import { LIMITS, type AdminBackup, type AdminBackupsResponse, type AdminQuestion, type AdminStats, type AdminSuggestion, type AdminUser } from '../../shared/api';
+import { BACKUP_KEEP_DAYS } from '../../shared/backup';
 import { isCategoryId } from '../../shared/categories';
 import type { Audience } from '../../shared/questions/types';
+import { createBackup, listBackups } from '../backup';
 import type { HonoEnv } from '../env';
 import { ApiError, badRequest, readJson } from '../http';
 import { getBank, invalidateBank, toQuestionDTO } from '../questions';
@@ -83,6 +85,10 @@ export const adminRoutes = new Hono<HonoEnv>()
     requireAdmin(c);
     await next();
   })
+
+  // Backups hold everything, so the console only ever sees their dates and sizes.
+  .get('/backups', async (c) => c.json<AdminBackupsResponse>({ backups: await listBackups(c.env), keepDays: BACKUP_KEEP_DAYS }))
+  .post('/backups', async (c) => c.json<AdminBackup>(await createBackup(c.env), 201))
 
   .get('/stats', async (c) => {
     const db = c.env.DB;

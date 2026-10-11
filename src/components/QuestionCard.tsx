@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { LIMITS, type AnswerDTO, type QuestionDTO, type QuestionState } from '../../shared/api';
 import { questionText } from '../../shared/categories';
 import { api, ApiError } from '../api';
-import { clearDraft, loadDraft, saveDraft } from '../lib/drafts';
+import { useDraft } from '../lib/drafts';
 import { formatDate, relativeTime, wordCount } from '../lib/format';
 import { invalidate } from '../lib/query';
 import { useMe } from '../lib/session';
@@ -92,13 +92,10 @@ function Composer({
 }) {
   const me = useMe();
   const partnerName = me.partner?.name ?? 'your partner';
-  const [text, setText] = useState(() => state.mine?.text ?? loadDraft(me.user.id, question.id, 'answer'));
+  const draft = useDraft(me.user.id, question.id, 'answer', { initial: state.mine?.text });
+  const text = draft.text;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!state.mine) saveDraft(me.user.id, question.id, 'answer', text);
-  }, [text]);
 
   async function submit(e: Event) {
     e.preventDefault();
@@ -106,8 +103,9 @@ function Composer({
     setBusy(true);
     setError('');
     try {
+      await draft.settle();
       const next = await api.answer(question.id, text);
-      clearDraft(me.user.id, question.id, 'answer');
+      draft.clear();
       onSaved(next);
     } catch (err) {
       setError((err as Error).message);
@@ -131,7 +129,7 @@ function Composer({
       <AutoTextarea
         class="journal-input"
         value={text}
-        onValue={setText}
+        onValue={draft.setText}
         maxLength={LIMITS.answerMax}
         rows={6}
         placeholder="Take your time. Write as much or as little as feels true."
@@ -141,7 +139,7 @@ function Composer({
         {words ? (
           <span class="composer__count">
             {words} word{words === 1 ? '' : 's'}
-            {!state.mine ? ' · draft saved on this device' : ''}
+            {!state.mine ? ' · draft saved' : ''}
           </span>
         ) : (
           <span class="composer__tip">{pick(WRITING_TIPS, question.id, 7)}</span>
@@ -248,20 +246,21 @@ const RESPONSE_PROMPTS = [
 function Revealed({ question, state, onChange }: { question: QuestionDTO; state: QuestionState; onChange: (s: QuestionState) => void }) {
   const me = useMe();
   const partnerName = me.partner?.name ?? 'your partner';
-  const [text, setText] = useState(() => loadDraft(me.user.id, question.id, 'response'));
+  // A reply sent since a draft was saved (maybe from another device) makes that draft stale.
+  const lastSent = Math.max(0, ...state.responses.filter((r) => r.userId === me.user.id).map((r) => r.createdAt));
+  const draft = useDraft(me.user.id, question.id, 'response', { staleBefore: lastSent });
+  const text = draft.text;
   const [busy, setBusy] = useState(false);
   const tip = pick(RESPONSE_PROMPTS, question.id);
-
-  useEffect(() => saveDraft(me.user.id, question.id, 'response', text), [text]);
 
   async function send(e: Event) {
     e.preventDefault();
     if (!text.trim() || busy) return;
     setBusy(true);
     try {
+      await draft.settle();
       onChange(await api.respond(question.id, text));
-      clearDraft(me.user.id, question.id, 'response');
-      setText('');
+      draft.clear();
     } catch (err) {
       toastError(err);
     } finally {
@@ -293,7 +292,7 @@ function Revealed({ question, state, onChange }: { question: QuestionDTO; state:
         <form class="composer composer--reply" onSubmit={send}>
           <AutoTextarea
             value={text}
-            onValue={setText}
+            onValue={draft.setText}
             maxLength={LIMITS.responseMax}
             rows={2}
             placeholder={state.responses.length ? 'Reply…' : `Respond to ${partnerName}…`}

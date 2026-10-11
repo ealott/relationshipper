@@ -43,12 +43,12 @@ export interface AuthContext {
   sessionId: string;
   user: UserRow;
   isAdmin: boolean;
-  partner: { id: string; name: string } | null;
+  partner: { id: string; name: string; email: string } | null;
   couple: CoupleRow | null;
 }
 
 export interface PairedContext extends AuthContext {
-  partner: { id: string; name: string };
+  partner: { id: string; name: string; email: string };
   couple: CoupleRow;
 }
 
@@ -62,12 +62,13 @@ type ContextRow = UserRow & {
   c_created_at: number | null;
   p_id: string | null;
   p_name: string | null;
+  p_email: string | null;
 };
 
 const CONTEXT_COLUMNS = `u.*,
   c.id AS c_id, c.timezone AS c_timezone, c.include_intimacy AS c_include_intimacy,
   c.married AS c_married, c.living_together AS c_living_together, c.has_kids AS c_has_kids, c.created_at AS c_created_at,
-  p.id AS p_id, p.name AS p_name`;
+  p.id AS p_id, p.name AS p_name, p.email AS p_email`;
 
 export function isAdminEmail(env: AppEnv, email: string): boolean {
   const admins = (env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
@@ -77,14 +78,14 @@ const CONTEXT_JOINS = `LEFT JOIN couples c ON c.id = u.couple_id
   LEFT JOIN users p ON p.couple_id = u.couple_id AND p.id <> u.id`;
 
 function toContext(env: AppEnv, row: ContextRow, sessionId: string): AuthContext {
-  const { c_id, c_timezone, c_include_intimacy, c_married, c_living_together, c_has_kids, c_created_at, p_id, p_name, ...user } = row;
+  const { c_id, c_timezone, c_include_intimacy, c_married, c_living_together, c_has_kids, c_created_at, p_id, p_name, p_email, ...user } = row;
   // A couple always has two members; treat a half-formed one as unpaired.
   const paired = c_id !== null && p_id !== null;
   return {
     sessionId,
     user,
     isAdmin: isAdminEmail(env, user.email),
-    partner: paired ? { id: p_id, name: p_name! } : null,
+    partner: paired ? { id: p_id, name: p_name!, email: p_email! } : null,
     couple: paired
       ? {
           id: c_id,

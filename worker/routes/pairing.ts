@@ -5,6 +5,7 @@ import { toMeResponse } from '../dto';
 import type { HonoEnv } from '../env';
 import { ApiError, badRequest, optionalBool, readJson, str } from '../http';
 import { randomId, randomString } from '../lib/crypto';
+import { isPermanentPair } from '../loginUsers';
 import { clientIp, rateLimit } from '../rateLimit';
 import { reloadAuth, requireAuth, requireCouple } from '../session';
 
@@ -25,6 +26,7 @@ export function deleteCoupleStatements(db: D1Database, coupleId: string): D1Prep
     db.prepare('DELETE FROM answers WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM responses WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM daily_questions WHERE couple_id = ?').bind(coupleId),
+    db.prepare('DELETE FROM drafts WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM questions WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM couples WHERE id = ?').bind(coupleId),
   ];
@@ -34,6 +36,7 @@ export function deleteCoupleStatements(db: D1Database, coupleId: string): D1Prep
 export function deleteUserStatements(db: D1Database, userId: string, coupleId: string | null): D1PreparedStatement[] {
   return [
     ...(coupleId ? deleteCoupleStatements(db, coupleId) : []),
+    db.prepare('DELETE FROM drafts WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM identities WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM push_subscriptions WHERE user_id = ?').bind(userId),
@@ -148,7 +151,10 @@ export const pairingRoutes = new Hono<HonoEnv>()
     return c.json(toMeResponse(await reloadAuth(c.env, user.id, sessionId), c.env));
   })
   .post('/couple/unpair', async (c) => {
-    const { user, couple, sessionId } = requireCouple(c);
+    const { user, partner, couple, sessionId } = requireCouple(c);
+    if (isPermanentPair(c.env, [user.email, partner.email])) {
+      throw new ApiError(409, 'permanent_couple', 'You two are paired for good on this server.');
+    }
     await c.env.DB.batch(deleteCoupleStatements(c.env.DB, couple.id));
     return c.json(toMeResponse(await reloadAuth(c.env, user.id, sessionId), c.env));
   });

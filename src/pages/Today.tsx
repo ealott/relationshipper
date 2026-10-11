@@ -5,6 +5,7 @@ import { ErrorNotice, Spinner } from '../components/Feedback';
 import { CardsIcon, ChevronIcon, PencilIcon, ShuffleIcon } from '../components/Icons';
 import { QuestionCard } from '../components/QuestionCard';
 import { QuestionRow } from '../components/QuestionRow';
+import { InstallCard } from '../components/Install';
 import { ReminderPrompt } from '../components/ReminderPrompt';
 import { idsWithStatus, randomFresh, useAvailableBank, useCatalog, useProgress, useToday } from '../lib/data';
 import { formatDay } from '../lib/format';
@@ -61,6 +62,7 @@ export function Today() {
         </div>
       )}
 
+      <InstallCard />
       <ReminderPrompt />
 
       {yourTurn.length > 0 && (

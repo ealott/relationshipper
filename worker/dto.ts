@@ -1,6 +1,7 @@
 import type { CoupleStage, MeResponse } from '../shared/api';
 import { minutesToTime } from '../shared/time';
 import type { AppEnv } from './env';
+import { isPermanentPair } from './loginUsers';
 import type { AuthContext, CoupleRow } from './session';
 
 const flag = (v: number | null): boolean | null => (v === null ? null : v === 1);
@@ -29,6 +30,7 @@ export function toMeResponse(auth: AuthContext, env: AppEnv): MeResponse {
           timezone: couple.timezone,
           includeIntimacy: couple.include_intimacy === 1,
           createdAt: couple.created_at,
+          permanent: partner ? isPermanentPair(env, [user.email, partner.email]) : false,
           ...coupleStage(couple),
         }
       : null,

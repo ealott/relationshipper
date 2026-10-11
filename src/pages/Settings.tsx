@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'preact/hooks';
 import { LIMITS, type CoupleStage } from '../../shared/api';
-import { api } from '../api';
+import { api, JOURNAL_EXPORT_URL } from '../api';
 import { CoupleAvatars } from '../components/Avatar';
 import { Switch } from '../components/Field';
+import { InstallSteps } from '../components/Install';
 import { BookIcon, DownloadIcon, ShareIcon, ShieldIcon } from '../components/Icons';
 import { StageFields } from './Stage';
-import { installPrompt, isIOS, isStandalone, promptInstall } from '../lib/platform';
+import { isStandalone } from '../lib/platform';
 import { checkDeviceSubscription, deviceSubscribed, disablePushOnDevice, enablePushOnDevice, pushSupport } from '../lib/push';
 import { setMe, signedOut, useMe } from '../lib/session';
 import { useStore } from '../lib/store';
@@ -56,6 +57,8 @@ export function Settings() {
         </div>
       </header>
 
+      <InstallApp />
+
       <section class="card couple-card">
         <CoupleAvatars me={me.user.name} partner={partnerName} />
         <div>
@@ -95,7 +98,7 @@ export function Settings() {
       </section>
 
       <Profile />
-      <InstallApp />
+      <Journal />
       <Account />
     </main>
   );
@@ -270,25 +273,29 @@ function Profile() {
   );
 }
 
-function InstallApp() {
-  const prompt = useStore(installPrompt);
-  if (isStandalone()) return null;
-  if (!prompt && !isIOS()) return null;
+function Journal() {
+  const me = useMe();
   return (
     <section class="card settings">
-      <h2 class="card__title">Install the app</h2>
-      {prompt ? (
-        <>
-          <p class="muted">Add Relationshipper to your home screen for quick access and reminders.</p>
-          <button class="btn btn--primary btn--sm" onClick={promptInstall}>
-            <DownloadIcon size={16} /> Install
-          </button>
-        </>
-      ) : (
-        <p class="muted">
-          In Safari, tap <ShareIcon size={14} /> <strong>Share</strong>, then <strong>Add to Home Screen</strong>.
-        </p>
-      )}
+      <h2 class="card__title">Keep a copy</h2>
+      <p class="muted">
+        Download every question you’ve answered, both your answers and your replies, as a file you can keep anywhere. {me.partner!.name}’s
+        answers are included once you’ve both written yours.
+      </p>
+      <a class="btn btn--ghost btn--block" href={JOURNAL_EXPORT_URL} download>
+        <DownloadIcon size={16} /> Download our journal
+      </a>
+    </section>
+  );
+}
+
+function InstallApp() {
+  if (isStandalone()) return null;
+  return (
+    <section class="card settings">
+      <h2 class="card__title">Add to your Home Screen</h2>
+      <p class="muted">Relationshipper opens like an app from your Home Screen, keeps working offline, and can remind you each day.</p>
+      <InstallSteps />
     </section>
   );
 }
@@ -397,9 +404,11 @@ function Account() {
           <button class="btn btn--ghost btn--block" onClick={() => signOut().catch(toastError)}>
             Sign out
           </button>
-          <button class="btn btn--danger-ghost btn--block" onClick={unpair}>
-            Unpair from {partnerName}
-          </button>
+          {!me.couple!.permanent && (
+            <button class="btn btn--danger-ghost btn--block" onClick={unpair}>
+              Unpair from {partnerName}
+            </button>
+          )}
           <button class="btn btn--danger-ghost btn--block" onClick={() => setDeleting(true)}>
             Delete account
           </button>

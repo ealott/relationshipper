@@ -1596,6 +1596,27 @@ select.input {
   font-size: 15px;
 }
 
+.prompt__raccoon {
+  flex: none;
+}
+
+.prompt__body .btn {
+  justify-self: start;
+}
+
+/* Numbered how-to steps (install instructions). */
+.steps {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+  font-size: 15px;
+}
+
+.steps svg {
+  vertical-align: -2px;
+}
+
 /* ---------- Admin ---------- */
 .stats {
   display: grid;

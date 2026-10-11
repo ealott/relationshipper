@@ -31,6 +31,8 @@ export interface CoupleDTO extends CoupleStage {
   timezone: string;
   includeIntimacy: boolean;
   createdAt: number;
+  /** Paired automatically from the server's two sign-in names, so they can't unpair. */
+  permanent: boolean;
 }
 
 export interface MeResponse {
@@ -85,6 +87,19 @@ export interface ResponseDTO {
   userId: string;
   text: string;
   createdAt: number;
+}
+
+export type DraftKind = 'answer' | 'response';
+
+/** An unsent draft. Only ever returned to its author. */
+export interface DraftDTO {
+  text: string;
+  updatedAt: number;
+}
+
+export interface DraftsResponse {
+  answer: DraftDTO | null;
+  response: DraftDTO | null;
 }
 
 export interface QuestionState {
@@ -189,3 +204,17 @@ export const LIMITS = {
   questionMin: 10,
   questionMax: 300,
 } as const;
+
+/** A nightly (or on-demand) backup: metadata only, never contents. */
+export interface AdminBackup {
+  key: string;
+  createdAt: number;
+  bytes: number;
+  rows: number;
+}
+
+export interface AdminBackupsResponse {
+  backups: AdminBackup[];
+  /** Days each backup is kept. */
+  keepDays: number;
+}

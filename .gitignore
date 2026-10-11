@@ -8,3 +8,5 @@ dist/
 test-results/
 playwright-report/
 .DS_Store
+# Restore files hold every answer; never commit them.
+restore-*.sql

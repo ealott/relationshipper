@@ -4,6 +4,7 @@ import { LIMITS, type AuthConfigResponse, type MeResponse } from '../../shared/a
 import { isValidTimeZone } from '../../shared/time';
 import { exchangeCode, googleAuthUrl, verifyIdToken } from '../auth/google';
 import { toMeResponse } from '../dto';
+import { loginUsers } from '../loginUsers';
 import type { AppEnv, HonoEnv } from '../env';
 import { ApiError, readJson, str } from '../http';
 import { base64url, fromBase64url } from '../lib/encoding';
@@ -26,9 +27,7 @@ const MINUTE = 60 * 1000;
 
 const googleConfigured = (env: AppEnv) => Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
-/** Simple sign-in: a fixed list of names (LOGIN_USERS) sharing one password (LOGIN_PASSWORD). */
-const passwordUsers = (env: AppEnv) => (env.LOGIN_USERS ?? '').split(',').map((n) => n.trim()).filter(Boolean);
-const passwordConfigured = (env: AppEnv) => Boolean(env.LOGIN_PASSWORD) && passwordUsers(env).length > 0;
+const passwordConfigured = (env: AppEnv) => Boolean(env.LOGIN_PASSWORD) && loginUsers(env).length > 0;
 
 /** Compares two secrets in constant time (by comparing their hashes). */
 async function sameSecret(a: string, b: string): Promise<boolean> {
@@ -148,7 +147,7 @@ export const authRoutes = new Hono<HonoEnv>()
     // sign-ins are rare).
     await rateLimit(c.env.DB, `login:${clientIp(c.req.raw)}`, 10, 15 * MINUTE);
     await rateLimit(c.env.DB, 'login:all', 60, 60 * MINUTE);
-    const names = passwordUsers(c.env);
+    const names = loginUsers(c.env);
     const who = names.find((n) => n.toLowerCase() === name.toLowerCase());
     const passwordOk = await sameSecret(password, c.env.LOGIN_PASSWORD!);
     if (!who || !passwordOk) throw new ApiError(401, 'wrong_password', 'That name and password don’t match.');

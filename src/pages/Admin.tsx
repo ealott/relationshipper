@@ -85,14 +85,54 @@ function Overview() {
     ['Bank: active / retired', `${s.bank.active} / ${s.bank.retired}`],
   ];
   return (
-    <div class="stats">
-      {cards.map(([label, value]) => (
-        <div class="stat">
-          <span class="stat__value">{value}</span>
-          <span class="stat__label">{label}</span>
-        </div>
-      ))}
+    <div class="stack">
+      <div class="stats">
+        {cards.map(([label, value]) => (
+          <div class="stat">
+            <span class="stat__value">{value}</span>
+            <span class="stat__label">{label}</span>
+          </div>
+        ))}
+      </div>
+      <Backups />
     </div>
+  );
+}
+
+/** Backup status (dates and sizes only; backups hold everything, so the console never opens them). */
+function Backups() {
+  const backups = useQuery('admin-backups', api.admin.backups);
+  const [busy, setBusy] = useState(false);
+  async function backUpNow() {
+    setBusy(true);
+    try {
+      const backup = await api.admin.backUpNow();
+      toast(`Backed up ${backup.rows.toLocaleString()} rows.`);
+      backups.refresh();
+    } catch (err) {
+      toastError(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const latest = backups.data?.backups[0];
+  return (
+    <section class="card stack">
+      <h2 class="card__title">Backups</h2>
+      <p class="muted">
+        {backups.error
+          ? backups.error.message
+          : !backups.data
+            ? 'Checking…'
+            : latest
+              ? `Last backup ${relativeTime(latest.createdAt)}: ${latest.rows.toLocaleString()} rows, ${Math.ceil(latest.bytes / 1024)} KB. ${backups.data.backups.length} kept.`
+              : 'No backups yet.'}{' '}
+        A backup runs every night and is kept {backups.data?.keepDays ?? 90} days. The README explains how to restore one.
+      </p>
+      <button class="btn btn--ghost btn--sm" onClick={backUpNow} disabled={busy}>
+        {busy ? 'Backing up…' : 'Back up now'}
+      </button>
+    </section>
   );
 }
 

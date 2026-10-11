@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { AuthConfigResponse, MeResponse } from '../shared/api';
-import { createTestEnv, TestClient } from './helpers/env';
+import { createTestEnv, pairedCouple, TestClient } from './helpers/env';
 
 let t: Awaited<ReturnType<typeof createTestEnv>>;
 
@@ -61,5 +61,17 @@ describe('name and password sign-in', () => {
     const client = new TestClient(t.env, t.ctx);
     for (let i = 0; i < 10; i++) expect((await signIn(client, 'Evan', `guess-${i}`)).status).toBe(401);
     expect((await signIn(client, 'Evan', 'booger')).status).toBe(429);
+  });
+
+  it('makes a pair that can’t be unpaired, unlike couples paired by invite', async () => {
+    const evan = new TestClient(t.env, t.ctx);
+    const me = await signIn(evan, 'Evan', 'booger');
+    expect(me.body.couple?.permanent).toBe(true);
+    expect((await evan.post('/api/couple/unpair', {})).status).toBe(409);
+    expect((await evan.get<MeResponse>('/api/me')).body.couple?.id).toBe(me.body.couple?.id);
+
+    const invited = await pairedCouple(t.env, t.ctx);
+    expect((await invited.a.client.get<MeResponse>('/api/me')).body.couple?.permanent).toBe(false);
+    expect((await invited.a.client.post('/api/couple/unpair', {})).status).toBe(200);
   });
 });

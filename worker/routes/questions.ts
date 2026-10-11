@@ -3,6 +3,9 @@ import {
   LIMITS,
   type BankResponse,
   type CustomQuestionsResponse,
+  type DraftDTO,
+  type DraftKind,
+  type DraftsResponse,
   type HistoryResponse,
   type Progress,
   type ProgressResponse,
@@ -10,8 +13,10 @@ import {
   type TodayResponse,
 } from '../../shared/api';
 import { isCategoryId } from '../../shared/categories';
+import { zonedNow } from '../../shared/time';
 import { getOrAssignDaily, getStreak } from '../daily';
 import type { HonoEnv } from '../env';
+import { exportJournal } from '../export';
 import { ApiError, badRequest, readJson } from '../http';
 import { randomId } from '../lib/crypto';
 import { notifyPartner, pushToUser, quote } from '../notify';
@@ -122,6 +127,7 @@ export const questionRoutes = new Hono<HonoEnv>()
       .bind(couple.id, q.id, user.id, text, now)
       .first<{ created_at: number }>();
     if (!written) throw new ApiError(409, 'answer_locked', 'Answers are locked once you’ve both written yours.');
+    await c.env.DB.prepare(`DELETE FROM drafts WHERE user_id = ? AND question_id = ? AND kind = 'answer'`).bind(user.id, q.id).run();
     const state = await getQuestionState(c.env.DB, couple.id, user.id, q.id);
     if (written.created_at === now) {
       const daily = await getOrAssignDaily(c.env.DB, couple);
@@ -153,9 +159,17 @@ export const questionRoutes = new Hono<HonoEnv>()
     )
       .bind(couple.id, q.id, user.id, now - RESPONSE_BURST_MS)
       .first();
-    await c.env.DB.prepare('INSERT INTO responses (id, couple_id, question_id, user_id, text, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(randomId(), couple.id, q.id, user.id, text, now)
-      .run();
+    await c.env.DB.batch([
+      c.env.DB.prepare('INSERT INTO responses (id, couple_id, question_id, user_id, text, created_at) VALUES (?, ?, ?, ?, ?, ?)').bind(
+        randomId(),
+        couple.id,
+        q.id,
+        user.id,
+        text,
+        now,
+      ),
+      c.env.DB.prepare(`DELETE FROM drafts WHERE user_id = ? AND question_id = ? AND kind = 'response'`).bind(user.id, q.id),
+    ]);
     if (!burst) {
       c.executionCtx.waitUntil(
         notifyPartner(c.env, {
@@ -168,6 +182,59 @@ export const questionRoutes = new Hono<HonoEnv>()
       );
     }
     return c.json(await getQuestionState(c.env.DB, couple.id, user.id, q.id));
+  })
+
+  // Unsent drafts, saved as you write so they survive closed tabs and follow you to other
+  // devices. Only ever returned to their author.
+  .get('/questions/:id/drafts', async (c) => {
+    const { user, couple } = requireCouple(c);
+    const q = await questionFor(c.env.DB, c.req.param('id'), couple.id);
+    const { results } = await c.env.DB.prepare('SELECT kind, text, updated_at FROM drafts WHERE user_id = ? AND couple_id = ? AND question_id = ?')
+      .bind(user.id, couple.id, q.id)
+      .all<{ kind: DraftKind; text: string; updated_at: number }>();
+    const draft = (kind: DraftKind): DraftDTO | null => {
+      const row = results.find((r) => r.kind === kind);
+      return row ? { text: row.text, updatedAt: row.updated_at } : null;
+    };
+    return c.json<DraftsResponse>({ answer: draft('answer'), response: draft('response') });
+  })
+  .put('/questions/:id/drafts/:kind', async (c) => {
+    const { user, couple } = requireCouple(c);
+    const kind = c.req.param('kind');
+    if (kind !== 'answer' && kind !== 'response') throw badRequest('Unknown kind of draft.');
+    const q = await questionFor(c.env.DB, c.req.param('id'), couple.id);
+    const body = await readJson(c);
+    const text = typeof body.text === 'string' ? body.text : '';
+    const max = kind === 'answer' ? LIMITS.answerMax : LIMITS.responseMax;
+    if (text.length > max) throw badRequest(`That’s a little long — keep it under ${max.toLocaleString('en-US')} characters.`);
+    const db = c.env.DB;
+    if (!text.trim()) {
+      await db.prepare('DELETE FROM drafts WHERE user_id = ? AND question_id = ? AND kind = ?').bind(user.id, q.id, kind).run();
+      return c.body(null, 204);
+    }
+    if (kind === 'answer') {
+      const answered = await db.prepare('SELECT 1 FROM answers WHERE couple_id = ? AND question_id = ? AND user_id = ?').bind(couple.id, q.id, user.id).first();
+      if (answered) throw new ApiError(409, 'already_answered', 'You’ve already answered this one.');
+    }
+    const now = Date.now();
+    await db
+      .prepare(
+        `INSERT INTO drafts (couple_id, question_id, user_id, kind, text, updated_at) VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT (user_id, question_id, kind) DO UPDATE SET couple_id = excluded.couple_id, text = excluded.text, updated_at = excluded.updated_at`,
+      )
+      .bind(couple.id, q.id, user.id, kind, text, now)
+      .run();
+    return c.json<DraftDTO>({ text, updatedAt: now });
+  })
+
+  // The journal as a file to keep (Settings → Download our journal).
+  .get('/export', async (c) => {
+    const auth = requireCouple(c);
+    const { day } = zonedNow(auth.couple.timezone);
+    c.header('Content-Type', 'text/markdown; charset=utf-8');
+    c.header('Content-Disposition', `attachment; filename="relationshipper-journal-${day}.md"`);
+    c.header('Cache-Control', 'no-store');
+    return c.body(await exportJournal(c.env.DB, auth));
   })
 
   // Questions a couple writes for themselves.

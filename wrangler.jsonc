@@ -16,6 +16,8 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Nightly backups (worker/backup.ts), kept apart from the database.
+  "kv_namespaces": [{ "binding": "BACKUPS", "id": "b07acfd5033b4dd49f9fa92f4ff1701a" }],
   // Daily reminders: every 5 minutes, send to anyone whose reminder time has passed today.
   "triggers": { "crons": ["*/5 * * * *"] },
   // Secrets (set with `wrangler secret put NAME` or in the Cloudflare dashboard; never committed):

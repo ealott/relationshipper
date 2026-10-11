@@ -1,4 +1,6 @@
 import type {
+  AdminBackup,
+  AdminBackupsResponse,
   AdminQuestion,
   AdminStats,
   AdminSuggestion,
@@ -6,6 +8,9 @@ import type {
   AuthConfigResponse,
   BankResponse,
   CustomQuestionsResponse,
+  DraftDTO,
+  DraftKind,
+  DraftsResponse,
   HistoryResponse,
   InvitePreviewResponse,
   InviteResponse,
@@ -28,10 +33,11 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
+      ...init,
       method,
       credentials: 'same-origin',
       headers: body === undefined ? undefined : { 'content-type': 'application/json' },
@@ -99,6 +105,10 @@ export const api = {
   question: (id: string) => request<QuestionResponse>('GET', `/questions/${enc(id)}`),
   answer: (id: string, text: string) => request<QuestionState>('PUT', `/questions/${enc(id)}/answer`, { text }),
   respond: (id: string, text: string) => request<QuestionState>('POST', `/questions/${enc(id)}/responses`, { text }),
+  drafts: (id: string) => request<DraftsResponse>('GET', `/questions/${enc(id)}/drafts`),
+  /** `keepalive` lets the save finish even if the page is closing. */
+  saveDraft: (id: string, kind: DraftKind, text: string, keepalive = false) =>
+    request<DraftDTO | undefined>('PUT', `/questions/${enc(id)}/drafts/${kind}`, { text }, { keepalive }),
   nudge: () => request<{ delivered: boolean }>('POST', '/nudge', {}),
 
   pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) => request<void>('POST', '/push/subscribe', sub),
@@ -115,5 +125,10 @@ export const api = {
     reject: (id: string) => request<void>('POST', `/admin/suggestions/${enc(id)}/reject`, {}),
     users: (q = '') => request<{ users: AdminUser[] }>('GET', `/admin/users?q=${enc(q)}`),
     deleteUser: (id: string) => request<void>('DELETE', `/admin/users/${enc(id)}`),
+    backups: () => request<AdminBackupsResponse>('GET', '/admin/backups'),
+    backUpNow: () => request<AdminBackup>('POST', '/admin/backups', {}),
   },
 };
+
+/** Downloads the couple's journal as a file (see worker/export.ts). */
+export const JOURNAL_EXPORT_URL = '/api/export';

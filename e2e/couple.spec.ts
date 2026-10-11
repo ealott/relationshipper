@@ -179,6 +179,44 @@ test('keeps the line being typed in view as an answer grows on a short screen', 
   }
 });
 
+test('an unsent draft follows you to another device, and the journal downloads', async ({ browser }) => {
+  const stamp = Date.now();
+  const call = (page: Page, method: string, path: string, body?: unknown) =>
+    page.evaluate(
+      async ([m, p, b]) => (await fetch(`/api${p}`, { method: m, headers: { 'content-type': 'application/json' }, body: b === undefined ? undefined : JSON.stringify(b) })).json(),
+      [method, path, body] as const,
+    );
+  const signIn = async (name: string) => {
+    const { page } = await newPage(browser);
+    await page.goto(`/api/auth/dev?email=${name}.${stamp}@example.com&name=${name}&returnTo=/`);
+    return page;
+  };
+  const phone = await signIn('Ari');
+  const { code } = await call(phone, 'POST', '/invite', {});
+  const partner = await signIn('Bea');
+  await call(partner, 'POST', '/pair', { code });
+  await call(partner, 'PATCH', '/couple', { married: false, livingTogether: false, hasKids: false });
+
+  await phone.goto('/');
+  await phone.getByLabel('Your answer').fill('Started on my phone, to finish later.');
+  await expect(phone.getByText('draft saved')).toBeVisible();
+  await phone.waitForResponse((r) => r.url().includes('/drafts/answer') && r.request().method() === 'PUT');
+
+  // Same account, a different device (fresh browser storage).
+  const laptop = await signIn('Ari');
+  await laptop.goto('/');
+  await expect(laptop.getByLabel('Your answer')).toHaveValue('Started on my phone, to finish later.');
+  // …and the partner sees nothing of it.
+  await partner.goto('/');
+  await expect(partner.getByLabel('Your answer')).toHaveValue('');
+  await expect(partner.getByText('has written their answer')).toHaveCount(0);
+
+  await tab(laptop, 'Settings').click();
+  const download = laptop.waitForEvent('download');
+  await laptop.getByRole('link', { name: 'Download our journal' }).click();
+  expect((await download).suggestedFilename()).toMatch(/^relationshipper-journal-\d{4}-\d\d-\d\d\.md$/);
+});
+
 test('admin console', async ({ browser }) => {
   const { page } = await newPage(browser);
   await page.goto('/');

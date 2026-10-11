@@ -1,13 +1,13 @@
 import { useState } from 'preact/hooks';
 import { api } from '../api';
-import { getFlag, isIOS, setFlag } from '../lib/platform';
+import { getFlag, setFlag } from '../lib/platform';
 import { deviceSubscribed, enablePushOnDevice, pushSupport } from '../lib/push';
 import { setMe, useMe } from '../lib/session';
 import { useStore } from '../lib/store';
 import { toast, toastError } from '../lib/toast';
-import { BellIcon, ShareIcon } from './Icons';
+import { BellIcon } from './Icons';
 
-/** Invites the user to turn on daily reminders (or explains how on iOS). */
+/** Invites the user to turn on daily reminders. */
 export function ReminderPrompt() {
   const me = useMe();
   const subscribed = useStore(deviceSubscribed);
@@ -24,31 +24,8 @@ export function ReminderPrompt() {
     setDismissed(true);
   };
 
-  if (support === 'needs-install') {
-    return (
-      <aside class="card prompt">
-        <div class="prompt__icon">
-          <BellIcon />
-        </div>
-        <div class="prompt__body">
-          <h2 class="card__title">Want a daily reminder?</h2>
-          <p>
-            {isIOS() ? (
-              <>
-                Add Relationshipper to your Home Screen first: tap <ShareIcon size={15} /> <strong>Share</strong>, then{' '}
-                <strong>Add to Home Screen</strong>. Open it from there to turn on reminders.
-              </>
-            ) : (
-              'Install the app to turn on reminders.'
-            )}
-          </p>
-          <button class="link-button" onClick={dismiss}>
-            Not now
-          </button>
-        </div>
-      </aside>
-    );
-  }
+  // Reminders need the app installed first (iPhone); the install card on Today covers that.
+  if (support === 'needs-install') return null;
 
   async function enable() {
     setBusy(true);
