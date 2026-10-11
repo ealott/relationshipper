@@ -11,6 +11,7 @@ import { Avatar } from './Avatar';
 import { AutoTextarea } from './Field';
 import { LockIcon, PencilIcon, SendIcon } from './Icons';
 import { CategoryLabel, SourceBadge } from './QuestionMeta';
+import { Raccoon } from './Raccoon';
 
 interface Props {
   question: QuestionDTO;
@@ -202,11 +203,7 @@ function Waiting({ state, daily, onEdit }: { state: QuestionState; daily?: boole
     <div class="waiting">
       <JournalEntry answer={state.mine!} who="me" name={me.user.name} />
       <div class="waiting__status">
-        <span class="dots" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
+        <Raccoon pose="peek" size={52} />
         <span>
           Waiting for {partnerName}. You’ll read each other’s answers once they’ve written theirs.
         </span>

@@ -7,6 +7,7 @@ import { Avatar } from '../components/Avatar';
 import { ErrorNotice, Spinner } from '../components/Feedback';
 import { CategoryLabel } from '../components/QuestionMeta';
 import { QuestionRow } from '../components/QuestionRow';
+import { Raccoon } from '../components/Raccoon';
 import { idsWithStatus, useCatalog, useProgress } from '../lib/data';
 import { relativeTime } from '../lib/format';
 import { useQuery } from '../lib/query';
@@ -56,7 +57,10 @@ export function Answers() {
             ))}
           </ul>
         ) : (
-          <p class="empty">Nothing is waiting on you. When {partnerName} answers something first, it shows up here.</p>
+          <div class="empty">
+            <Raccoon pose="sleep" size={64} />
+            <p>Nothing is waiting on you. When {partnerName} answers something first, it shows up here.</p>
+          </div>
         ))}
       {tab === 'waiting' &&
         (waiting.length ? (
@@ -66,7 +70,10 @@ export function Answers() {
             ))}
           </ul>
         ) : (
-          <p class="empty">You’re all caught up. Questions you answer first wait here for {partnerName}.</p>
+          <div class="empty">
+            <Raccoon pose="sleep" size={64} />
+            <p>You’re all caught up. Questions you answer first wait here for {partnerName}.</p>
+          </div>
         ))}
     </main>
   );
@@ -102,6 +109,7 @@ function History() {
   if (!items.length) {
     return (
       <div class="empty">
+        <Raccoon pose="peek" size={72} />
         <p>Nothing shared yet. Once you’ve both answered a question, you can read each other’s answers here.</p>
         <a class="btn btn--primary" href="/">
           Answer today’s question

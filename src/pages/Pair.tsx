@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api } from '../api';
 import { CopyIcon, ShareIcon } from '../components/Icons';
+import { Raccoon } from '../components/Raccoon';
 import { Spinner } from '../components/Feedback';
 import { useQuery } from '../lib/query';
 import { refreshMe, setMe, useMe } from '../lib/session';
@@ -72,8 +73,13 @@ export function Pair() {
 
   return (
     <main class="page page--narrow">
-      <h1 class="page__title">Hi {me.user.name}! 👋</h1>
-      <p class="page__lede">Relationshipper works in pairs. Invite your partner, or enter the code they sent you.</p>
+      <header class="pair__hero">
+        <Raccoon size={72} />
+        <div>
+          <h1 class="page__title">Hi {me.user.name}</h1>
+          <p class="page__lede">Relationshipper works in pairs. Invite your partner, or enter the code they sent you.</p>
+        </div>
+      </header>
 
       <section class="card invite">
         <h2 class="card__title">Invite your partner</h2>

@@ -1,7 +1,8 @@
 import { useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { api, devSignInUrl, googleSignInUrl } from '../api';
-import { GoogleLogo, HeartIcon } from '../components/Icons';
+import { GoogleLogo } from '../components/Icons';
+import { RaccoonPair } from '../components/Raccoon';
 import { useQuery } from '../lib/query';
 
 export const AUTH_ERRORS: Record<string, string> = {
@@ -75,9 +76,7 @@ export function Welcome() {
   return (
     <main class="welcome">
       <div class="welcome__hero">
-        <div class="logo" aria-hidden="true">
-          <HeartIcon size={34} />
-        </div>
+        <RaccoonPair width={190} />
         <h1 class="welcome__title">Relationshipper</h1>
         <p class="welcome__tagline">A daily question for the two of you. Write privately, then read each other’s answers.</p>
       </div>

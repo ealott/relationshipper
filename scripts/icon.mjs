@@ -1,25 +1,44 @@
-// Source artwork for the app icons (see scripts/generate-icons.mjs).
-const HEART = 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z';
-const BUBBLE = 'M176 128H336A80 80 0 0 1 416 208V272A80 80 0 0 1 336 352H244L170 404C161 410 151 403 154 393L170 352A80 80 0 0 1 96 272V208A80 80 0 0 1 176 128Z';
+// Source artwork for the app icons (see scripts/generate-icons.mjs): the raccoon from
+// shared/raccoon.ts on a burgundy tile.
+import { build } from 'esbuild';
 
-/** @param {{ radius?: number }} opts radius 0 = full-bleed (maskable / Apple) */
-export function appIcon({ radius = 112 } = {}) {
+const bundle = await build({
+  entryPoints: [new URL('../shared/raccoon.ts', import.meta.url).pathname],
+  bundle: true,
+  write: false,
+  format: 'esm',
+  platform: 'node',
+});
+const { RACCOON: R, RACCOON_COLORS: C, MIRROR } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`);
+
+const both = (half) => `${half}<g transform="${MIRROR}">${half}</g>`;
+const circle = ({ cx, cy, r }, fill) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"/>`;
+
+/** The raccoon's face on its 100×100 grid. */
+const face = [
+  both(`<path d="${R.ear}" fill="${C.fur}"/><path d="${R.earRim}" fill="${C.face}"/><path d="${R.earInner}" fill="${C.furDark}"/>`),
+  `<path d="${R.head}" fill="${C.fur}"/>`,
+  `<path d="${R.face}" fill="${C.face}"/>`,
+  `<path d="${R.mask}" fill="${C.mask}"/>`,
+  `<path d="${R.stripe}" fill="${C.furDark}"/>`,
+  both(circle(R.eye, C.face) + circle(R.pupil, C.mask) + circle(R.glint, C.face)),
+  `<path d="${R.nose}" fill="${C.nose}"/>`,
+  `<path d="${R.mouth}" fill="none" stroke="${C.mask}" stroke-width="1.8" stroke-linecap="round"/>`,
+].join('');
+
+/** @param {{ radius?: number, scale?: number }} opts radius 0 = full-bleed (maskable / Apple) */
+export function appIcon({ radius = 112, scale = 3.6 } = {}) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f0607f"/>
-      <stop offset="1" stop-color="#f59e5b"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="${radius}" fill="url(#g)"/>
-  <path d="${BUBBLE}" fill="#fff"/>
-  <path d="${HEART}" fill="#e8456b" transform="translate(256 240) scale(6.2) translate(-12 -12)"/>
+  <rect width="512" height="512" rx="${radius}" fill="#9d3b55"/>
+  <g transform="translate(${256 - 50 * scale} ${256 - 49 * scale}) scale(${scale})">${face}</g>
 </svg>`;
 }
 
-/** Monochrome notification badge (Android uses only the alpha channel). */
+/** Monochrome notification badge (Android uses only the alpha channel): the head, mask cut out. */
 export function badgeIcon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
-  <path d="${HEART}" fill="#fff" transform="translate(48 49) scale(3.4) translate(-12 -12)"/>
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs><mask id="m"><rect width="100" height="100" fill="#fff"/><path d="${R.mask}" fill="#000"/><path d="${R.nose}" fill="#000"/></mask></defs>
+  <g mask="url(#m)" fill="#fff">${both(`<path d="${R.ear}"/>`)}<path d="${R.head}"/></g>
+  ${both(circle({ cx: 34, cy: 53, r: 4 }, '#fff'))}
 </svg>`;
 }

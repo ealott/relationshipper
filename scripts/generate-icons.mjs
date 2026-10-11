@@ -7,9 +7,9 @@ const out = new URL('../public/icons/', import.meta.url);
 const icons = [
   { file: 'icon-192.png', size: 192, svg: appIcon() },
   { file: 'icon-512.png', size: 512, svg: appIcon() },
-  { file: 'icon-maskable-512.png', size: 512, svg: appIcon({ radius: 0 }) },
-  { file: 'apple-touch-icon.png', size: 180, svg: appIcon({ radius: 0 }) },
-  { file: 'favicon-32.png', size: 32, svg: appIcon({ radius: 112 }) },
+  { file: 'icon-maskable-512.png', size: 512, svg: appIcon({ radius: 0, scale: 3 }) },
+  { file: 'apple-touch-icon.png', size: 180, svg: appIcon({ radius: 0, scale: 3 }) },
+  { file: 'favicon-32.png', size: 32, svg: appIcon({ scale: 4 }) },
   { file: 'badge-96.png', size: 96, svg: badgeIcon() },
 ];
 

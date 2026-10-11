@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { api } from '../api';
 import { Spinner } from '../components/Feedback';
-import { HeartIcon } from '../components/Icons';
+import { RaccoonPair } from '../components/Raccoon';
 import { useQuery } from '../lib/query';
 import { setMe, useSession } from '../lib/session';
 import { toast } from '../lib/toast';
@@ -45,9 +45,7 @@ export function Join({ code }: { code: string }) {
   return (
     <main class="page page--narrow">
       <div class="join__hero">
-        <div class="logo" aria-hidden="true">
-          <HeartIcon size={30} />
-        </div>
+        <RaccoonPair width={150} />
         {preview.data ? (
           <>
             <h1 class="page__title">{inviter} invited you</h1>

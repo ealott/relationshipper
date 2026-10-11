@@ -32,6 +32,7 @@ The app shows a plain-language version, with links to every source, at `/researc
 - API: [Hono](https://hono.dev). Client: [Preact](https://preactjs.com) with preact-iso, built with Vite and `@cloudflare/vite-plugin`.
 - Web Push with VAPID and RFC 8291 payload encryption on WebCrypto, so there are no push dependencies. A small custom service worker handles offline caching and notifications.
 - TypeScript throughout. Shared types and the question bank live in `shared/`.
+- The raccoon is drawn once, in `shared/raccoon.ts`. The in-app illustrations and the app icons both use it; after changing it, run `node scripts/generate-icons.mjs` to re-render the icons.
 
 ## Running it locally
 

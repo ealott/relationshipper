@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { LocationProvider, Route, Router, useLocation } from 'preact-iso';
 import { SystemBanners, Toaster } from './components/Feedback';
-import { HeartIcon } from './components/Icons';
+import { Raccoon } from './components/Raccoon';
 import { TabBar } from './components/TabBar';
 import { idsWithStatus, useProgress } from './lib/data';
 import { getFlag, setAppBadge, setFlag } from './lib/platform';
@@ -94,7 +94,7 @@ function Routes() {
     return (
       <div class="splash" aria-label="Loading">
         <div class="logo logo--pulse">
-          <HeartIcon size={34} />
+          <Raccoon size={50} />
         </div>
       </div>
     );

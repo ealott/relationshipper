@@ -21,6 +21,13 @@
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-serif: ui-serif, 'New York', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --tabbar-h: 64px;
+  /* The raccoon (src/components/Raccoon.tsx) */
+  --rc-fur: #8d857f;
+  --rc-fur-dark: #4b443f;
+  --rc-mask: #2a2420;
+  --rc-face: #fffdf9;
+  --rc-nose: #9d3b55;
+  --rc-paw: #6a615b;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -40,6 +47,12 @@
     --success: #74b98f;
     --danger: #f07c72;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.25);
+    --rc-fur: #9b938c;
+    --rc-fur-dark: #574f4a;
+    --rc-mask: #12100e;
+    --rc-face: #f1ebe3;
+    --rc-nose: #d9768f;
+    --rc-paw: #776e67;
   }
 }
 
@@ -266,17 +279,75 @@ fieldset {
   width: 64px;
   height: 64px;
   border-radius: 20px;
-  background: linear-gradient(135deg, #f0607f, #f59e5b);
-  box-shadow: 0 10px 28px rgb(200 70 100 / 0.25);
+  background: #9d3b55;
+  box-shadow: 0 10px 28px rgb(120 40 60 / 0.25);
 }
 
-.logo svg {
-  fill: #fff;
-  stroke: none;
+/* The raccoon's colors come from the --rc-* tokens. */
+.rc-fur {
+  fill: var(--rc-fur);
+}
+
+.rc-fur-dark {
+  fill: var(--rc-fur-dark);
+}
+
+.rc-mask {
+  fill: var(--rc-mask);
+}
+
+.rc-face {
+  fill: var(--rc-face);
+}
+
+.rc-nose {
+  fill: var(--rc-nose);
+}
+
+.rc-line,
+.rc-sleepy {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.rc-line {
+  stroke: var(--rc-mask);
+  stroke-width: 1.8;
+}
+
+.rc-sleepy {
+  stroke: var(--rc-face);
+  stroke-width: 2.2;
+}
+
+.rc-paw {
+  fill: var(--rc-paw);
+  stroke: var(--rc-mask);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+/* On the burgundy logo tile the raccoon keeps its daytime colors. */
+.logo .raccoon {
+  --rc-fur: #8d857f;
+  --rc-fur-dark: #4b443f;
+  --rc-mask: #2a2420;
+  --rc-face: #fffdf9;
+  --rc-nose: #9d3b55;
 }
 
 .logo--pulse {
   animation: pulse 1.6s ease-in-out infinite;
+}
+
+.pair__hero {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.pair__hero .raccoon {
+  flex: none;
 }
 
 .splash {
@@ -896,8 +967,8 @@ select.input {
   font-size: 15px;
 }
 
-.waiting__status .dots {
-  color: var(--partner);
+.waiting__status .raccoon {
+  flex: none;
 }
 
 .conversation {
