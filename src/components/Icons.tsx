@@ -142,6 +142,13 @@ export const SparkleIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const MessageIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5v-8A2.5 2.5 0 0 1 6.5 3Z" />
+    <path d="M8 8.5h8M8 12h5" />
+  </Icon>
+);
+
 export const GlassIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M7.5 3h9l-.6 5.5a3.9 3.9 0 0 1-7.8 0Z" />

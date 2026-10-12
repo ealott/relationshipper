@@ -7,6 +7,7 @@ export const TIMELINE_LIMITS = { titleMax: 120, placeMax: 120, memoryMax: 4000, 
 
 export type MilestoneKind =
   | 'met'
+  | 'first-chat'
   | 'first-date'
   | 'first-kiss'
   | 'official'
@@ -36,6 +37,7 @@ export interface MilestoneKindInfo {
 /** In the order they usually happen, which is also the order suggestions appear in. */
 export const MILESTONE_KINDS: readonly MilestoneKindInfo[] = [
   { id: 'met', label: 'The day we met', title: 'The day we met', suggest: 'always' },
+  { id: 'first-chat', label: 'First chat', title: 'Our first chat', suggest: 'always' },
   { id: 'first-date', label: 'First date', title: 'Our first date', suggest: 'always' },
   { id: 'first-kiss', label: 'First kiss', title: 'Our first kiss', suggest: 'always' },
   { id: 'official', label: 'Made it official', title: 'We made it official', suggest: 'always' },

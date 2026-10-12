@@ -32,6 +32,7 @@ import {
   HeartIcon,
   HomeIcon,
   MapPinIcon,
+  MessageIcon,
   MusicIcon,
   PencilIcon,
   RingIcon,
@@ -45,6 +46,7 @@ import {
 
 const KIND_ICONS: Record<MilestoneKind, (p: { size?: number }) => JSX.Element> = {
   met: SparkleIcon,
+  'first-chat': MessageIcon,
   'first-date': GlassIcon,
   'first-kiss': HeartIcon,
   official: CheckIcon,
@@ -67,6 +69,7 @@ export function KindIcon({ kind, size = 20 }: { kind: MilestoneKind; size?: numb
 
 const MEMORY_PROMPTS: Partial<Record<MilestoneKind, string>> = {
   met: 'Where you were, what you noticed first, what you thought…',
+  'first-chat': 'Who wrote first, what you talked about, how long it went on…',
   'first-date': 'Where you went, what you wore, what you talked about…',
   'first-kiss': 'Where it happened, and what came just before…',
   official: 'Who asked, and how you knew…',
