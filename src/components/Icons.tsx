@@ -103,6 +103,15 @@ export const CheckIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const NotebookIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6Z" />
+    <path d="M6 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2" />
+    <path d="M10 8h5" />
+    <path d="M10 12h5" />
+  </Icon>
+);
+
 export const HistoryIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />

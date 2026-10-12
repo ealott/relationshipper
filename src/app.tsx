@@ -3,7 +3,7 @@ import { LocationProvider, Route, Router, useLocation } from 'preact-iso';
 import { SystemBanners, Toaster } from './components/Feedback';
 import { Raccoon } from './components/Raccoon';
 import { TabBar } from './components/TabBar';
-import { idsWithStatus, useProgress } from './lib/data';
+import { idsWithStatus, useJournal, useProgress } from './lib/data';
 import { getFlag, setAppBadge, setFlag } from './lib/platform';
 import { checkDeviceSubscription } from './lib/push';
 import { loadSession, useMe, useSession } from './lib/session';
@@ -11,6 +11,7 @@ import { Admin } from './pages/Admin';
 import { Answers } from './pages/Answers';
 import { CategoryPage } from './pages/Category';
 import { Join } from './pages/Join';
+import { Journal, JournalDayPage } from './pages/Journal';
 import { Library } from './pages/Library';
 import { NotFound } from './pages/NotFound';
 import { Pair } from './pages/Pair';
@@ -46,6 +47,8 @@ function PairedApp() {
   const { path } = useLocation();
   const progress = useProgress();
   const yourTurn = idsWithStatus(progress.data?.progress, 'partner').length;
+  const journal = useJournal();
+  const journalTurn = journal.data?.days.filter((d) => d.state.partnerAnswered && !d.state.mine).length ?? 0;
   const couple = me.couple!;
   const skipKey = `stage-skipped:${couple.id}`;
   const [skipped, setSkipped] = useState(() => getFlag(skipKey) === '1');
@@ -76,6 +79,8 @@ function PairedApp() {
         <Route path="/questions/new" component={WriteQuestion} />
         <Route path="/questions/:category" component={CategoryPage} />
         <Route path="/q/:id" component={QuestionPage} />
+        <Route path="/journal" component={Journal} />
+        <Route path="/journal/:day" component={JournalDayPage} />
         <Route path="/answers" component={Answers} />
         <Route path="/settings" component={Settings} />
         <Route path="/research" component={Research} />
@@ -83,7 +88,7 @@ function PairedApp() {
         <Route path="/join/:code" component={Join} />
         <Route default component={NotFound} />
       </Router>
-      <TabBar badges={{ '/answers': yourTurn }} />
+      <TabBar badges={{ '/answers': yourTurn, '/journal': journalTurn }} />
     </>
   );
 }

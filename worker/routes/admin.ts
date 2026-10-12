@@ -3,6 +3,7 @@
 import { Hono } from 'hono';
 import { LIMITS, type AdminBackup, type AdminBackupsResponse, type AdminQuestion, type AdminStats, type AdminSuggestion, type AdminUser } from '../../shared/api';
 import { BACKUP_KEEP_DAYS } from '../../shared/backup';
+import { JOURNAL_PREFIX } from '../../shared/journal';
 import { isCategoryId } from '../../shared/categories';
 import type { Audience } from '../../shared/questions/types';
 import { createBackup, listBackups } from '../backup';
@@ -93,14 +94,16 @@ export const adminRoutes = new Hono<HonoEnv>()
   .get('/stats', async (c) => {
     const db = c.env.DB;
     const weekAgo = Date.now() - 7 * DAY;
-    const [users, couples, activeCouples7d, answers, answers7d, responses, customQuestions, pendingSuggestions, pushDevices, active, retired] =
+    const journal = `question_id LIKE '${JOURNAL_PREFIX}%'`;
+    const [users, couples, activeCouples7d, answers, answers7d, responses, journalEntries, customQuestions, pendingSuggestions, pushDevices, active, retired] =
       await Promise.all([
         count(db, 'SELECT COUNT(*) AS n FROM users'),
         count(db, 'SELECT COUNT(*) AS n FROM couples'),
         count(db, 'SELECT COUNT(DISTINCT couple_id) AS n FROM answers WHERE created_at > ?', weekAgo),
-        count(db, 'SELECT COUNT(*) AS n FROM answers'),
-        count(db, 'SELECT COUNT(*) AS n FROM answers WHERE created_at > ?', weekAgo),
+        count(db, `SELECT COUNT(*) AS n FROM answers WHERE NOT ${journal}`),
+        count(db, `SELECT COUNT(*) AS n FROM answers WHERE NOT ${journal} AND created_at > ?`, weekAgo),
         count(db, 'SELECT COUNT(*) AS n FROM responses'),
+        count(db, `SELECT COUNT(*) AS n FROM answers WHERE ${journal}`),
         count(db, `SELECT COUNT(*) AS n FROM questions WHERE source = 'custom'`),
         count(db, `SELECT COUNT(*) AS n FROM question_suggestions WHERE status = 'pending'`),
         count(db, 'SELECT COUNT(*) AS n FROM push_subscriptions'),
@@ -114,6 +117,7 @@ export const adminRoutes = new Hono<HonoEnv>()
       answers,
       answers7d,
       responses,
+      journalEntries,
       customQuestions,
       pendingSuggestions,
       pushDevices,

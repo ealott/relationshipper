@@ -14,6 +14,8 @@ import type {
   HistoryResponse,
   InvitePreviewResponse,
   InviteResponse,
+  JournalDay,
+  JournalResponse,
   MeResponse,
   ProgressResponse,
   QuestionDTO,
@@ -22,6 +24,7 @@ import type {
   TodayResponse,
   VersionsResponse,
 } from '../shared/api';
+import type { JournalEntry } from '../shared/journal';
 import type { Audience, CategoryId, Depth } from '../shared/questions/types';
 
 export class ApiError extends Error {
@@ -114,6 +117,11 @@ export const api = {
   saveDraft: (id: string, kind: DraftKind, text: string, keepalive = false) =>
     request<DraftDTO | undefined>('PUT', `/questions/${enc(id)}/drafts/${kind}`, { text }, { keepalive }),
   nudge: () => request<{ delivered: boolean }>('POST', '/nudge', {}),
+
+  journal: (before?: string) => request<JournalResponse>('GET', `/journal${before ? `?before=${before}` : ''}`),
+  /** `day` is YYYY-MM-DD or `today`. Opening a day creates it, so drafts and replies can belong to it. */
+  journalDay: (day: string) => request<JournalDay>('GET', `/journal/${enc(day)}`),
+  writeJournal: (day: string, entry: JournalEntry) => request<JournalDay>('PUT', `/journal/${enc(day)}`, entry),
 
   pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) => request<void>('POST', '/push/subscribe', sub),
   pushUnsubscribe: (endpoint: string) => request<void>('POST', '/push/unsubscribe', { endpoint }),

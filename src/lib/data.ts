@@ -9,6 +9,9 @@ export const useProgress = () => useQuery('progress', api.progress, { refreshInt
 export const useToday = () => useQuery('today', api.today, { refreshInterval: 20_000 });
 export const useBank = () => useQuery('bank', api.bank);
 export const useCustomQuestions = () => useQuery('custom-questions', api.customQuestions, { refreshInterval: 60_000 });
+/** Days either of you has written about (the first page). */
+export const useJournal = () => useQuery('journal', () => api.journal(), { refreshInterval: 30_000 });
+export const useJournalDay = (day: string) => useQuery(`journal:${day}`, () => api.journalDay(day), { refreshInterval: 20_000 });
 
 /** Every question this couple can see: the shared bank plus their own. */
 export function useCatalog(): { byId: Map<string, QuestionDTO>; bank: QuestionDTO[]; custom: QuestionDTO[]; loading: boolean } {

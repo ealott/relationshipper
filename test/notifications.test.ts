@@ -184,6 +184,32 @@ describe('partner activity notifications', () => {
     expect(pushes).toHaveLength(0);
   });
 
+  it('tells your partner when you write about your day, without counting it on the badge', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    await subscribe(a.client);
+    await subscribe(b.client);
+    const entry = { good: ['NOT-IN-PUSH'], hard: [], thanks: [], note: '' };
+    const written = await a.client.put('/api/journal/today', entry);
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(1);
+    expect(pushes[0]!.payload).toMatchObject({ url: `/journal/${written.body.day}`, tag: `journal-${written.body.day}`, badge: 0 });
+    expect(pushes[0]!.payload.title).toMatch(/^Alex wrote about their (day|week)$/);
+    expect(JSON.stringify(pushes[0]!.payload)).not.toContain('NOT-IN-PUSH');
+
+    pushes = [];
+    await b.client.put('/api/journal/today', entry);
+    await a.client.put('/api/journal/today', { ...entry, good: ['edited'] }); // edits don't notify
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(1);
+    expect(pushes[0]!.payload.title).toMatch(/^Sam wrote about their (day|week) too$/);
+
+    pushes = [];
+    await b.client.post(`/api/questions/${written.body.questionId}/responses`, { text: 'A reply' });
+    await t.ctx.flush();
+    expect(pushes[0]!.payload).toMatchObject({ title: 'Sam responded to you', url: `/journal/${written.body.day}` });
+    expect(pushes[0]!.payload.body).toMatch(/^In your journal: /);
+  });
+
   it('respects the partner’s notification setting', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     await subscribe(b.client);

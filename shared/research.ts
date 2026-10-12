@@ -354,6 +354,13 @@ export const PRINCIPLES: Principle[] = [
     sources: [R.gottmanDeClaire2001, R.driverGottman2004, R.fieseEtAl2002, R.lallyEtAl2010],
   },
   {
+    title: 'A few lines about your day',
+    strength: 'Moderate for the ingredients; the journal itself is untested',
+    body: 'Sharing good news and getting an enthusiastic response goes with more intimacy and daily satisfaction. Supporting each other through stress is strongly linked with satisfaction, and stress from outside the relationship makes everyday ups and downs hit harder. Appreciation helps partners notice each other’s care and draw closer.',
+    inApp: 'The journal asks for something good, something hard and something you appreciated about each other, a line or two each, with a longer look back on Sundays. You read each other’s day once you’ve both written. Putting these together as a daily journal is our design, and no study has tested it.',
+    sources: [R.gableEtAl2004, R.gableEtAl2006, R.bodenmann2005, R.falconierEtAl2015, R.neffKarney2009, R.algoe2012, R.gordonEtAl2012],
+  },
+  {
     title: 'Questions that deepen gradually',
     strength: 'Moderate, though mostly from studies with strangers',
     body: 'In the well-known “36 questions” study, questions that moved from light to personal built more closeness than small talk. It measured closeness, not love. People expect deep conversations to be more awkward than they turn out to be, and come away more connected than from shallow ones.',

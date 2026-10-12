@@ -338,3 +338,54 @@ test('display preferences apply before the first paint and stay with the device'
   await expect(partner.locator('html')).toHaveAttribute('data-text', 'default');
   await expect(partner.locator('html')).toHaveAttribute('data-tips', 'on');
 });
+
+test('the journal: a few lines about your day, read once you’ve both written', async ({ browser }) => {
+  const stamp = Date.now();
+  const jo = await signInAs(browser, 'Jo', stamp);
+  const lee = await signInAs(browser, 'Lee', stamp);
+  await pair(jo, lee);
+  const leeBodies: string[] = [];
+  lee.on('response', async (res) => {
+    if (res.url().includes('/api/')) leeBodies.push(await res.text().catch(() => ''));
+  });
+  const secret = `JO-GOOD-${stamp}`;
+
+  // Jo writes a few lines about the day, from Today's journal card.
+  await jo.goto('/');
+  await expect(jo.locator('.journal-card')).toContainText('How was your');
+  await jo.locator('.journal-card').click();
+  await expect(jo.getByRole('heading', { name: 'Journal', exact: true })).toBeVisible();
+  const good = jo.getByLabel('Something good', { exact: true });
+  await good.fill(secret);
+  await good.press('Enter');
+  await expect(jo.getByLabel('Something good, line 2')).toBeFocused();
+  await jo.keyboard.type('Finished early');
+  await jo.getByLabel('Something hard', { exact: true }).fill('A long meeting');
+  await jo.getByLabel('Something you appreciated about Lee', { exact: true }).fill('The coffee');
+  await jo.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(jo.getByText('Waiting for Lee.')).toBeVisible();
+  await expect(jo.locator('.entry--me')).toContainText('Finished early');
+  await shot(jo, '18-journal-waiting');
+
+  // Lee learns that Jo wrote, but not what.
+  await lee.goto('/');
+  await expect(lee.locator('.journal-card')).toContainText('Jo has written about their');
+  await tab(lee, 'Journal').click();
+  await expect(lee.getByText(/Jo has written about their (day|week)\. Write yours to read it\./)).toBeVisible();
+  await expect(lee.locator('body')).not.toContainText(secret);
+  expect(leeBodies.some((b) => b.includes(secret))).toBe(false);
+
+  // Lee writes; both days show, and they talk about them.
+  await lee.getByLabel('Something you appreciated about Jo', { exact: true }).fill('Dinner was ready when I got home');
+  await lee.getByRole('button', { name: /Save & read Jo’s/ }).click();
+  await expect(lee.locator('.entry--partner')).toContainText(secret);
+  await expect(lee.locator('.entry--partner')).toContainText('A long meeting');
+  await lee.getByLabel('Respond to Jo').fill('What was the long meeting about?');
+  await lee.getByRole('button', { name: 'Send' }).click();
+  await expect(lee.locator('.message--me')).toContainText('long meeting');
+  await shot(lee, '19-journal-shared');
+
+  await jo.reload();
+  await expect(jo.locator('.entry--partner')).toContainText('Dinner was ready');
+  await expect(jo.locator('.message--partner')).toContainText('long meeting');
+});

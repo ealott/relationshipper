@@ -14,7 +14,9 @@ import {
   type VersionsResponse,
 } from '../../shared/api';
 import { isCategoryId } from '../../shared/categories';
+import { JOURNAL_PREFIX } from '../../shared/journal';
 import { zonedNow } from '../../shared/time';
+import { saveAnswer } from '../answers';
 import { getOrAssignDaily, getStreak } from '../daily';
 import type { HonoEnv } from '../env';
 import { exportJournal } from '../export';
@@ -69,9 +71,9 @@ export const questionRoutes = new Hono<HonoEnv>()
     const { user, couple } = requireCouple(c);
     const { results } = await c.env.DB.prepare(
       `SELECT question_id, MAX(user_id = ?2) AS mine, MAX(user_id <> ?2) AS theirs
-         FROM answers WHERE couple_id = ?1 GROUP BY question_id`,
+         FROM answers WHERE couple_id = ?1 AND question_id NOT LIKE ?3 GROUP BY question_id`,
     )
-      .bind(couple.id, user.id)
+      .bind(couple.id, user.id, `${JOURNAL_PREFIX}%`)
       .all<{ question_id: string; mine: number; theirs: number }>();
     const progress: Progress = {};
     for (const r of results) progress[r.question_id] = r.mine && r.theirs ? 'both' : r.mine ? 'mine' : 'partner';
@@ -88,11 +90,11 @@ export const questionRoutes = new Hono<HonoEnv>()
       `SELECT m.question_id, MAX(m.created_at, p.created_at) AS revealed_at
          FROM answers m
          JOIN answers p ON p.couple_id = m.couple_id AND p.question_id = m.question_id AND p.user_id = ?3
-        WHERE m.couple_id = ?1 AND m.user_id = ?2 AND MAX(m.created_at, p.created_at) < ?4
+        WHERE m.couple_id = ?1 AND m.user_id = ?2 AND MAX(m.created_at, p.created_at) < ?4 AND m.question_id NOT LIKE ?6
         ORDER BY revealed_at DESC
         LIMIT ?5`,
     )
-      .bind(couple.id, user.id, partner.id, before, limit + 1)
+      .bind(couple.id, user.id, partner.id, before, limit + 1, `${JOURNAL_PREFIX}%`)
       .all<{ question_id: string; revealed_at: number }>();
     const page = results.slice(0, limit);
     const ids = page.map((r) => r.question_id);
@@ -115,37 +117,12 @@ export const questionRoutes = new Hono<HonoEnv>()
   .put('/questions/:id/answer', async (c) => {
     const { user, partner, couple } = requireCouple(c);
     const q = await questionFor(c.env.DB, c.req.param('id'), couple.id);
+    if (q.source === 'journal') throw new ApiError(409, 'journal_day', 'Journal entries are written in the journal.');
     const text = writtenText(await readJson(c), LIMITS.answerMax, 'answer');
     const now = Date.now();
-    const db = c.env.DB;
-    // Until your partner answers, editing replaces your answer: they haven't read it. After the
-    // reveal, the version they read is kept, and the answer is marked edited. Checked in the same
-    // transaction as the write, so an answer arriving meanwhile can't slip between the two.
-    const revealed = 'EXISTS (SELECT 1 FROM answers WHERE couple_id = ?1 AND question_id = ?2 AND user_id <> ?3)';
-    const [, upsert] = await db.batch([
-      db
-        .prepare(
-          `INSERT INTO answer_versions (id, couple_id, question_id, user_id, text, written_at, replaced_at)
-           SELECT ?5, couple_id, question_id, user_id, text, updated_at, ?6 FROM answers
-            WHERE couple_id = ?1 AND question_id = ?2 AND user_id = ?3 AND text <> ?4 AND ${revealed}`,
-        )
-        .bind(couple.id, q.id, user.id, text, randomId(), now),
-      db
-        .prepare(
-          `INSERT INTO answers (couple_id, question_id, user_id, text, created_at, updated_at)
-           VALUES (?1, ?2, ?3, ?4, ?5, ?5)
-           ON CONFLICT (couple_id, question_id, user_id) DO UPDATE SET
-             text = excluded.text,
-             updated_at = CASE WHEN answers.text <> excluded.text THEN excluded.updated_at ELSE answers.updated_at END,
-             edited_at = CASE WHEN answers.text <> excluded.text AND ${revealed} THEN excluded.updated_at ELSE answers.edited_at END
-           RETURNING created_at`,
-        )
-        .bind(couple.id, q.id, user.id, text, now),
-      db.prepare(`DELETE FROM drafts WHERE user_id = ? AND question_id = ? AND kind = 'answer'`).bind(user.id, q.id),
-    ]);
-    const written = (upsert!.results as { created_at: number }[])[0]!;
-    const state = await getQuestionState(db, couple.id, user.id, q.id);
-    if (written.created_at === now) {
+    const { first } = await saveAnswer(c.env.DB, { coupleId: couple.id, questionId: q.id, userId: user.id, text, now });
+    const state = await getQuestionState(c.env.DB, couple.id, user.id, q.id);
+    if (first) {
       const daily = await getOrAssignDaily(c.env.DB, couple);
       const isDaily = daily.questionId === q.id;
       c.executionCtx.waitUntil(
@@ -293,7 +270,7 @@ export const questionRoutes = new Hono<HonoEnv>()
   .get('/custom-questions', async (c) => {
     const { couple } = requireCouple(c);
     const { results } = await c.env.DB.prepare(
-      `SELECT * FROM questions WHERE couple_id = ? AND status = 'active' ORDER BY created_at DESC`,
+      `SELECT * FROM questions WHERE couple_id = ? AND source = 'custom' AND status = 'active' ORDER BY created_at DESC`,
     )
       .bind(couple.id)
       .all<QuestionRow>();
