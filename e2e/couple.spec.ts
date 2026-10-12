@@ -27,12 +27,14 @@ async function devSignIn(page: Page, name: string, email: string) {
   await form.getByRole('button', { name: 'Sign in' }).click();
 }
 
-/** Calls the API from inside a signed-in page, with its cookies. */
-const call = (page: Page, method: string, path: string, body?: unknown) =>
-  page.evaluate(
-    async ([m, p, b]) => (await fetch(`/api${p}`, { method: m, headers: { 'content-type': 'application/json' }, body: b === undefined ? undefined : JSON.stringify(b) })).json(),
-    [method, path, body] as const,
-  );
+/**
+ * Calls the API as a signed-in page, with its cookies. It goes through the browser context rather
+ * than the page, so it can't race the app's own navigation right after signing in.
+ */
+async function call(page: Page, method: string, path: string, body?: unknown) {
+  const res = await page.request.fetch(new URL(`/api${path}`, page.url()).href, { method, data: body });
+  return res.status() === 204 ? null : res.json();
+}
 
 /** A fresh browser signed in through the local-only test route. The same name and stamp is the same account. */
 async function signInAs(browser: Browser, name: string, stamp: number, colorScheme: 'light' | 'dark' = 'light') {
@@ -155,13 +157,20 @@ test('two partners pair up, write privately, and talk about their answers', asyn
   await expect(alex.page.locator('.source')).toContainText('Written by you');
   await write(alex.page, 'Our Sunday mornings.', /^Save answer$/);
 
-  await tab(sam.page, 'Answers').click();
-  await sam.page.getByRole('tab', { name: /Your turn/ }).click();
+  // Answers live under Questions, which carries the "your turn" badge. (A push would refresh it;
+  // these browsers have no service worker, so reload.)
+  await sam.page.reload();
+  await expect(tab(sam.page, 'Questions')).toHaveAttribute('aria-label', /Questions, \d+ waiting for you/);
+  await tab(sam.page, 'Questions').click();
+  await sam.page.getByRole('navigation', { name: 'Your answers' }).getByRole('link', { name: /Your turn/ }).click();
+  await expect(sam.page.getByRole('tab', { name: /Your turn/ })).toHaveAttribute('aria-selected', 'true');
   await expect(sam.page.getByText('What is one thing you want us to protect')).toBeVisible();
   await sam.page.getByText('What is one thing you want us to protect').click();
   await expect(sam.page.locator('.source')).toContainText('Written by Alex');
 
-  await tab(alex.page, 'Answers').click();
+  await tab(alex.page, 'Questions').click();
+  await alex.page.getByRole('navigation', { name: 'Your answers' }).getByRole('link', { name: /Shared/ }).click();
+  await expect(alex.page.getByRole('heading', { name: 'Answers' })).toBeVisible();
   await expect(alex.page.locator('.hcard')).toHaveCount(1);
   await shot(alex.page, '11-answers');
 
@@ -433,6 +442,12 @@ test('date nights: deciding ahead, together', async ({ browser }) => {
   const ics = await ben.request.get(href!);
   expect(ics.headers()['content-type']).toContain('text/calendar');
   expect(await ics.text()).toContain('SUMMARY:Date night: Learn a new board or card game');
+
+  // Date nights have their own tab.
+  await tab(ana, 'Today').click();
+  await tab(ana, 'Dates').click();
+  await expect(ana.getByRole('heading', { name: 'Date nights' })).toBeVisible();
+  await expect(ana.locator('.next-date')).toContainText(`${label(moved)} · 7:30 PM`);
 });
 
 test('a snuggle, sent with one tap and returned', async ({ browser }) => {

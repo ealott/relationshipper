@@ -1767,6 +1767,43 @@ select.input {
 }
 
 /* ---------- Library ---------- */
+/* On Questions: the way into your answers. */
+.answer-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.answer-link {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.answer-link strong {
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.answer-link--turn {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  background: color-mix(in srgb, var(--primary-soft) 60%, var(--surface));
+  color: var(--primary-strong);
+}
+
+.answer-link--turn strong {
+  color: var(--primary-strong);
+}
+
 .themes {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
