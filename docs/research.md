@@ -98,10 +98,17 @@ In three lab experiments, couples who did a novel, challenging 7-minute task tog
 
 *In the app:* a shared list of ideas, with starter suggestions that lean toward new things, and a calendar for deciding on a date ahead of time and who's planning it. Planning ahead and taking turns are our design choices; no study has tested them.
 
+### 10. Our timeline
+**Strength:** Emerging.
+
+How couples tell the story of their relationship has been linked with how it goes. In a small study of about 50 couples, fondness (which included reminiscing about romantic, special times) and "we-ness" in how couples told their story predicted who stayed together three years later, though the predictions were never tested on new couples (Buehlman et al., 1992). In an experiment with 129 young and older adults, recalling their own relationship memories, rather than fictional relationship stories, raised the warmth they felt toward their partner, and women also felt closer (Alea & Bluck, 2007). Feelings were measured before and after remembering, so the study says nothing about how long the effect lasts.
+
+*In the app:* a timeline of your milestones, where each of you writes your own memory of each one, and a milestone comes back on Today on its anniversary. Keeping a timeline together is our design; no study has tested whether it helps.
+
 ### Popular ideas we handle with care
 
 - **The "five love languages."** Chapman's (1992) framework makes three core claims: each person has one preferred "language," there are exactly five, and partners are happier when they match. These claims have limited support (Impett et al., 2024), and direct tests are mixed. Matching added little in a study of 67 couples (Bunt & Hazelwood, 2017) but was linked to satisfaction in a study of 100 couples (Mostova et al., 2022). The app doesn't sort people into types.
-- **Divorce "prediction" accuracy.** Figures such as 93% (Gottman & Levenson, 2000) come from models fitted and tested on the same small samples. When such models are tested on new data, accuracy drops sharply (Heyman & Slep, 2001; Stanley et al., 2000). We treat the Four Horsemen as warning signs, not a crystal ball.
+- **Divorce "prediction" accuracy.** Figures such as 93% (Gottman & Levenson, 2000) and 94% (Buehlman et al., 1992) come from models fitted and tested on the same small samples. When such models are tested on new data, accuracy drops sharply (Heyman & Slep, 2001; Stanley et al., 2000). We treat the Four Horsemen as warning signs, not a crystal ball.
 - **Viral statistics.** "Couples who stayed together turned toward bids 86% of the time vs. 33%" and "69% of conflicts are perpetual" come from Gottman's books and institute materials. We could not find either in a peer-reviewed paper, so the app doesn't quote them.
 
 ---
@@ -162,6 +169,8 @@ Couples who talk about sex report better sexual function (Mallory et al., 2019).
 ---
 
 ## References
+
+Alea, N., & Bluck, S. (2007). I'll keep you in mind: The intimacy function of autobiographical memory. *Applied Cognitive Psychology, 21*(8), 1091–1111. https://doi.org/10.1002/acp.1316
 
 Algoe, S. B. (2012). Find, remind, and bind: The functions of gratitude in everyday relationships. *Social and Personality Psychology Compass, 6*(6), 455–469. https://doi.org/10.1111/j.1751-9004.2012.00439.x
 
