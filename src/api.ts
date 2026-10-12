@@ -6,6 +6,7 @@ import type {
   AdminSuggestion,
   AdminUser,
   AuthConfigResponse,
+  CalendarFeedResponse,
   BankResponse,
   CustomQuestionsResponse,
   DateIdeaDTO,
@@ -148,6 +149,10 @@ export const api = {
   cancelDate: (id: string) => request<void>('DELETE', `/dates/${enc(id)}`),
   /** A one-event calendar file for the date, to open on your phone. */
   dateCalendarUrl: (id: string) => `/api/dates/${enc(id)}/calendar.ics`,
+  /** Your private calendar feed: off (null), on, or a new link. */
+  calendarFeed: () => request<CalendarFeedResponse>('GET', '/calendar'),
+  startCalendarFeed: () => request<CalendarFeedResponse>('POST', '/calendar', {}),
+  stopCalendarFeed: () => request<void>('DELETE', '/calendar'),
   addDateIdea: (idea: { title: string; notes?: string; setting?: DateSetting | null }) => request<DateIdeaDTO>('POST', '/date-ideas', idea),
   deleteDateIdea: (id: string) => request<void>('DELETE', `/date-ideas/${enc(id)}`),
 

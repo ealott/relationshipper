@@ -1652,6 +1652,28 @@ select.input {
   gap: 14px;
 }
 
+.feed-card__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.feed-card__head > svg {
+  flex: none;
+  color: var(--primary);
+}
+
+.feed-card__url {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.feed-card__url .input {
+  min-width: 0;
+  font-size: 14px;
+}
+
 .plan-form__when {
   display: grid;
   grid-template-columns: 1fr 1fr;

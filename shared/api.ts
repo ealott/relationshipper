@@ -159,6 +159,14 @@ export interface DatesResponse {
   ideas: DateIdeaDTO[];
 }
 
+/** Your private calendar feed of date nights, for Google Calendar or Apple Calendar. */
+export interface CalendarFeedResponse {
+  /** The link a calendar app subscribes to; null when it's off. */
+  url: string | null;
+  /** When a calendar app last fetched it. */
+  fetchedAt: number | null;
+}
+
 /** One partner's memory of a milestone. */
 export interface MemoryDTO {
   userId: string;

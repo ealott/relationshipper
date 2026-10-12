@@ -438,7 +438,12 @@ test('date nights: deciding ahead, together', async ({ browser }) => {
   await ben.getByLabel('Day', { exact: true }).fill(moved);
   await ben.getByRole('button', { name: 'Save changes' }).click();
   await expect(ben.locator('.next-date')).toContainText(`${label(moved)} · 7:30 PM`);
-  const href = await ben.locator('.next-date').getByRole('link', { name: 'Add to calendar' }).getAttribute('href');
+  const google = new URL((await ben.locator('.next-date').getByRole('link', { name: 'Google Calendar' }).getAttribute('href'))!);
+  expect(google.origin + google.pathname).toBe('https://calendar.google.com/calendar/render');
+  expect(google.searchParams.get('action')).toBe('TEMPLATE');
+  expect(google.searchParams.get('text')).toBe('Date night: Learn a new board or card game');
+  expect(google.searchParams.get('dates')).toMatch(/^\d{8}T\d{6}Z\/\d{8}T\d{6}Z$/);
+  const href = await ben.locator('.next-date').getByRole('link', { name: 'Apple Calendar' }).getAttribute('href');
   const ics = await ben.request.get(href!);
   expect(ics.headers()['content-type']).toContain('text/calendar');
   expect(await ics.text()).toContain('SUMMARY:Date night: Learn a new board or card game');
@@ -448,6 +453,23 @@ test('date nights: deciding ahead, together', async ({ browser }) => {
   await tab(ana, 'Dates').click();
   await expect(ana.getByRole('heading', { name: 'Date nights' })).toBeVisible();
   await expect(ana.locator('.next-date')).toContainText(`${label(moved)} · 7:30 PM`);
+
+  // Ana subscribes to the feed, so dates follow into her calendar app.
+  await ana.getByRole('button', { name: 'Set up' }).click();
+  const webcal = (await ana.getByRole('link', { name: 'Subscribe in Apple Calendar' }).getAttribute('href'))!;
+  expect(webcal).toMatch(/^webcal:\/\/localhost:4173\/api\/calendar\/[\w-]{32}\.ics$/);
+  expect(await ana.getByRole('link', { name: 'Subscribe in Google Calendar' }).getAttribute('href')).toBe(`https://www.google.com/calendar/render?cid=${webcal}`);
+  const feed = await ana.request.get(webcal.replace('webcal:', 'http:'));
+  expect(feed.headers()['content-type']).toContain('text/calendar');
+  expect(await feed.text()).toContain('SUMMARY:Date night: Learn a new board or card game');
+  await ana.reload();
+  await expect(ana.locator('.feed-card')).toContainText('Your calendar last checked just now.');
+  await shot(ana, '21-calendar-feed');
+  await ana.locator('.feed-card').getByRole('button', { name: 'Show' }).click();
+  ana.once('dialog', (dialog) => void dialog.accept());
+  await ana.getByRole('button', { name: 'Turn off' }).click();
+  await expect(ana.locator('.feed-card')).toContainText('Put date nights in your calendar');
+  expect((await ana.request.get(webcal.replace('webcal:', 'http:'))).status()).toBe(404);
 });
 
 test('a snuggle, sent with one tap and returned', async ({ browser }) => {

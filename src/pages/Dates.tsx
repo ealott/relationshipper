@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import type { DateIdeaDTO, DateNightDTO } from '../../shared/api';
 import { DATE_LIMITS, SUGGESTED_DATES, type DateSetting } from '../../shared/dates';
 import { api, type DatePlan } from '../api';
+import { CalendarFeedCard } from '../components/CalendarFeed';
 import { MonthCalendar, whenLabel, whoLabel } from '../components/Dates';
 import { ErrorNotice } from '../components/Feedback';
 import { AutoTextarea, Segmented } from '../components/Field';
 import { CalendarIcon, PencilIcon, PlusIcon, ShuffleIcon, TrashIcon } from '../components/Icons';
+import { googleEventUrl } from '../lib/calendar';
 import { useDates } from '../lib/data';
 import { formatDay } from '../lib/format';
 import { useMe } from '../lib/session';
@@ -85,8 +87,11 @@ export function Dates() {
               <button class="btn btn--ghost btn--sm" onClick={() => edit(next)}>
                 <PencilIcon size={16} /> Change
               </button>
+              <a class="btn btn--ghost btn--sm" href={googleEventUrl(next, me.couple?.timezone ?? 'UTC', `${location.origin}/dates`)} target="_blank" rel="noopener noreferrer">
+                <CalendarIcon size={16} /> Google Calendar
+              </a>
               <a class="btn btn--ghost btn--sm" href={api.dateCalendarUrl(next.id)}>
-                <CalendarIcon size={16} /> Add to calendar
+                <CalendarIcon size={16} /> Apple Calendar
               </a>
             </div>
           </section>
@@ -121,6 +126,8 @@ export function Dates() {
           }}
         />
       )}
+
+      {data && <CalendarFeedCard />}
 
       {data && data.upcoming.length > 1 && (
         <section class="section">
