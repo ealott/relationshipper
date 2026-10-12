@@ -1467,6 +1467,36 @@ select.input {
   grid-column: 1 / -1;
 }
 
+.bootycall > svg:first-child {
+  flex: none;
+  color: var(--accent);
+}
+
+.bootycall--asked {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  animation: reveal-in 0.4s ease-out;
+}
+
+.bootycall__text {
+  display: grid;
+  gap: 2px;
+}
+
+.bootycall__text p {
+  margin: 0;
+}
+
+.bootycall__title {
+  font-weight: 700;
+}
+
+.bootycall__actions {
+  grid-column: 1 / -1;
+}
+
 .snuggle.is-popped > svg:first-child {
   fill: currentColor;
   animation: pulse 0.45s ease-in-out 2;

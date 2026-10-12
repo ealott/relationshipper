@@ -23,6 +23,7 @@ export function toMeResponse(auth: AuthContext, env: AppEnv): MeResponse {
       notifyPartner: user.notify_partner === 1,
       notifyDates: user.notify_dates === 1,
       notifySnuggles: user.notify_snuggles === 1,
+      bootyCalls: user.booty_calls === 1,
       isAdmin: auth.isAdmin,
     },
     partner: partner ? { id: partner.id, name: partner.name } : null,

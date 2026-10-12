@@ -2,8 +2,8 @@
 // (which turns one back into SQL) and the tests.
 
 /**
- * Tables in a backup, parents before children. Left out: sessions, invites, rate limits and
- * snuggles, which are short-lived (after a restore, everyone signs in again).
+ * Tables in a backup, parents before children. Left out: sessions, invites, rate limits, snuggles
+ * and booty calls, which are short-lived (after a restore, everyone signs in again).
  */
 export const BACKUP_TABLES = [
   'couples',

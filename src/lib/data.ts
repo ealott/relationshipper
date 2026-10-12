@@ -14,6 +14,7 @@ export const useJournal = () => useQuery('journal', () => api.journal(), { refre
 export const useJournalDay = (day: string) => useQuery(`journal:${day}`, () => api.journalDay(day), { refreshInterval: 20_000 });
 export const useDates = () => useQuery('dates', api.dates, { refreshInterval: 60_000 });
 export const useSnuggles = () => useQuery('snuggles', api.snuggles, { refreshInterval: 30_000 });
+export const useBootyCalls = () => useQuery('booty-calls', api.bootyCalls, { refreshInterval: 30_000 });
 export const useTimeline = () => useQuery('timeline', api.timeline, { refreshInterval: 60_000 });
 /** Shares its key's prefix with the timeline, so `invalidate('timeline')` refreshes both. */
 export const useMilestone = (id: string) => useQuery(`timeline:${id}`, () => api.milestone(id), { refreshInterval: 30_000 });

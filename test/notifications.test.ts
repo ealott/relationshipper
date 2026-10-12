@@ -333,6 +333,34 @@ describe('partner activity notifications', () => {
     expect(pushes).toHaveLength(0);
   });
 
+  it('says only “a wink” about a booty call, and about its answer', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    const alexDevice = await subscribe(a.client);
+    await subscribe(b.client);
+    await Promise.all([a.client.patch('/api/me', { bootyCalls: true }), b.client.patch('/api/me', { bootyCalls: true })]);
+    const asked = await a.client.post('/api/booty-calls');
+    await t.ctx.flush();
+    expect(pushes.map((p) => p.payload)).toEqual([{ title: 'Alex sent you a wink', body: 'Open Relationshipper to answer.', url: '/', tag: 'wink', badge: 0 }]);
+
+    pushes = [];
+    await b.client.post(`/api/booty-calls/${asked.body.latest.id}/answer`, { answer: 'yes' });
+    await t.ctx.flush();
+    expect(pushes.map((p) => [p.payload.title, p.payload.body])).toEqual([['Sam answered your wink', 'Open Relationshipper to see.']]);
+    expect(pushes[0]!.endpoint).toBe(alexDevice);
+
+    // Taking an ask back and asking again right away doesn't buzz twice.
+    const other = await pairedCouple(t.env, t.ctx);
+    await subscribe(other.b.client);
+    await Promise.all([other.a.client.patch('/api/me', { bootyCalls: true }), other.b.client.patch('/api/me', { bootyCalls: true })]);
+    pushes = [];
+    const first = await other.a.client.post('/api/booty-calls');
+    await other.a.client.delete(`/api/booty-calls/${first.body.latest.id}`);
+    await other.a.client.post('/api/booty-calls');
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(1);
+    expect(JSON.stringify(pushes).toLowerCase()).not.toContain('booty');
+  });
+
   it('respects the partner’s notification setting', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     await subscribe(b.client);
