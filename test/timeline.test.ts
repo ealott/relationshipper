@@ -50,6 +50,7 @@ describe('the timeline', () => {
     expect((await add({ kind: 'married', title: 'Our wedding', day: addDays(today(), 400) })).status).toBe(201);
     expect((await add({ day: String(Number(today().slice(0, 4)) + 11) })).status).toBe(400);
     expect((await add({})).status).toBe(201);
+    expect((await add({ kind: 'first-chat', title: 'Our first chat', day: '2019-05' })).status).toBe(201);
   });
 
   it('keeps each partner’s own memory of a milestone, with a song', async () => {

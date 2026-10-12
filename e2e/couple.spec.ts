@@ -514,6 +514,7 @@ test('our timeline: milestones, both memories, and the day they come back', asyn
   await expect(card).toContainText('Start with the day you met.');
   await card.click();
   await expect(mae.getByRole('heading', { name: 'Our timeline' })).toBeVisible();
+  await expect(mae.getByRole('button', { name: 'First chat', exact: true })).toBeVisible();
   await mae.getByRole('button', { name: 'First date', exact: true }).click();
   await expect(mae.getByLabel('Title')).toHaveValue('Our first date');
   await mae.getByLabel('Day', { exact: true }).fill('2019-06-14');
