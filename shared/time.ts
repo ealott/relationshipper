@@ -51,3 +51,19 @@ export function timeToMinutes(time: unknown): number | null {
   const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
+
+/** The UTC instant of a wall-clock time (`HH:MM` on `YYYY-MM-DD`) in a time zone. */
+export function zonedTimeToUtc(day: string, time: string, timeZone: string): Date {
+  const [y, mo, d] = day.split('-').map(Number);
+  const [h, mi] = time.split(':').map(Number);
+  const wall = Date.UTC(y!, mo! - 1, d!, h!, mi!);
+  // How far the zone's clock is ahead of UTC at a given instant.
+  const offset = (at: number) => {
+    const z = zonedNow(timeZone, new Date(at));
+    const [zy, zm, zd] = z.day.split('-').map(Number);
+    return Date.UTC(zy!, zm! - 1, zd!, Math.floor(z.minutes / 60), z.minutes % 60) - at;
+  };
+  // Twice, so a guess on the far side of a daylight-saving change corrects itself.
+  const first = wall - offset(wall);
+  return new Date(wall - offset(first));
+}

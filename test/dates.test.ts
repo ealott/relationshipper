@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { DateIdeaDTO, DateNightDTO, DatesResponse, MeResponse } from '../shared/api';
-import { addDays, zonedNow } from '../shared/time';
-import { calendarEvent, zonedTimeToUtc } from '../worker/ics';
+import { addDays, zonedNow, zonedTimeToUtc } from '../shared/time';
+import { calendarEvent } from '../worker/ics';
 import { createTestEnv, pairedCouple } from './helpers/env';
 
 let t: Awaited<ReturnType<typeof createTestEnv>>;

@@ -22,6 +22,8 @@ export function normalizeCode(code: string): string {
 /** Removes a couple and everything they shared. Both partners become unpaired. */
 export function deleteCoupleStatements(db: D1Database, coupleId: string): D1PreparedStatement[] {
   return [
+    // Before the partners are unpaired, while their feeds can still be found by couple.
+    db.prepare('DELETE FROM calendar_feeds WHERE user_id IN (SELECT id FROM users WHERE couple_id = ?)').bind(coupleId),
     db.prepare('UPDATE users SET couple_id = NULL, last_reminded_on = NULL WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM answer_versions WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM response_versions WHERE response_id IN (SELECT id FROM responses WHERE couple_id = ?)').bind(coupleId),
