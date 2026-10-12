@@ -1,6 +1,7 @@
 // Request/response shapes shared by the Worker and the client.
 import type { DateSetting } from './dates';
 import type { Audience, CategoryId, Depth } from './questions/types';
+import type { MilestoneKind } from './timeline';
 
 export interface UserDTO {
   id: string;
@@ -158,6 +159,52 @@ export interface DatesResponse {
   ideas: DateIdeaDTO[];
 }
 
+/** One partner's memory of a milestone. */
+export interface MemoryDTO {
+  userId: string;
+  text: string;
+  /** The song that goes with it. */
+  song: { title: string; artist: string; url: string } | null;
+  updatedAt: number;
+}
+
+export interface MilestoneDTO {
+  id: string;
+  kind: MilestoneKind;
+  title: string;
+  /** YYYY, YYYY-MM or YYYY-MM-DD. */
+  day: string;
+  place: string;
+  createdBy: string | null;
+  createdAt: number;
+  updatedAt: number;
+  /** Yours and your partner's, if written. */
+  memories: MemoryDTO[];
+}
+
+export interface TimelineResponse {
+  /** Today in the couple's time zone. */
+  today: string;
+  /** Oldest first. */
+  milestones: MilestoneDTO[];
+}
+
+/** What you send to add or change a milestone. */
+export interface MilestoneInput {
+  kind: MilestoneKind;
+  title: string;
+  day: string;
+  place: string;
+}
+
+/** What you send to write your memory of a milestone. All empty removes it. */
+export interface MemoryInput {
+  text: string;
+  songTitle: string;
+  songArtist: string;
+  songUrl: string;
+}
+
 /** One day of the couple's journal. Each partner's entry is the answer to `questionId` (JSON, see shared/journal.ts). */
 export interface JournalDay {
   /** YYYY-MM-DD, in the couple's time zone. */
@@ -255,6 +302,7 @@ export interface AdminStats {
   journalEntries: number;
   dateNights: number;
   dateIdeas: number;
+  milestones: number;
   customQuestions: number;
   pendingSuggestions: number;
   pushDevices: number;

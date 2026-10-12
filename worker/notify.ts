@@ -128,3 +128,18 @@ export async function notifySnuggle(env: AppEnv, { from, partnerId, coupleId }: 
     badge: await countYourTurn(env.DB, coupleId, partnerId),
   });
 }
+
+/** Tells your partner you added to your timeline: that you did, never what, which someone wrote. */
+export async function notifyTimeline(
+  env: AppEnv,
+  { from, partnerId, coupleId, kind, milestoneId }: { from: { name: string }; partnerId: string; coupleId: string; kind: 'added' | 'memory'; milestoneId: string },
+): Promise<void> {
+  if (!vapidKeys(env)) return;
+  const partner = await env.DB.prepare('SELECT notify_partner FROM users WHERE id = ?').bind(partnerId).first<{ notify_partner: number }>();
+  if (partner?.notify_partner !== 1) return;
+  const copy =
+    kind === 'added'
+      ? { title: `${from.name} added a milestone`, body: 'Add your memory of it to your timeline.' }
+      : { title: `${from.name} wrote a memory`, body: 'Read it on your timeline.' };
+  await pushToUser(env, partnerId, { ...copy, url: `/timeline/${milestoneId}`, tag: `milestone-${milestoneId}`, badge: await countYourTurn(env.DB, coupleId, partnerId) });
+}

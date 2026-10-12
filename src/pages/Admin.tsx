@@ -82,6 +82,7 @@ function Overview() {
     ['Journal entries', s.journalEntries],
     ['Date nights planned', s.dateNights],
     ['Date ideas', s.dateIdeas],
+    ['Timeline milestones', s.milestones],
     ['Couple-written questions', s.customQuestions],
     ['Suggestions to review', s.pendingSuggestions],
     ['Devices with notifications', s.pushDevices],

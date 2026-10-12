@@ -11,6 +11,7 @@ It runs as an installable web app (PWA) at **https://relationshipper.evanlott.co
 - **Then talk about it.** Once both answers are revealed, the conversation continues as responses underneath. Tips on responding come from research on responsiveness.
 - **A journal for your days.** Each day you can both jot down something good, something hard and something you appreciated about each other: a line or two each, with room to say more, and a longer look back on Sundays. As with the questions, you read each other's day once you've both written it, then reply.
 - **Date nights, decided ahead.** Keep a shared list of date ideas (starter suggestions lean toward new things), plan dates on a calendar with who's planning them, and get a reminder on the morning of each one. "Add to calendar" puts a date on your phone. Afterwards, a link takes you to that day in your journal.
+- **Our timeline.** A timeline of your relationship, from the day you met to today: first date, moving in, trips, anniversaries, and anything ahead, like a wedding. A date can be a day, a month or just a year. Each of you writes your own memory of a milestone, with the song that goes with it if there is one. On a milestone's anniversary, Today brings it back ("4 years ago today").
 - **Send a snuggle.** One tap on Today lets your partner know you're thinking of them, and they can snuggle back. They get at most one notification every few minutes, however many you send. Nothing keeps score, and snuggles are cleared after a month.
 - **Edits keep their history.** You can edit your answer or a reply at any time. Before the reveal, an edit replaces your answer, since your partner hasn't read it. After the reveal, the version your partner read is kept: the answer says "Edited", and either of you can see what changed. The journal download includes earlier versions too.
 - **A question a day.** Both partners get the same daily question in the couple's time zone. Questions start light and deepen over the first three weeks. After the first week, Sundays bring a check-in on the relationship itself.
@@ -165,7 +166,7 @@ worker/            API (Hono), auth, reveal rules, daily question, reminders, We
 src/               Preact client: pages/, components/, lib/, sw.ts (service worker)
 shared/            types shared by client and Worker, themes, research notes, time helpers
   questions/       the research-based question bank, one file per theme
-migrations/        D1 schema (0001), the generated question bank (0002, 0004), drafts (0003), edit history (0005), date nights (0006), snuggles (0007)
+migrations/        D1 schema (0001), the generated question bank (0002, 0004), drafts (0003), edit history (0005), date nights (0006), snuggles (0007), the timeline (0008)
 public/            icons, manifest, _headers (CSP), prefs.js (applies display preferences before the first paint)
 scripts/           seed builder, VAPID keys, icon renderer, service worker build, restore-backup, deploy-inline
 test/              API tests (Vitest)

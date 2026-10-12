@@ -135,6 +135,86 @@ export const HeartIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const SparkleIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M11 3c.6 4.2 1.8 5.4 6 6-4.2.6-5.4 1.8-6 6-.6-4.2-1.8-5.4-6-6 4.2-.6 5.4-1.8 6-6Z" />
+    <path d="M18.5 14.5c.3 1.7.8 2.2 2.5 2.5-1.7.3-2.2.8-2.5 2.5-.3-1.7-.8-2.2-2.5-2.5 1.7-.3 2.2-.8 2.5-2.5Z" />
+  </Icon>
+);
+
+export const GlassIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7.5 3h9l-.6 5.5a3.9 3.9 0 0 1-7.8 0Z" />
+    <path d="M12 12.5V20M8.5 20h7" />
+  </Icon>
+);
+
+export const HomeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3.5 11 12 4l8.5 7" />
+    <path d="M6 9.5V20h12V9.5M10 20v-5.5h4V20" />
+  </Icon>
+);
+
+export const RingIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="15" r="6" />
+    <path d="m9.5 5.5 2.5 3 2.5-3-1-2h-3Z" />
+  </Icon>
+);
+
+export const RingsIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="9" cy="13" r="5.5" />
+    <circle cx="15" cy="13" r="5.5" />
+  </Icon>
+);
+
+export const MapPinIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" />
+    <circle cx="12" cy="10" r="2.3" />
+  </Icon>
+);
+
+export const CakeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 20h16M5.5 20v-7.5h13V20" />
+    <path d="M5.5 16c2.2 1.2 4.3 1.2 6.5 0s4.3-1.2 6.5 0M12 12.5V9" />
+    <path d="M12 6.5c-1-.8-1-2 0-3 1 1 1 2.2 0 3Z" />
+  </Icon>
+);
+
+export const BabyIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="13" r="7" />
+    <path d="M12 6c0-1.6 1-2.6 2.6-2.6M9.5 12.5h.01M14.5 12.5h.01M10 16c1.2.8 2.8.8 4 0" />
+  </Icon>
+);
+
+export const StarIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m12 3.5 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8Z" />
+  </Icon>
+);
+
+export const MusicIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M9 18V5.5l11-2V16" />
+    <circle cx="6.5" cy="18" r="2.5" />
+    <circle cx="17.5" cy="16" r="2.5" />
+  </Icon>
+);
+
+export const TimelineIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6 3v18" />
+    <circle cx="6" cy="7" r="2.2" fill="currentColor" />
+    <circle cx="6" cy="16" r="2.2" fill="currentColor" />
+    <path d="M11 7h9M11 16h6" />
+  </Icon>
+);
+
 export const PencilIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M12 20h9" />

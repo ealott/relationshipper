@@ -34,6 +34,10 @@ export interface Caveat {
 }
 
 const R = {
+  aleaBluck2007: {
+    cite: 'Alea, N., & Bluck, S. (2007). I\'ll keep you in mind: The intimacy function of autobiographical memory. Applied Cognitive Psychology, 21(8), 1091–1111.',
+    url: 'https://doi.org/10.1002/acp.1316',
+  },
   algoe2012: {
     cite: 'Algoe, S. B. (2012). Find, remind, and bind: The functions of gratitude in everyday relationships. Social and Personality Psychology Compass, 6(6), 455–469.',
     url: 'https://doi.org/10.1111/j.1751-9004.2012.00439.x',
@@ -368,6 +372,13 @@ export const PRINCIPLES: Principle[] = [
     sources: [R.aronEtAl2000, R.fieseEtAl2002],
   },
   {
+    title: 'Remembering your story',
+    strength: 'Emerging',
+    body: 'How couples told the story of their relationship, with fondness and a sense of “we”, predicted who stayed together in one small study, though the predictions were never tested on new couples. In an experiment, recalling their own relationship memories raised the warmth people felt toward their partner, measured before and after remembering.',
+    inApp: 'The timeline keeps your milestones, with each of your own memories of them, and brings one back on its anniversary. Keeping a timeline together is our design, and no study has tested whether it helps.',
+    sources: [R.buehlmanEtAl1992, R.aleaBluck2007],
+  },
+  {
     title: 'Questions that deepen gradually',
     strength: 'Moderate, though mostly from studies with strangers',
     body: 'In the well-known “36 questions” study, questions that moved from light to personal built more closeness than small talk. It measured closeness, not love. People expect deep conversations to be more awkward than they turn out to be, and come away more connected than from shallow ones.',
@@ -400,7 +411,7 @@ export const CAVEATS: Caveat[] = [
   {
     title: 'No scores or predictions',
     body: 'Claims that researchers can predict divorce with over 90% accuracy come from models fitted and tested on the same small samples. On new couples, accuracy drops sharply. The app gives no compatibility scores and makes no predictions.',
-    sources: [R.gottmanLevenson2000, R.heymanSlep2001, R.stanleyEtAl2000],
+    sources: [R.gottmanLevenson2000, R.buehlmanEtAl1992, R.heymanSlep2001, R.stanleyEtAl2000],
   },
   {
     title: 'No viral statistics',
