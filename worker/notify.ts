@@ -1,4 +1,5 @@
 import { questionText } from '../shared/categories';
+import { formatClock } from '../shared/dates';
 import { isWeeklyDay, JOURNAL_PREFIX } from '../shared/journal';
 import type { AppEnv } from './env';
 import { sendPush, type PushTarget, type SendOptions, type VapidKeys } from './push/webpush';
@@ -90,4 +91,26 @@ export async function notifyPartner(
     tag: day ? `journal-${day}` : `q-${question.id}`,
     badge: await countYourTurn(env.DB, coupleId, partnerId),
   });
+}
+
+/** "Friday, October 17 at 7:00 PM": when a date night is. Never what it is, which someone wrote. */
+export const dateWhen = (date: { day: string; start_time: string | null }) =>
+  `${dayLabel(date.day)}${date.start_time ? ` at ${formatClock(date.start_time)}` : ''}`;
+
+/** Tells your partner you planned, moved or cancelled a date night, if they want date notifications. */
+export async function notifyDate(
+  env: AppEnv,
+  args: { from: { name: string }; partnerId: string; coupleId: string; kind: 'planned' | 'moved' | 'cancelled'; date: { id: string; day: string; start_time: string | null } },
+): Promise<void> {
+  const { from, partnerId, coupleId, kind, date } = args;
+  if (!vapidKeys(env)) return;
+  const partner = await env.DB.prepare('SELECT notify_dates FROM users WHERE id = ?').bind(partnerId).first<{ notify_dates: number }>();
+  if (partner?.notify_dates !== 1) return;
+  const when = dateWhen(date);
+  const copy = {
+    planned: { title: `${from.name} planned a date night`, body: when },
+    moved: { title: `${from.name} moved your date night`, body: `Now ${when}` },
+    cancelled: { title: `${from.name} cancelled a date night`, body: when },
+  }[kind];
+  await pushToUser(env, partnerId, { ...copy, url: '/dates', tag: `date-${date.id}`, badge: await countYourTurn(env.DB, coupleId, partnerId) });
 }

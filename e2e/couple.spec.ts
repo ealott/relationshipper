@@ -389,3 +389,48 @@ test('the journal: a few lines about your day, read once you’ve both written',
   await expect(jo.locator('.entry--partner')).toContainText('Dinner was ready');
   await expect(jo.locator('.message--partner')).toContainText('long meeting');
 });
+
+test('date nights: deciding ahead, together', async ({ browser }) => {
+  const stamp = Date.now();
+  const ana = await signInAs(browser, 'Ana', stamp);
+  const ben = await signInAs(browser, 'Ben', stamp);
+  await pair(ana, ben);
+  const dayIn = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
+  const label = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const [first, moved] = [dayIn(3), dayIn(4)];
+
+  // Ana starts the list from a suggestion and plans a date from it, for Ben to plan.
+  await ana.goto('/');
+  const anaCard = ana.locator('.date-card');
+  await expect(anaCard).toContainText('Nothing on the calendar yet');
+  await anaCard.click();
+  await expect(ana.getByRole('heading', { name: 'Date nights' })).toBeVisible();
+  await ana.locator('.suggestions .idea', { hasText: 'Learn a new board or card game' }).getByRole('button', { name: 'Add' }).click();
+  const idea = ana.locator('.section .idea-list').first().locator('.idea', { hasText: 'Learn a new board or card game' });
+  await idea.getByRole('button', { name: 'Plan this' }).click();
+  await expect(ana.getByLabel('What you’ll do')).toHaveValue('Learn a new board or card game');
+  await ana.getByLabel('Day', { exact: true }).fill(first);
+  await ana.getByLabel('Time (optional)').fill('19:30');
+  await ana.getByRole('radio', { name: 'Ben' }).click();
+  await ana.getByLabel('Notes (optional)').fill('Ben picks the game');
+  await ana.getByRole('button', { name: 'Plan it' }).click();
+  const next = ana.locator('.next-date');
+  await expect(next).toContainText('Learn a new board or card game');
+  await expect(next).toContainText(`${label(first)} · 7:30 PM`);
+  await expect(next).toContainText('Ben is planning it');
+  await shot(ana, '20-date-nights');
+
+  // Ben sees it on Today, moves it a day, and can put it on his calendar.
+  await ben.goto('/');
+  const benCard = ben.locator('.date-card');
+  await expect(benCard).toContainText('Learn a new board or card game. You’re planning it.');
+  await benCard.click();
+  await ben.locator('.next-date').getByRole('button', { name: 'Change' }).click();
+  await ben.getByLabel('Day', { exact: true }).fill(moved);
+  await ben.getByRole('button', { name: 'Save changes' }).click();
+  await expect(ben.locator('.next-date')).toContainText(`${label(moved)} · 7:30 PM`);
+  const href = await ben.locator('.next-date').getByRole('link', { name: 'Add to calendar' }).getAttribute('href');
+  const ics = await ben.request.get(href!);
+  expect(ics.headers()['content-type']).toContain('text/calendar');
+  expect(await ics.text()).toContain('SUMMARY:Date night: Learn a new board or card game');
+});

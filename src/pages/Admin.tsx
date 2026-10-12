@@ -80,6 +80,8 @@ function Overview() {
     ['Answers (7 days)', s.answers7d],
     ['Responses', s.responses],
     ['Journal entries', s.journalEntries],
+    ['Date nights planned', s.dateNights],
+    ['Date ideas', s.dateIdeas],
     ['Couple-written questions', s.customQuestions],
     ['Suggestions to review', s.pendingSuggestions],
     ['Devices with notifications', s.pushDevices],

@@ -10,6 +10,7 @@ import { loadSession, useMe, useSession } from './lib/session';
 import { Admin } from './pages/Admin';
 import { Answers } from './pages/Answers';
 import { CategoryPage } from './pages/Category';
+import { Dates } from './pages/Dates';
 import { Join } from './pages/Join';
 import { Journal, JournalDayPage } from './pages/Journal';
 import { Library } from './pages/Library';
@@ -80,6 +81,7 @@ function PairedApp() {
         <Route path="/questions/:category" component={CategoryPage} />
         <Route path="/q/:id" component={QuestionPage} />
         <Route path="/journal" component={Journal} />
+        <Route path="/dates" component={Dates} />
         <Route path="/journal/:day" component={JournalDayPage} />
         <Route path="/answers" component={Answers} />
         <Route path="/settings" component={Settings} />

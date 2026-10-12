@@ -361,6 +361,13 @@ export const PRINCIPLES: Principle[] = [
     sources: [R.gableEtAl2004, R.gableEtAl2006, R.bodenmann2005, R.falconierEtAl2015, R.neffKarney2009, R.algoe2012, R.gordonEtAl2012],
   },
   {
+    title: 'Date nights, planned ahead',
+    strength: 'Emerging',
+    body: 'In lab experiments, couples who did something new and a little challenging together rated their relationship higher afterwards, at least in the short term. Routines and rituals go with happier marriages, though those studies are correlational and used inconsistent methods.',
+    inApp: 'A shared list of date ideas, with suggestions that lean toward new things, and a calendar for deciding ahead what you’ll do and who’s planning it. Planning ahead and taking turns are our design choices, and no study has tested them.',
+    sources: [R.aronEtAl2000, R.fieseEtAl2002],
+  },
+  {
     title: 'Questions that deepen gradually',
     strength: 'Moderate, though mostly from studies with strangers',
     body: 'In the well-known “36 questions” study, questions that moved from light to personal built more closeness than small talk. It measured closeness, not love. People expect deep conversations to be more awkward than they turn out to be, and come away more connected than from shallow ones.',

@@ -89,6 +89,13 @@ The journal asks three small things each day, each drawn from research covered e
 
 On Sundays it also asks for a longer look back at the week, an occasional dose of the expressive writing in section 1 (Pennebaker, 1997). The journal follows the same reveal rule as the questions. Putting these prompts together as a daily journal is our design; no study has tested it.
 
+### 9. Date nights, planned ahead
+**Strength:** Emerging.
+
+In three lab experiments, couples who did a novel, challenging 7-minute task together reported a short-term rise in relationship quality compared with couples given a mundane task (Aron et al., 2000). The effect was measured in the lab and in the short term, so it says little about date nights at home over months. A review of 50 years of research links routines and rituals with marital satisfaction, though the studies used inconsistent methods (Fiese et al., 2002).
+
+*In the app:* a shared list of ideas, with starter suggestions that lean toward new things, and a calendar for deciding on a date ahead of time and who's planning it. Planning ahead and taking turns are our design choices; no study has tested them.
+
 ### Popular ideas we handle with care
 
 - **The "five love languages."** Chapman's (1992) framework makes three core claims: each person has one preferred "language," there are exactly five, and partners are happier when they match. These claims have limited support (Impett et al., 2024), and direct tests are mixed. Matching added little in a study of 67 couples (Bunt & Hazelwood, 2017) but was linked to satisfaction in a study of 100 couples (Mostova et al., 2022). The app doesn't sort people into types.

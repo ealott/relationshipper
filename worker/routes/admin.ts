@@ -95,7 +95,7 @@ export const adminRoutes = new Hono<HonoEnv>()
     const db = c.env.DB;
     const weekAgo = Date.now() - 7 * DAY;
     const journal = `question_id LIKE '${JOURNAL_PREFIX}%'`;
-    const [users, couples, activeCouples7d, answers, answers7d, responses, journalEntries, customQuestions, pendingSuggestions, pushDevices, active, retired] =
+    const [users, couples, activeCouples7d, answers, answers7d, responses, journalEntries, dateNights, dateIdeas, customQuestions, pendingSuggestions, pushDevices, active, retired] =
       await Promise.all([
         count(db, 'SELECT COUNT(*) AS n FROM users'),
         count(db, 'SELECT COUNT(*) AS n FROM couples'),
@@ -104,6 +104,8 @@ export const adminRoutes = new Hono<HonoEnv>()
         count(db, `SELECT COUNT(*) AS n FROM answers WHERE NOT ${journal} AND created_at > ?`, weekAgo),
         count(db, 'SELECT COUNT(*) AS n FROM responses'),
         count(db, `SELECT COUNT(*) AS n FROM answers WHERE ${journal}`),
+        count(db, 'SELECT COUNT(*) AS n FROM date_nights'),
+        count(db, 'SELECT COUNT(*) AS n FROM date_ideas'),
         count(db, `SELECT COUNT(*) AS n FROM questions WHERE source = 'custom'`),
         count(db, `SELECT COUNT(*) AS n FROM question_suggestions WHERE status = 'pending'`),
         count(db, 'SELECT COUNT(*) AS n FROM push_subscriptions'),
@@ -118,6 +120,8 @@ export const adminRoutes = new Hono<HonoEnv>()
       answers7d,
       responses,
       journalEntries,
+      dateNights,
+      dateIdeas,
       customQuestions,
       pendingSuggestions,
       pushDevices,

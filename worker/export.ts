@@ -1,5 +1,6 @@
 import type { VersionDTO } from '../shared/api';
 import { CATEGORY_BY_ID, isCategoryId, questionText } from '../shared/categories';
+import { formatClock } from '../shared/dates';
 import { isWeeklyDay, JOURNAL_PROMPTS, JOURNAL_PREFIX, parseEntry } from '../shared/journal';
 import { journalDayOf } from './journal';
 import { findQuestions } from './questions';
@@ -8,7 +9,8 @@ import type { PairedContext } from './session';
 
 /**
  * The couple's journal as a readable Markdown file: every question either of you has answered,
- * both answers and the replies (with any earlier versions), oldest first, then the journal days.
+ * both answers and the replies (with any earlier versions), oldest first, then the journal days
+ * and the date nights.
  * It follows the app's rule: your partner's answer only appears once you've written yours.
  */
 export async function exportJournal(db: D1Database, auth: PairedContext, now = Date.now()): Promise<string> {
@@ -89,5 +91,18 @@ export async function exportJournal(db: D1Database, auth: PairedContext, now = D
       }
     }
   });
+  const { results: dates } = await db
+    .prepare('SELECT day, start_time, title, notes, planner_id FROM date_nights WHERE couple_id = ? ORDER BY day, start_time')
+    .bind(couple.id)
+    .all<{ day: string; start_time: string | null; title: string; notes: string; planner_id: string | null }>();
+  if (dates.length) {
+    lines.push('---', '', '# Date nights', '');
+    for (const d of dates) {
+      const when = `${day.format(new Date(`${d.day}T12:00:00Z`))}${d.start_time ? `, ${formatClock(d.start_time)}` : ''}`;
+      const who = d.planner_id ? `${nameOf(d.planner_id) ?? 'One of you'} planned it` : 'planned together';
+      lines.push(`- **${when}**: ${d.title} (${who})`, ...d.notes.split('\n').filter(Boolean).map((l) => `  ${l}`));
+    }
+    lines.push('');
+  }
   return lines.join('\n');
 }

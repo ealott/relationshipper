@@ -29,6 +29,8 @@ describe('backups', () => {
     await a.client.patch(`/api/questions/love-maps-001/responses/${replied.body.responses[0].id}`, { text: 'Tell me more, please.' });
     await b.client.put('/api/questions/love-maps-002/drafts/answer', { text: 'Half a thought' });
     await a.client.post('/api/custom-questions', { text: 'What should we never stop doing?' });
+    const idea = await a.client.post('/api/date-ideas', { title: 'Stargazing; somewhere dark', setting: 'out' });
+    await b.client.post('/api/dates', { day: '2027-01-15', time: '20:00', title: 'Stargazing', notes: 'Warm coats', ideaId: idea.body.id });
 
     await t.ctx.flush(); // notifications update their senders' rows in the background
     const info = await createBackup(t.env);
