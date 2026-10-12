@@ -114,3 +114,17 @@ export async function notifyDate(
   }[kind];
   await pushToUser(env, partnerId, { ...copy, url: '/dates', tag: `date-${date.id}`, badge: await countYourTurn(env.DB, coupleId, partnerId) });
 }
+
+/** A snuggle from your partner, if you want to hear about them. */
+export async function notifySnuggle(env: AppEnv, { from, partnerId, coupleId }: { from: { name: string }; partnerId: string; coupleId: string }): Promise<void> {
+  if (!vapidKeys(env)) return;
+  const partner = await env.DB.prepare('SELECT notify_snuggles FROM users WHERE id = ?').bind(partnerId).first<{ notify_snuggles: number }>();
+  if (partner?.notify_snuggles !== 1) return;
+  await pushToUser(env, partnerId, {
+    title: `${from.name} sent you a snuggle`,
+    body: 'Thinking of you.',
+    url: '/',
+    tag: 'snuggle',
+    badge: await countYourTurn(env.DB, coupleId, partnerId),
+  });
+}

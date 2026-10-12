@@ -22,6 +22,7 @@ export function toMeResponse(auth: AuthContext, env: AppEnv): MeResponse {
       reminderTime: minutesToTime(user.reminder_minutes),
       notifyPartner: user.notify_partner === 1,
       notifyDates: user.notify_dates === 1,
+      notifySnuggles: user.notify_snuggles === 1,
       isAdmin: auth.isAdmin,
     },
     partner: partner ? { id: partner.id, name: partner.name } : null,

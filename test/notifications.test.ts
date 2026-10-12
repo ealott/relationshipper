@@ -274,6 +274,34 @@ describe('partner activity notifications', () => {
     expect(await sendDateReminders(t.env, zonedTimeToUtc(addDays(day, 2), '18:00', 'America/New_York'))).toBe(0);
   });
 
+  it('tells your partner about a snuggle, at most once every few minutes', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    await subscribe(b.client);
+    const age = (ms: number) => t.env.DB.prepare('UPDATE snuggles SET created_at = created_at - ? WHERE from_user = ?').bind(ms, a.id).run();
+    await a.client.post('/api/snuggles');
+    await t.ctx.flush();
+    expect(pushes.map((p) => p.payload)).toEqual([{ title: 'Alex sent you a snuggle', body: 'Thinking of you.', url: '/', tag: 'snuggle', badge: 0 }]);
+
+    // Another one soon after is kept, but quietly.
+    pushes = [];
+    await age(10_000);
+    expect((await a.client.post('/api/snuggles')).status).toBe(204);
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(0);
+    await age(5 * 60 * 1000);
+    await a.client.post('/api/snuggles');
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(1);
+
+    pushes = [];
+    await b.client.patch('/api/me', { notifySnuggles: false });
+    expect((await b.client.get('/api/me')).body.user.notifySnuggles).toBe(false);
+    await age(10 * 60 * 1000);
+    await a.client.post('/api/snuggles');
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(0);
+  });
+
   it('respects the partner’s notification setting', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     await subscribe(b.client);

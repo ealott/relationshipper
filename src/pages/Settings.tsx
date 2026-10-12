@@ -236,6 +236,18 @@ function Notifications({ saving, update }: { saving: boolean; update: (fn: () =>
           onChange={(v) => update(() => api.updateMe({ notifyDates: v }))}
         />
       </div>
+      <div class="setting">
+        <div class="setting__text">
+          <span class="setting__label">Snuggles</span>
+          <span class="setting__hint">When {me.partner!.name} sends you one.</span>
+        </div>
+        <Switch
+          label="Snuggle notifications"
+          checked={me.user.notifySnuggles}
+          disabled={!canToggle}
+          onChange={(v) => update(() => api.updateMe({ notifySnuggles: v }))}
+        />
+      </div>
     </section>
   );
 }

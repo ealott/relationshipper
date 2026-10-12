@@ -23,6 +23,7 @@ export interface UserRow {
   reminder_minutes: number;
   notify_partner: number;
   notify_dates: number;
+  notify_snuggles: number;
   last_reminded_on: string | null;
   last_activity_push_at: number | null;
   last_nudge_at: number | null;

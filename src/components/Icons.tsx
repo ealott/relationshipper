@@ -129,6 +129,12 @@ export const HistoryIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const HeartIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 20s-7.5-4.6-7.5-10.1A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 7.5 2.9C19.5 15.4 12 20 12 20Z" />
+  </Icon>
+);
+
 export const PencilIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M12 20h9" />
