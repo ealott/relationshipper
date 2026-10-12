@@ -24,6 +24,7 @@ import type {
   QuestionDTO,
   QuestionResponse,
   QuestionState,
+  SnugglesResponse,
   TodayResponse,
   VersionsResponse,
 } from '../shared/api';
@@ -100,7 +101,7 @@ export const api = {
     request<MeResponse>('POST', '/auth/password', { name, password, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
   me: () => request<MeResponse>('GET', '/me'),
   logout: () => request<void>('POST', '/auth/logout', {}),
-  updateMe: (body: Partial<{ name: string; timezone: string; reminderEnabled: boolean; reminderTime: string; notifyPartner: boolean; notifyDates: boolean }>) =>
+  updateMe: (body: Partial<{ name: string; timezone: string; reminderEnabled: boolean; reminderTime: string; notifyPartner: boolean; notifyDates: boolean; notifySnuggles: boolean }>) =>
     request<MeResponse>('PATCH', '/me', body),
   deleteAccount: () => request<void>('POST', '/me/delete', { confirm: 'DELETE' }),
 
@@ -145,6 +146,11 @@ export const api = {
   dateCalendarUrl: (id: string) => `/api/dates/${enc(id)}/calendar.ics`,
   addDateIdea: (idea: { title: string; notes?: string; setting?: DateSetting | null }) => request<DateIdeaDTO>('POST', '/date-ideas', idea),
   deleteDateIdea: (id: string) => request<void>('DELETE', `/date-ideas/${enc(id)}`),
+
+  snuggles: () => request<SnugglesResponse>('GET', '/snuggles'),
+  /** Also marks your partner's snuggles as seen: snuggling back means you saw them. */
+  sendSnuggle: () => request<void>('POST', '/snuggles', {}),
+  seenSnuggles: () => request<void>('POST', '/snuggles/seen', {}),
 
   pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) => request<void>('POST', '/push/subscribe', sub),
   pushUnsubscribe: (endpoint: string) => request<void>('POST', '/push/unsubscribe', { endpoint }),

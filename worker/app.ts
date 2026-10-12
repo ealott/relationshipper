@@ -12,6 +12,7 @@ import { meRoutes } from './routes/me';
 import { pairingRoutes } from './routes/pairing';
 import { pushRoutes } from './routes/push';
 import { questionRoutes } from './routes/questions';
+import { snuggleRoutes } from './routes/snuggles';
 import { sessionMiddleware } from './session';
 
 export const app = new Hono<HonoEnv>().basePath('/api');
@@ -31,6 +32,7 @@ app.route('/admin', adminRoutes);
 app.route('/journal', journalRoutes);
 app.route('/dates', dateRoutes);
 app.route('/date-ideas', dateIdeaRoutes);
+app.route('/snuggles', snuggleRoutes);
 app.route('/', pairingRoutes);
 app.route('/', questionRoutes);
 

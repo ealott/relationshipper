@@ -350,7 +350,7 @@ export const PRINCIPLES: Principle[] = [
     title: 'A small daily ritual',
     strength: 'Emerging',
     body: 'Relationships are built from small, everyday moments of turning toward each other, and routines and rituals go with happier marriages, though those studies are correlational. Habits form through repetition in a consistent setting over weeks to months, and missing a day didn’t undo them.',
-    inApp: 'One question a day, and an optional reminder once a day at a time you each choose. A quiet “days in a row” appears when you’ve both answered two or more days running; nothing happens when a streak breaks.',
+    inApp: 'One question a day, and an optional reminder once a day at a time you each choose. A quiet “days in a row” appears when you’ve both answered two or more days running; nothing happens when a streak breaks. A snuggle is a one-tap bid your partner can return; whether a tap works like a bid in person is untested.',
     sources: [R.gottmanDeClaire2001, R.driverGottman2004, R.fieseEtAl2002, R.lallyEtAl2010],
   },
   {

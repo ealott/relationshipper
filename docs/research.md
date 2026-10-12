@@ -52,6 +52,8 @@ One caveat: training people to respond enthusiastically changed how they saw the
 
 Gottman describes relationships as built from small "bids" for connection, which partners either turn toward or turn away from (Gottman & DeClaire, 2001). In a study of 49 newlywed couples observed at dinner, playfulness and enthusiastic turning toward went with more humor and affection in a later conflict discussion. The authors stress that these data are correlational (Driver & Gottman, 2004). A review of 50 years of research links family routines and rituals with marital satisfaction, though the studies used inconsistent methods (Fiese et al., 2002).
 
+*In the app:* a snuggle is a one-tap bid, and your partner can turn toward it by snuggling back. Nothing tallies them over time, so they can't become a score. Whether a tap does what a bid in person does is untested.
+
 For the reminder: habits form through repetition in a consistent context over weeks to months, and missing a single day did not derail the process (Lally et al., 2010). So reminders come once a day, at a time each partner chooses. Consistency is marked quietly: Today shows "N days in a row" only when both partners have answered the daily question two or more days running, and nothing is shown or sent when a streak breaks.
 
 ### 5. Prompts that deepen gradually

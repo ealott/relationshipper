@@ -13,6 +13,7 @@ export const useCustomQuestions = () => useQuery('custom-questions', api.customQ
 export const useJournal = () => useQuery('journal', () => api.journal(), { refreshInterval: 30_000 });
 export const useJournalDay = (day: string) => useQuery(`journal:${day}`, () => api.journalDay(day), { refreshInterval: 20_000 });
 export const useDates = () => useQuery('dates', api.dates, { refreshInterval: 60_000 });
+export const useSnuggles = () => useQuery('snuggles', api.snuggles, { refreshInterval: 30_000 });
 
 /** Every question this couple can see: the shared bank plus their own. */
 export function useCatalog(): { byId: Map<string, QuestionDTO>; bank: QuestionDTO[]; custom: QuestionDTO[]; loading: boolean } {

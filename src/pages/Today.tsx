@@ -9,7 +9,8 @@ import { InstallCard } from '../components/Install';
 import { DatePrompt } from '../components/Dates';
 import { JournalPrompt } from '../components/JournalDay';
 import { ReminderPrompt } from '../components/ReminderPrompt';
-import { idsWithStatus, randomFresh, useAvailableBank, useCatalog, useProgress, useToday } from '../lib/data';
+import { SnuggleCard } from '../components/Snuggle';
+import { idsWithStatus, randomFresh, useAvailableBank, useCatalog, useProgress, useSnuggles, useToday } from '../lib/data';
 import { formatDay } from '../lib/format';
 import { useMe } from '../lib/session';
 
@@ -19,6 +20,7 @@ export function Today() {
   const progress = useProgress();
   const catalog = useCatalog();
   const available = useAvailableBank();
+  const snuggles = useSnuggles();
   const { route } = useLocation();
   const partnerName = me.partner!.name;
 
@@ -49,6 +51,8 @@ export function Today() {
         </div>
       </header>
 
+      <SnuggleCard query={snuggles} place="top" />
+
       {today.data ? (
         <QuestionCard
           question={today.data.question}
@@ -66,6 +70,7 @@ export function Today() {
 
       <JournalPrompt />
       <DatePrompt />
+      <SnuggleCard query={snuggles} place="below" />
       <InstallCard />
       <ReminderPrompt />
 

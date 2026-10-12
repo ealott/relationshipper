@@ -1442,6 +1442,36 @@ select.input {
   font-weight: 700;
 }
 
+.snuggle--received {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  background: color-mix(in srgb, var(--primary-soft) 70%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
+  animation: reveal-in 0.4s ease-out;
+}
+
+.snuggle__text {
+  display: grid;
+  gap: 2px;
+}
+
+.snuggle__text p {
+  margin: 0;
+}
+
+.snuggle__title {
+  font-weight: 700;
+}
+
+.snuggle__actions {
+  grid-column: 1 / -1;
+}
+
+.snuggle.is-popped > svg:first-child {
+  fill: currentColor;
+  animation: pulse 0.45s ease-in-out 2;
+}
+
 .jday-picker {
   display: flex;
   align-items: center;

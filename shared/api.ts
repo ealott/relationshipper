@@ -13,6 +13,8 @@ export interface UserDTO {
   notifyPartner: boolean;
   /** Date night notifications: when your partner plans, moves or cancels one, and a reminder on the day. */
   notifyDates: boolean;
+  /** A notification when your partner sends a snuggle. */
+  notifySnuggles: boolean;
   isAdmin: boolean;
 }
 
@@ -113,6 +115,13 @@ export interface VersionsResponse {
 }
 
 export type DraftKind = 'answer' | 'response';
+
+export interface SnugglesResponse {
+  /** Snuggles from your partner you haven't seen yet. */
+  unseen: number;
+  lastReceivedAt: number | null;
+  lastSentAt: number | null;
+}
 
 export interface DateIdeaDTO {
   id: string;

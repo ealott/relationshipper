@@ -434,3 +434,33 @@ test('date nights: deciding ahead, together', async ({ browser }) => {
   expect(ics.headers()['content-type']).toContain('text/calendar');
   expect(await ics.text()).toContain('SUMMARY:Date night: Learn a new board or card game');
 });
+
+test('a snuggle, sent with one tap and returned', async ({ browser }) => {
+  const stamp = Date.now();
+  const kim = await signInAs(browser, 'Kim', stamp);
+  const noor = await signInAs(browser, 'Noor', stamp);
+  await pair(kim, noor);
+
+  await kim.goto('/');
+  const send = kim.locator('.snuggle');
+  await expect(send).toContainText('Thinking of Noor?');
+  await send.getByRole('button', { name: 'Snuggle', exact: true }).click();
+  await expect(kim.getByText('Snuggle sent to Noor.')).toBeVisible();
+  await expect(send).toContainText('You sent a snuggle just now.');
+
+  // Noor finds it at the top of Today and snuggles back.
+  await noor.goto('/');
+  const received = noor.locator('.snuggle--received');
+  await expect(received).toContainText('Kim sent you a snuggle');
+  await shot(noor, '21-snuggle');
+  await received.getByRole('button', { name: 'Snuggle back' }).click();
+  await expect(received).toHaveCount(0);
+  await expect(noor.locator('.snuggle')).toContainText('You sent a snuggle just now.');
+
+  await kim.reload();
+  const back = kim.locator('.snuggle--received');
+  await expect(back).toContainText('Noor sent you a snuggle');
+  await back.getByRole('button', { name: 'Thanks' }).click();
+  await expect(back).toHaveCount(0);
+  await expect(kim.locator('.snuggle')).toContainText('Thinking of Noor?');
+});
