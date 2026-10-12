@@ -9,9 +9,10 @@ import { InstallCard } from '../components/Install';
 import { DatePrompt } from '../components/Dates';
 import { JournalPrompt } from '../components/JournalDay';
 import { ReminderPrompt } from '../components/ReminderPrompt';
+import { BootyCallCard } from '../components/BootyCall';
 import { SnuggleCard } from '../components/Snuggle';
 import { TimelinePrompt } from '../components/Timeline';
-import { idsWithStatus, randomFresh, useAvailableBank, useCatalog, useProgress, useSnuggles, useTimeline, useToday } from '../lib/data';
+import { idsWithStatus, randomFresh, useAvailableBank, useBootyCalls, useCatalog, useProgress, useSnuggles, useTimeline, useToday } from '../lib/data';
 import { formatDay } from '../lib/format';
 import { useMe } from '../lib/session';
 
@@ -22,6 +23,7 @@ export function Today() {
   const catalog = useCatalog();
   const available = useAvailableBank();
   const snuggles = useSnuggles();
+  const bootyCalls = useBootyCalls();
   const timeline = useTimeline();
   const { route } = useLocation();
   const partnerName = me.partner!.name;
@@ -53,6 +55,7 @@ export function Today() {
         </div>
       </header>
 
+      <BootyCallCard query={bootyCalls} place="top" />
       <SnuggleCard query={snuggles} place="top" />
       <TimelinePrompt query={timeline} place="top" />
 
@@ -75,6 +78,7 @@ export function Today() {
       <DatePrompt />
       <TimelinePrompt query={timeline} place="below" />
       <SnuggleCard query={snuggles} place="below" />
+      <BootyCallCard query={bootyCalls} place="below" />
       <InstallCard />
       <ReminderPrompt />
 

@@ -6,6 +6,8 @@ import type {
   AdminSuggestion,
   AdminUser,
   AuthConfigResponse,
+  BootyCallAnswer,
+  BootyCallsResponse,
   CalendarFeedResponse,
   BankResponse,
   CustomQuestionsResponse,
@@ -106,7 +108,7 @@ export const api = {
     request<MeResponse>('POST', '/auth/password', { name, password, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
   me: () => request<MeResponse>('GET', '/me'),
   logout: () => request<void>('POST', '/auth/logout', {}),
-  updateMe: (body: Partial<{ name: string; timezone: string; reminderEnabled: boolean; reminderTime: string; notifyPartner: boolean; notifyDates: boolean; notifySnuggles: boolean }>) =>
+  updateMe: (body: Partial<{ name: string; timezone: string; reminderEnabled: boolean; reminderTime: string; notifyPartner: boolean; notifyDates: boolean; notifySnuggles: boolean; bootyCalls: boolean }>) =>
     request<MeResponse>('PATCH', '/me', body),
   deleteAccount: () => request<void>('POST', '/me/delete', { confirm: 'DELETE' }),
 
@@ -163,6 +165,12 @@ export const api = {
   removeMilestone: (id: string) => request<void>('DELETE', `/timeline/${enc(id)}`),
   /** Your own memory of it; all empty removes it. */
   writeMemory: (id: string, memory: MemoryInput) => request<MilestoneDTO>('PUT', `/timeline/${enc(id)}/memory`, memory),
+
+  bootyCalls: () => request<BootyCallsResponse>('GET', '/booty-calls'),
+  askBootyCall: () => request<BootyCallsResponse>('POST', '/booty-calls', {}),
+  answerBootyCall: (id: string, answer: BootyCallAnswer) => request<BootyCallsResponse>('POST', `/booty-calls/${enc(id)}/answer`, { answer }),
+  /** Before it's answered. */
+  takeBackBootyCall: (id: string) => request<BootyCallsResponse>('DELETE', `/booty-calls/${enc(id)}`),
 
   snuggles: () => request<SnugglesResponse>('GET', '/snuggles'),
   /** Also marks your partner's snuggles as seen: snuggling back means you saw them. */

@@ -142,5 +142,6 @@ export async function cleanupExpired(env: AppEnv, now = Date.now()): Promise<voi
     env.DB.prepare('DELETE FROM invites WHERE expires_at <= ?').bind(now),
     env.DB.prepare('DELETE FROM rate_limits WHERE window_start <= ?').bind(now - 24 * 60 * 60 * 1000),
     env.DB.prepare('DELETE FROM snuggles WHERE created_at <= ?').bind(now - 30 * 24 * 60 * 60 * 1000),
+    env.DB.prepare('DELETE FROM booty_calls WHERE created_at <= ?').bind(now - 30 * 24 * 60 * 60 * 1000),
   ]);
 }

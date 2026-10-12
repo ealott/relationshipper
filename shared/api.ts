@@ -16,6 +16,8 @@ export interface UserDTO {
   notifyDates: boolean;
   /** A notification when your partner sends a snuggle. */
   notifySnuggles: boolean;
+  /** You've turned on booty calls; the button shows once your partner has too. */
+  bootyCalls: boolean;
   isAdmin: boolean;
 }
 
@@ -157,6 +159,26 @@ export interface DatesResponse {
   /** The most recent past dates, newest first. */
   past: DateNightDTO[];
   ideas: DateIdeaDTO[];
+}
+
+export type BootyCallAnswer = 'yes' | 'later' | 'no';
+
+export interface BootyCallDTO {
+  id: string;
+  fromMe: boolean;
+  createdAt: number;
+  /** 'later' is a rain check, 'no' is not tonight. */
+  answer: BootyCallAnswer | null;
+  answeredAt: number | null;
+}
+
+export interface BootyCallsResponse {
+  /** Whether each of you has turned booty calls on. The button shows once you both have. */
+  mine: boolean;
+  partner: boolean;
+  /** The latest ask from the last 12 hours, either way, unless it was taken back. */
+  latest: BootyCallDTO | null;
+  canAsk: boolean;
 }
 
 /** Your private calendar feed of date nights, for Google Calendar or Apple Calendar. */

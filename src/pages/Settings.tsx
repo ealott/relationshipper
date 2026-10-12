@@ -6,9 +6,11 @@ import { Segmented, Switch } from '../components/Field';
 import { InstallSteps } from '../components/Install';
 import { BookIcon, DownloadIcon, ShareIcon, ShieldIcon } from '../components/Icons';
 import { StageFields } from './Stage';
+import { useBootyCalls } from '../lib/data';
 import { isStandalone } from '../lib/platform';
 import { getPref, setPref, type Prefs } from '../lib/prefs';
 import { checkDeviceSubscription, deviceSubscribed, disablePushOnDevice, enablePushOnDevice, pushSupport } from '../lib/push';
+import { invalidate } from '../lib/query';
 import { setMe, signedOut, useMe } from '../lib/session';
 import { useStore } from '../lib/store';
 import { accountLabel } from '../lib/format';
@@ -402,6 +404,7 @@ function InstallApp() {
 
 function Relationship({ saving, update }: { saving: boolean; update: (fn: () => Promise<ReturnType<typeof useMe>>, success?: string) => Promise<void> }) {
   const me = useMe();
+  const bootyCalls = useBootyCalls();
   const couple = me.couple!;
   const stage: CoupleStage = { married: couple.married, livingTogether: couple.livingTogether, hasKids: couple.hasKids };
   return (
@@ -423,6 +426,30 @@ function Relationship({ saving, update }: { saving: boolean; update: (fn: () => 
           checked={couple.includeIntimacy}
           disabled={saving}
           onChange={(v) => update(() => api.updateCouple({ includeIntimacy: v }))}
+        />
+      </div>
+      <div class="setting">
+        <div class="setting__text">
+          <span class="setting__label">Booty calls</span>
+          <span class="setting__hint">
+            {!me.user.bootyCalls
+              ? `A button on Today to ask ${me.partner!.name} for one. It shows once you’ve both turned it on, and lock screens only ever say “a wink”.`
+              : bootyCalls.data?.partner
+                ? 'On for both of you. Lock screens only ever say “a wink”.'
+                : `On for you. It shows once ${me.partner!.name} turns it on too.`}
+          </span>
+        </div>
+        <Switch
+          label="Booty calls"
+          checked={me.user.bootyCalls}
+          disabled={saving}
+          onChange={(v) =>
+            update(async () => {
+              const next = await api.updateMe({ bootyCalls: v });
+              invalidate('booty-calls');
+              return next;
+            })
+          }
         />
       </div>
       <div class="setting setting--stacked">

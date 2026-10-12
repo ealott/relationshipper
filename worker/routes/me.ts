@@ -39,6 +39,8 @@ export const meRoutes = new Hono<HonoEnv>()
     if (notifyDates !== undefined) set('notify_dates', notifyDates ? 1 : 0);
     const notifySnuggles = optionalBool(body, 'notifySnuggles');
     if (notifySnuggles !== undefined) set('notify_snuggles', notifySnuggles ? 1 : 0);
+    const bootyCalls = optionalBool(body, 'bootyCalls');
+    if (bootyCalls !== undefined) set('booty_calls', bootyCalls ? 1 : 0);
 
     // A new schedule shouldn't fire immediately for a time that has already passed today.
     if (reminderEnabled || reminderMinutes !== undefined || timezone !== undefined) {
