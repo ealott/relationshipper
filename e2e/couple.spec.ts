@@ -114,6 +114,32 @@ test('two partners pair up, write privately, and talk about their answers', asyn
   await alex.page.getByRole('button', { name: 'Send' }).click();
   await expect(alex.page.locator('.message--me')).toContainText('cooking on Sunday');
 
+  // After the reveal Alex adds to their answer and corrects their reply. Sam sees both edits,
+  // and what Alex wrote before.
+  await alex.page.locator('.entry--me').getByRole('button', { name: 'Edit', exact: true }).click();
+  await alex.page.getByLabel('Your answer').fill(`${secret}\n\nA second paragraph, and a third thought.`);
+  await alex.page.getByRole('button', { name: 'Save changes' }).click();
+  await expect(alex.page.locator('.entry--me .entry__text')).toContainText('a third thought');
+  await expect(alex.page.locator('.entry--me .versions__toggle')).toContainText('Edited');
+  await alex.page.locator('.message--me').getByRole('button', { name: 'Edit', exact: true }).click();
+  await alex.page.getByLabel('Edit your reply').fill('It came up when we were cooking on Saturday.');
+  await alex.page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(alex.page.locator('.message--me .message__text')).toContainText('cooking on Saturday');
+
+  await sam.page.reload();
+  const alexEntry = sam.page.locator('.entry--partner');
+  await expect(alexEntry.locator('.entry__text')).toContainText('a third thought');
+  await alexEntry.getByRole('button', { name: /See what changed/ }).click();
+  await expect(alexEntry.locator('.versions__text')).toHaveText(`${secret}\n\nA second paragraph.`);
+  const alexReply = sam.page.locator('.message--partner');
+  await expect(alexReply.locator('.message__text')).toContainText('cooking on Saturday');
+  await alexReply.getByRole('button', { name: 'edited', exact: true }).click();
+  await expect(alexReply.locator('.versions__text')).toContainText('cooking on Sunday');
+  await shot(sam.page, '08b-edited');
+  // Only Alex can change Alex's words.
+  await expect(alexEntry.getByRole('button', { name: 'Edit', exact: true })).toHaveCount(0);
+  await expect(alexReply.getByRole('button', { name: 'Edit', exact: true })).toHaveCount(0);
+
   // The library, a theme, and a question Alex writes for them both.
   await tab(alex.page, 'Questions').click();
   await expect(alex.page.getByRole('heading', { name: 'Questions', exact: true })).toBeVisible();

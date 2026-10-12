@@ -168,6 +168,22 @@ describe('partner activity notifications', () => {
     expect(pushes[0]!.payload.title).toBe('Alex answered a question');
   });
 
+  it('doesn’t notify when an answer or reply is edited after the reveal', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    await subscribe(a.client);
+    await subscribe(b.client);
+    const q = 'love-maps-003';
+    await a.client.put(`/api/questions/${q}/answer`, answerFor('mine'));
+    await b.client.put(`/api/questions/${q}/answer`, answerFor('theirs'));
+    const replied = await a.client.post(`/api/questions/${q}/responses`, { text: 'a reply' });
+    await t.ctx.flush();
+    pushes = [];
+    await a.client.put(`/api/questions/${q}/answer`, answerFor('mine, edited'));
+    await a.client.patch(`/api/questions/${q}/responses/${replied.body.responses[0].id}`, { text: 'a reply, edited' });
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(0);
+  });
+
   it('respects the partner’s notification setting', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     await subscribe(b.client);

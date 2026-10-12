@@ -20,6 +20,7 @@ import type {
   QuestionResponse,
   QuestionState,
   TodayResponse,
+  VersionsResponse,
 } from '../shared/api';
 import type { Audience, CategoryId, Depth } from '../shared/questions/types';
 
@@ -105,6 +106,9 @@ export const api = {
   question: (id: string) => request<QuestionResponse>('GET', `/questions/${enc(id)}`),
   answer: (id: string, text: string) => request<QuestionState>('PUT', `/questions/${enc(id)}/answer`, { text }),
   respond: (id: string, text: string) => request<QuestionState>('POST', `/questions/${enc(id)}/responses`, { text }),
+  editReply: (id: string, responseId: string, text: string) =>
+    request<QuestionState>('PATCH', `/questions/${enc(id)}/responses/${enc(responseId)}`, { text }),
+  versions: (id: string) => request<VersionsResponse>('GET', `/questions/${enc(id)}/versions`),
   drafts: (id: string) => request<DraftsResponse>('GET', `/questions/${enc(id)}/drafts`),
   /** `keepalive` lets the save finish even if the page is closing. */
   saveDraft: (id: string, kind: DraftKind, text: string, keepalive = false) =>

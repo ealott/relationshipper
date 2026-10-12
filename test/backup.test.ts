@@ -23,7 +23,10 @@ describe('backups', () => {
     const tricky = "It's; complicated —\n'quoted' and \"double\" -- not a comment";
     await a.client.put('/api/questions/love-maps-001/answer', { text: tricky });
     await b.client.put('/api/questions/love-maps-001/answer', { text: 'Mine.' });
-    await a.client.post('/api/questions/love-maps-001/responses', { text: 'Tell me more; please.' });
+    const replied = await a.client.post('/api/questions/love-maps-001/responses', { text: 'Tell me more; please.' });
+    // Edits after the reveal, so there are earlier versions to back up.
+    await b.client.put('/api/questions/love-maps-001/answer', { text: 'Mine, edited.' });
+    await a.client.patch(`/api/questions/love-maps-001/responses/${replied.body.responses[0].id}`, { text: 'Tell me more, please.' });
     await b.client.put('/api/questions/love-maps-002/drafts/answer', { text: 'Half a thought' });
     await a.client.post('/api/custom-questions', { text: 'What should we never stop doing?' });
 

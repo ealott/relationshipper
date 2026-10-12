@@ -69,8 +69,11 @@ describe('answers stay hidden until both partners have written', () => {
     expect((await b.client.get<QuestionResponse>(`/api/questions/${q}`)).body.state).toMatchObject({ mine: null, partnerAnswered: true, partner: null });
     expect((await b.client.get('/api/progress')).body.progress[q]).toBe('partner');
 
-    // Responses aren't possible before the reveal.
+    // Responses aren't possible before the reveal, and there are no earlier versions to read.
     expect((await b.client.post(`/api/questions/${q}/responses`, { text: 'early' })).status).toBe(409);
+    const early = await b.client.get(`/api/questions/${q}/versions`);
+    expect(early.status).toBe(409);
+    expect(early.raw).not.toContain('SECRET');
 
     const edited = await a.client.put<QuestionState>(`/api/questions/${q}/answer`, { text: 'SECRET-EDITED' });
     expect(edited.body.mine?.text).toBe('SECRET-EDITED');
@@ -80,9 +83,11 @@ describe('answers stay hidden until both partners have written', () => {
     expect(revealed.body.revealedAt).toBeTypeOf('number');
     expect((await a.client.get<QuestionResponse>(`/api/questions/${q}`)).body.state.partner?.text).toBe('Sam’s reflection');
 
-    const lockA = await a.client.put(`/api/questions/${q}/answer`, { text: 'too late' });
-    expect(lockA.status).toBe(409);
-    expect(lockA.body.error.code).toBe('answer_locked');
+    // Sam never read Alex's first version, so it isn't kept as an earlier version.
+    const versions = await b.client.get(`/api/questions/${q}/versions`);
+    expect(versions.status).toBe(200);
+    expect(versions.raw).not.toContain('SECRET-ANSWER-FROM-ALEX');
+    expect(revealed.body.partner?.editedAt).toBeNull();
 
     // The conversation after the reveal.
     const r1 = await a.client.post<QuestionState>(`/api/questions/${q}/responses`, { text: 'I didn’t know that about you.' });
@@ -198,15 +203,19 @@ describe('unpairing and deletion', () => {
     const custom = await a.client.post<QuestionDTO>('/api/custom-questions', { text: 'What do you want next year to hold?' });
     await a.client.put('/api/questions/love-maps-001/answer', { text: 'a' });
     await b.client.put('/api/questions/love-maps-001/answer', { text: 'b' });
-    await a.client.post('/api/questions/love-maps-001/responses', { text: 'c' });
+    const replied = await a.client.post<QuestionState>('/api/questions/love-maps-001/responses', { text: 'c' });
+    // Edits after the reveal leave earlier versions behind; those go too.
+    await a.client.put('/api/questions/love-maps-001/answer', { text: 'a, edited' });
+    await a.client.patch(`/api/questions/love-maps-001/responses/${replied.body.responses[0]!.id}`, { text: 'c, edited' });
 
     expect((await b.client.post<MeResponse>('/api/couple/unpair')).body.couple).toBeNull();
     expect((await a.client.get<MeResponse>('/api/me')).body.couple).toBeNull();
     const left = await t.env.DB.prepare(
       `SELECT (SELECT COUNT(*) FROM answers WHERE user_id IN (?1, ?2)) + (SELECT COUNT(*) FROM responses WHERE user_id IN (?1, ?2))
+            + (SELECT COUNT(*) FROM answer_versions WHERE user_id IN (?1, ?2)) + (SELECT COUNT(*) FROM response_versions WHERE response_id = ?4)
             + (SELECT COUNT(*) FROM questions WHERE id = ?3) AS n`,
     )
-      .bind(a.id, b.id, custom.body.id)
+      .bind(a.id, b.id, custom.body.id, replied.body.responses[0]!.id)
       .first<{ n: number }>();
     expect(left?.n).toBe(0);
   });

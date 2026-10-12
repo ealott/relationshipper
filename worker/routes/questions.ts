@@ -11,6 +11,7 @@ import {
   type ProgressResponse,
   type QuestionResponse,
   type TodayResponse,
+  type VersionsResponse,
 } from '../../shared/api';
 import { isCategoryId } from '../../shared/categories';
 import { zonedNow } from '../../shared/time';
@@ -21,7 +22,7 @@ import { ApiError, badRequest, readJson } from '../http';
 import { randomId } from '../lib/crypto';
 import { notifyPartner, pushToUser, quote } from '../notify';
 import { findQuestion, findQuestions, getBank, toQuestionDTO, type QuestionRow } from '../questions';
-import { countYourTurn, getQuestionState, getQuestionStates } from '../questionState';
+import { countYourTurn, getQuestionState, getQuestionStates, getVersions } from '../questionState';
 import { requireAuth, requireCouple } from '../session';
 
 const NUDGE_COOLDOWN = 3 * 60 * 60 * 1000;
@@ -116,19 +117,34 @@ export const questionRoutes = new Hono<HonoEnv>()
     const q = await questionFor(c.env.DB, c.req.param('id'), couple.id);
     const text = writtenText(await readJson(c), LIMITS.answerMax, 'answer');
     const now = Date.now();
-    // You can change your answer until your partner answers; after the reveal it's locked.
-    const written = await c.env.DB.prepare(
-      `INSERT INTO answers (couple_id, question_id, user_id, text, created_at, updated_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?5)
-       ON CONFLICT (couple_id, question_id, user_id) DO UPDATE SET text = excluded.text, updated_at = excluded.updated_at
-       WHERE NOT EXISTS (SELECT 1 FROM answers WHERE couple_id = ?1 AND question_id = ?2 AND user_id <> ?3)
-       RETURNING created_at`,
-    )
-      .bind(couple.id, q.id, user.id, text, now)
-      .first<{ created_at: number }>();
-    if (!written) throw new ApiError(409, 'answer_locked', 'Answers are locked once you’ve both written yours.');
-    await c.env.DB.prepare(`DELETE FROM drafts WHERE user_id = ? AND question_id = ? AND kind = 'answer'`).bind(user.id, q.id).run();
-    const state = await getQuestionState(c.env.DB, couple.id, user.id, q.id);
+    const db = c.env.DB;
+    // Until your partner answers, editing replaces your answer: they haven't read it. After the
+    // reveal, the version they read is kept, and the answer is marked edited. Checked in the same
+    // transaction as the write, so an answer arriving meanwhile can't slip between the two.
+    const revealed = 'EXISTS (SELECT 1 FROM answers WHERE couple_id = ?1 AND question_id = ?2 AND user_id <> ?3)';
+    const [, upsert] = await db.batch([
+      db
+        .prepare(
+          `INSERT INTO answer_versions (id, couple_id, question_id, user_id, text, written_at, replaced_at)
+           SELECT ?5, couple_id, question_id, user_id, text, updated_at, ?6 FROM answers
+            WHERE couple_id = ?1 AND question_id = ?2 AND user_id = ?3 AND text <> ?4 AND ${revealed}`,
+        )
+        .bind(couple.id, q.id, user.id, text, randomId(), now),
+      db
+        .prepare(
+          `INSERT INTO answers (couple_id, question_id, user_id, text, created_at, updated_at)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?5)
+           ON CONFLICT (couple_id, question_id, user_id) DO UPDATE SET
+             text = excluded.text,
+             updated_at = CASE WHEN answers.text <> excluded.text THEN excluded.updated_at ELSE answers.updated_at END,
+             edited_at = CASE WHEN answers.text <> excluded.text AND ${revealed} THEN excluded.updated_at ELSE answers.edited_at END
+           RETURNING created_at`,
+        )
+        .bind(couple.id, q.id, user.id, text, now),
+      db.prepare(`DELETE FROM drafts WHERE user_id = ? AND question_id = ? AND kind = 'answer'`).bind(user.id, q.id),
+    ]);
+    const written = (upsert!.results as { created_at: number }[])[0]!;
+    const state = await getQuestionState(db, couple.id, user.id, q.id);
     if (written.created_at === now) {
       const daily = await getOrAssignDaily(c.env.DB, couple);
       const isDaily = daily.questionId === q.id;
@@ -182,6 +198,42 @@ export const questionRoutes = new Hono<HonoEnv>()
       );
     }
     return c.json(await getQuestionState(c.env.DB, couple.id, user.id, q.id));
+  })
+
+  // Editing a reply keeps its earlier version, for both of you to see.
+  .patch('/questions/:id/responses/:responseId', async (c) => {
+    const { user, couple } = requireCouple(c);
+    const q = await questionFor(c.env.DB, c.req.param('id'), couple.id);
+    const text = writtenText(await readJson(c), LIMITS.responseMax, 'reply');
+    const db = c.env.DB;
+    const id = c.req.param('responseId');
+    const reply = await db
+      .prepare('SELECT user_id FROM responses WHERE id = ? AND couple_id = ? AND question_id = ?')
+      .bind(id, couple.id, q.id)
+      .first<{ user_id: string }>();
+    if (!reply) throw new ApiError(404, 'unknown_response', 'That reply doesn’t exist.');
+    if (reply.user_id !== user.id) throw new ApiError(403, 'not_author', 'Only the person who wrote a reply can edit it.');
+    const now = Date.now();
+    await db.batch([
+      db
+        .prepare(
+          `INSERT INTO response_versions (id, response_id, text, written_at, replaced_at)
+           SELECT ?1, id, text, COALESCE(edited_at, created_at), ?2 FROM responses WHERE id = ?3 AND text <> ?4`,
+        )
+        .bind(randomId(), now, id, text),
+      db.prepare('UPDATE responses SET text = ?1, edited_at = ?2 WHERE id = ?3 AND text <> ?1').bind(text, now, id),
+    ]);
+    return c.json(await getQuestionState(db, couple.id, user.id, q.id));
+  })
+
+  // Earlier versions of edited answers and replies, once you've both answered.
+  .get('/questions/:id/versions', async (c) => {
+    const { user, couple } = requireCouple(c);
+    const q = await questionFor(c.env.DB, c.req.param('id'), couple.id);
+    const state = await getQuestionState(c.env.DB, couple.id, user.id, q.id);
+    if (state.revealedAt === null) throw new ApiError(409, 'not_revealed', 'Earlier versions appear once you’ve both answered.');
+    const versions = await getVersions(c.env.DB, couple.id, [state]);
+    return c.json<VersionsResponse>(versions.get(q.id)!);
   })
 
   // Unsent drafts, saved as you write so they survive closed tabs and follow you to other

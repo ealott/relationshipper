@@ -717,10 +717,16 @@ select.input {
 
 .hint {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   color: var(--text-muted);
   font-size: 14px;
+}
+
+/* Level with the first line when the hint wraps. */
+.hint > svg {
+  flex: none;
+  margin-top: 0.2em;
 }
 
 .hint--center {
@@ -1008,6 +1014,59 @@ select.input {
   color: var(--text-muted);
 }
 
+.entry__edit {
+  font-size: 13px;
+  padding: 0;
+}
+
+/* Earlier versions of an edited answer or reply */
+.versions {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+
+.versions__toggle {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.versions__list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.versions__item {
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
+
+.versions__date {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.versions__text {
+  margin-top: 2px;
+  font-family: var(--font-serif);
+  font-size: calc(16px * var(--text-scale));
+  line-height: 1.55;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.versions__loading {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .entry__text {
   font-family: var(--font-serif);
   font-size: calc(18px * var(--text-scale));
@@ -1083,6 +1142,36 @@ select.input {
   font-weight: 600;
   color: var(--text-muted);
   margin-bottom: 2px;
+}
+
+.message__action {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.message--editing {
+  justify-self: stretch;
+  max-width: none;
+}
+
+.message__edit {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.message__edit .row {
+  justify-content: flex-end;
+}
+
+.message .versions__list {
+  margin-top: 6px;
 }
 
 .message__text {

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { LIMITS, type AnswerDTO, type QuestionDTO, type QuestionState } from '../../shared/api';
+import type { ComponentChildren } from 'preact';
+import { LIMITS, type AnswerDTO, type QuestionDTO, type QuestionState, type ResponseDTO, type VersionDTO, type VersionsResponse } from '../../shared/api';
 import { questionText } from '../../shared/categories';
-import { api, ApiError } from '../api';
+import { api } from '../api';
 import { useDraft } from '../lib/drafts';
 import { formatDate, relativeTime, wordCount } from '../lib/format';
 import { invalidate } from '../lib/query';
@@ -9,7 +10,7 @@ import { useMe } from '../lib/session';
 import { toast, toastError } from '../lib/toast';
 import { Avatar } from './Avatar';
 import { AutoTextarea } from './Field';
-import { LockIcon, PencilIcon, SendIcon } from './Icons';
+import { HistoryIcon, LockIcon, PencilIcon, SendIcon } from './Icons';
 import { CategoryLabel, SourceBadge } from './QuestionMeta';
 import { Raccoon } from './Raccoon';
 
@@ -70,7 +71,6 @@ export function QuestionCard({ question, state, onChange, daily }: Props) {
           state={state}
           onSaved={saved}
           onCancel={editing ? () => setEditing(false) : undefined}
-          onLocked={async () => onChange((await api.question(question.id)).state)}
         />
       )}
     </article>
@@ -82,13 +82,11 @@ function Composer({
   state,
   onSaved,
   onCancel,
-  onLocked,
 }: {
   question: QuestionDTO;
   state: QuestionState;
   onSaved: (s: QuestionState) => void;
   onCancel?: () => void;
-  onLocked: () => void;
 }) {
   const me = useMe();
   const partnerName = me.partner?.name ?? 'your partner';
@@ -109,7 +107,6 @@ function Composer({
       onSaved(next);
     } catch (err) {
       setError((err as Error).message);
-      if (err instanceof ApiError && err.code === 'answer_locked') onLocked();
     } finally {
       setBusy(false);
     }
@@ -169,16 +166,85 @@ function Composer({
   );
 }
 
-export function JournalEntry({ answer, who, name }: { answer: AnswerDTO; who: 'me' | 'partner'; name: string }) {
+export function JournalEntry({
+  answer,
+  who,
+  name,
+  onEdit,
+  children,
+}: {
+  answer: AnswerDTO;
+  who: 'me' | 'partner';
+  name: string;
+  onEdit?: () => void;
+  children?: ComponentChildren;
+}) {
   return (
     <section class={`entry entry--${who}`}>
       <header class="entry__head">
         <Avatar name={name} who={who} size={26} />
         <span class="entry__name">{who === 'me' ? 'You' : name}</span>
         <time class="entry__date">{formatDate(answer.updatedAt)}</time>
+        {onEdit && (
+          <button type="button" class="link-button entry__edit" onClick={onEdit}>
+            <PencilIcon size={14} /> Edit
+          </button>
+        )}
       </header>
       <div class="entry__text">{answer.text}</div>
+      {children}
     </section>
+  );
+}
+
+/**
+ * Earlier versions of a question's answers and replies, fetched the first time someone asks to
+ * see them, and again after any edit.
+ */
+function useVersions(questionId: string, state: QuestionState) {
+  const edits = [state.mine?.editedAt, state.partner?.editedAt, ...state.responses.map((r) => r.editedAt)].join();
+  const [data, setData] = useState<VersionsResponse | null>(null);
+  const loading = useRef<Promise<void> | null>(null);
+  useEffect(() => {
+    setData(null);
+    loading.current = null;
+  }, [questionId, edits]);
+  function load() {
+    loading.current ??= api.versions(questionId).then(setData, (err) => {
+      loading.current = null;
+      toastError(err);
+    });
+  }
+  return { data, load };
+}
+
+/** "Edited …", opening the earlier versions. `versions` is undefined until they've loaded. */
+function EarlierVersions({ editedAt, versions, load }: { editedAt: number; versions: VersionDTO[] | undefined; load: () => void }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (open && !versions) load();
+  }, [open, versions]);
+  return (
+    <div class="versions">
+      <button type="button" class="link-button versions__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <HistoryIcon size={14} /> Edited {formatDate(editedAt)} · {open ? 'Hide earlier versions' : 'See what changed'}
+      </button>
+      {open && <VersionList versions={versions} />}
+    </div>
+  );
+}
+
+function VersionList({ versions }: { versions: VersionDTO[] | undefined }) {
+  if (!versions) return <p class="versions__loading">Loading…</p>;
+  return (
+    <ol class="versions__list" aria-label="Earlier versions">
+      {versions.map((v) => (
+        <li class="versions__item">
+          <time class="versions__date">Written {formatDate(v.writtenAt)}</time>
+          <p class="versions__text">{v.text}</p>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -246,6 +312,14 @@ const RESPONSE_PROMPTS = [
 function Revealed({ question, state, onChange }: { question: QuestionDTO; state: QuestionState; onChange: (s: QuestionState) => void }) {
   const me = useMe();
   const partnerName = me.partner?.name ?? 'your partner';
+  const partnerId = me.partner?.id ?? '';
+  const [editingAnswer, setEditingAnswer] = useState(false);
+  const versions = useVersions(question.id, state);
+  const edited = (next: QuestionState) => {
+    onChange(next);
+    invalidate('history');
+    invalidate('today');
+  };
   // A reply sent since a draft was saved (maybe from another device) makes that draft stale.
   const lastSent = Math.max(0, ...state.responses.filter((r) => r.userId === me.user.id).map((r) => r.createdAt));
   const draft = useDraft(me.user.id, question.id, 'response', { staleBefore: lastSent });
@@ -270,23 +344,44 @@ function Revealed({ question, state, onChange }: { question: QuestionDTO; state:
 
   return (
     <div class="reveal">
-      <JournalEntry answer={state.partner!} who="partner" name={partnerName} />
-      <JournalEntry answer={state.mine!} who="me" name={me.user.name} />
+      <JournalEntry answer={state.partner!} who="partner" name={partnerName}>
+        {state.partner!.editedAt && (
+          <EarlierVersions editedAt={state.partner!.editedAt} versions={versions.data?.answers[partnerId] ?? (versions.data ? [] : undefined)} load={versions.load} />
+        )}
+      </JournalEntry>
+      {editingAnswer ? (
+        <EditAnswer
+          question={question}
+          answer={state.mine!}
+          onSaved={(next) => {
+            setEditingAnswer(false);
+            edited(next);
+          }}
+          onCancel={() => setEditingAnswer(false)}
+        />
+      ) : (
+        <JournalEntry answer={state.mine!} who="me" name={me.user.name} onEdit={() => setEditingAnswer(true)}>
+          {state.mine!.editedAt && (
+            <EarlierVersions editedAt={state.mine!.editedAt} versions={versions.data?.answers[me.user.id] ?? (versions.data ? [] : undefined)} load={versions.load} />
+          )}
+        </JournalEntry>
+      )}
       <section class="conversation" aria-label="Conversation">
         <h3 class="conversation__title">Conversation</h3>
         {state.responses.length > 0 && (
           <ol class="thread">
-            {state.responses.map((r) => {
-              const mine = r.userId === me.user.id;
-              return (
-                <li class={`message message--${mine ? 'me' : 'partner'}`}>
-                  <span class="message__meta">
-                    {mine ? 'You' : partnerName} · {relativeTime(r.createdAt)}
-                  </span>
-                  <p class="message__text">{r.text}</p>
-                </li>
-              );
-            })}
+            {state.responses.map((r) => (
+              <Message
+                key={r.id}
+                reply={r}
+                mine={r.userId === me.user.id}
+                name={partnerName}
+                questionId={question.id}
+                versions={versions.data?.responses[r.id] ?? (versions.data ? [] : undefined)}
+                loadVersions={versions.load}
+                onChange={edited}
+              />
+            ))}
           </ol>
         )}
         <form class="composer composer--reply" onSubmit={send}>
@@ -307,5 +402,155 @@ function Revealed({ question, state, onChange }: { question: QuestionDTO; state:
         </form>
       </section>
     </div>
+  );
+}
+
+/** Editing your answer after the reveal. The version your partner read is kept. */
+function EditAnswer({
+  question,
+  answer,
+  onSaved,
+  onCancel,
+}: {
+  question: QuestionDTO;
+  answer: AnswerDTO;
+  onSaved: (s: QuestionState) => void;
+  onCancel: () => void;
+}) {
+  const me = useMe();
+  const partnerName = me.partner?.name ?? 'your partner';
+  const [text, setText] = useState(answer.text);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function submit(e: Event) {
+    e.preventDefault();
+    if (!text.trim() || busy) return;
+    if (text.trim() === answer.text) return onCancel();
+    setBusy(true);
+    setError('');
+    try {
+      onSaved(await api.answer(question.id, text));
+    } catch (err) {
+      setError((err as Error).message);
+      setBusy(false);
+    }
+  }
+
+  const words = wordCount(text);
+  return (
+    <form class="composer" onSubmit={submit}>
+      <AutoTextarea class="journal-input" value={text} onValue={setText} maxLength={LIMITS.answerMax} rows={6} aria-label="Your answer" />
+      <div class="composer__footer">
+        <span class="composer__count">
+          {words} word{words === 1 ? '' : 's'}
+        </span>
+        <div class="row">
+          <button type="button" class="btn btn--ghost btn--sm" onClick={onCancel}>
+            Cancel
+          </button>
+          <button class="btn btn--primary btn--sm" disabled={!text.trim() || busy}>
+            {busy ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
+      </div>
+      {error && (
+        <p class="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <p class="hint">
+        <HistoryIcon size={14} /> {partnerName} has read this answer. If you change it, the version they read stays in its history, for both of you.
+      </p>
+    </form>
+  );
+}
+
+/** A reply in the conversation. You can edit your own; earlier versions are kept for both of you. */
+function Message({
+  reply,
+  mine,
+  name,
+  questionId,
+  versions,
+  loadVersions,
+  onChange,
+}: {
+  reply: ResponseDTO;
+  mine: boolean;
+  name: string;
+  questionId: string;
+  versions: VersionDTO[] | undefined;
+  loadVersions: () => void;
+  onChange: (s: QuestionState) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(reply.text);
+  const [busy, setBusy] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
+  useEffect(() => {
+    if (showVersions && !versions) loadVersions();
+  }, [showVersions, versions]);
+
+  async function save(e: Event) {
+    e.preventDefault();
+    if (!text.trim() || busy) return;
+    if (text.trim() === reply.text) return setEditing(false);
+    setBusy(true);
+    try {
+      onChange(await api.editReply(questionId, reply.id, text));
+      setEditing(false);
+    } catch (err) {
+      toastError(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <li class={`message message--${mine ? 'me' : 'partner'}${editing ? ' message--editing' : ''}`}>
+      <span class="message__meta">
+        {mine ? 'You' : name} · {relativeTime(reply.createdAt)}
+        {reply.editedAt && (
+          <>
+            {' · '}
+            <button type="button" class="message__action" aria-expanded={showVersions} onClick={() => setShowVersions(!showVersions)}>
+              edited
+            </button>
+          </>
+        )}
+        {mine && !editing && (
+          <>
+            {' · '}
+            <button
+              type="button"
+              class="message__action"
+              onClick={() => {
+                setText(reply.text);
+                setEditing(true);
+              }}
+            >
+              Edit
+            </button>
+          </>
+        )}
+      </span>
+      {editing ? (
+        <form class="message__edit" onSubmit={save}>
+          <AutoTextarea value={text} onValue={setText} maxLength={LIMITS.responseMax} rows={2} aria-label="Edit your reply" />
+          <div class="row">
+            <button type="button" class="btn btn--ghost btn--sm" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+            <button class="btn btn--primary btn--sm" disabled={!text.trim() || busy}>
+              {busy ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <p class="message__text">{reply.text}</p>
+      )}
+      {showVersions && <VersionList versions={versions} />}
+    </li>
   );
 }
