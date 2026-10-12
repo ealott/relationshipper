@@ -14,12 +14,14 @@ import { Dates } from './pages/Dates';
 import { Join } from './pages/Join';
 import { Journal, JournalDayPage } from './pages/Journal';
 import { Library } from './pages/Library';
+import { MilestonePage } from './pages/Milestone';
 import { NotFound } from './pages/NotFound';
 import { Pair } from './pages/Pair';
 import { QuestionPage } from './pages/QuestionPage';
 import { Research } from './pages/Research';
 import { Settings } from './pages/Settings';
 import { StageSetup } from './pages/Stage';
+import { Timeline } from './pages/Timeline';
 import { Today } from './pages/Today';
 import { Welcome } from './pages/Welcome';
 import { WriteQuestion } from './pages/WriteQuestion';
@@ -83,6 +85,8 @@ function PairedApp() {
         <Route path="/journal" component={Journal} />
         <Route path="/dates" component={Dates} />
         <Route path="/journal/:day" component={JournalDayPage} />
+        <Route path="/timeline" component={Timeline} />
+        <Route path="/timeline/:id" component={MilestonePage} />
         <Route path="/answers" component={Answers} />
         <Route path="/settings" component={Settings} />
         <Route path="/research" component={Research} />

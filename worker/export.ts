@@ -2,15 +2,17 @@ import type { VersionDTO } from '../shared/api';
 import { CATEGORY_BY_ID, isCategoryId, questionText } from '../shared/categories';
 import { formatClock } from '../shared/dates';
 import { isWeeklyDay, JOURNAL_PROMPTS, JOURNAL_PREFIX, parseEntry } from '../shared/journal';
+import { milestoneDateLabel } from '../shared/timeline';
 import { journalDayOf } from './journal';
 import { findQuestions } from './questions';
 import { getQuestionStates, getVersions } from './questionState';
 import type { PairedContext } from './session';
+import { loadMilestones } from './timeline';
 
 /**
  * The couple's journal as a readable Markdown file: every question either of you has answered,
- * both answers and the replies (with any earlier versions), oldest first, then the journal days
- * and the date nights.
+ * both answers and the replies (with any earlier versions), oldest first, then the journal days,
+ * the date nights and your timeline.
  * It follows the app's rule: your partner's answer only appears once you've written yours.
  */
 export async function exportJournal(db: D1Database, auth: PairedContext, now = Date.now()): Promise<string> {
@@ -103,6 +105,20 @@ export async function exportJournal(db: D1Database, auth: PairedContext, now = D
       lines.push(`- **${when}**: ${d.title} (${who})`, ...d.notes.split('\n').filter(Boolean).map((l) => `  ${l}`));
     }
     lines.push('');
+  }
+  const timeline = await loadMilestones(db, couple.id);
+  if (timeline.length) {
+    lines.push('---', '', '# Our timeline', '');
+    for (const m of timeline) {
+      lines.push(`## ${milestoneDateLabel(m.day, 'en-US')}: ${m.title}`, '', ...(m.place ? [`_${m.place}_`, ''] : []));
+      for (const who of [user, partner]) {
+        const memory = m.memories.find((x) => x.userId === who.id);
+        if (!memory) continue;
+        const song = memory.song && [memory.song.title, memory.song.artist].filter(Boolean).join(', ');
+        lines.push(`### ${who.name}`, '', ...(memory.text ? [memory.text, ''] : []));
+        if (memory.song) lines.push(`Song: ${song || memory.song.url}${song && memory.song.url ? ` (${memory.song.url})` : ''}`, '');
+      }
+    }
   }
   return lines.join('\n');
 }

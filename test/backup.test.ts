@@ -31,6 +31,8 @@ describe('backups', () => {
     await a.client.post('/api/custom-questions', { text: 'What should we never stop doing?' });
     const idea = await a.client.post('/api/date-ideas', { title: 'Stargazing; somewhere dark', setting: 'out' });
     await b.client.post('/api/dates', { day: '2027-01-15', time: '20:00', title: 'Stargazing', notes: 'Warm coats', ideaId: idea.body.id });
+    const milestone = await a.client.post('/api/timeline', { kind: 'first-date', title: "Our first date; it's a story", day: '2019-06', place: 'The pier' });
+    await b.client.put(`/api/timeline/${milestone.body.id}/memory`, { text: tricky, songTitle: 'Dreams', songUrl: 'https://example.com/dreams' });
 
     await t.ctx.flush(); // notifications update their senders' rows in the background
     const info = await createBackup(t.env);

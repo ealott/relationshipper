@@ -19,6 +19,8 @@ export const BACKUP_TABLES = [
   'drafts',
   'date_ideas',
   'date_nights',
+  'milestones',
+  'milestone_memories',
   'push_subscriptions',
 ] as const;
 

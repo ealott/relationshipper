@@ -214,11 +214,11 @@ function Notifications({ saving, update }: { saving: boolean; update: (fn: () =>
       )}
       <div class="setting">
         <div class="setting__text">
-          <span class="setting__label">When {me.partner!.name} answers</span>
-          <span class="setting__hint">Know when there’s something to reveal.</span>
+          <span class="setting__label">When {me.partner!.name} writes</span>
+          <span class="setting__hint">Answers, replies, journal days and your timeline.</span>
         </div>
         <Switch
-          label={`Notify me when ${me.partner!.name} answers`}
+          label={`Notify me when ${me.partner!.name} writes`}
           checked={me.user.notifyPartner}
           disabled={!canToggle}
           onChange={(v) => update(() => api.updateMe({ notifyPartner: v }))}

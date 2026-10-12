@@ -464,3 +464,73 @@ test('a snuggle, sent with one tap and returned', async ({ browser }) => {
   await expect(back).toHaveCount(0);
   await expect(kim.locator('.snuggle')).toContainText('Thinking of Noor?');
 });
+
+test('our timeline: milestones, both memories, and the day they come back', async ({ browser }) => {
+  const stamp = Date.now();
+  const mae = await signInAs(browser, 'Mae', stamp);
+  const ivo = await signInAs(browser, 'Ivo', stamp);
+  await pair(mae, ivo);
+
+  // Mae starts the timeline from Today, with a suggestion.
+  await mae.goto('/');
+  const card = mae.locator('.timeline-card');
+  await expect(card).toContainText('Start with the day you met.');
+  await card.click();
+  await expect(mae.getByRole('heading', { name: 'Our timeline' })).toBeVisible();
+  await mae.getByRole('button', { name: 'First date', exact: true }).click();
+  await expect(mae.getByLabel('Title')).toHaveValue('Our first date');
+  await mae.getByLabel('Day', { exact: true }).fill('2019-06-14');
+  await mae.getByLabel('Where (optional)').fill('The pier');
+  await mae.getByRole('button', { name: 'Add it' }).click();
+
+  // She lands on it and writes what she remembers, with a song.
+  await expect(mae.getByRole('heading', { name: 'Our first date' })).toBeVisible();
+  await expect(mae.locator('.milestone')).toContainText('June 14, 2019');
+  await mae.getByLabel('Your memory').fill('You were ten minutes late.');
+  await mae.getByRole('button', { name: 'Add a song' }).click();
+  await mae.getByLabel('Song', { exact: true }).fill('Dreams');
+  await mae.getByLabel('Artist').fill('Fleetwood Mac');
+  await mae.getByRole('button', { name: 'Save memory' }).click();
+  await expect(mae.locator('.memory')).toContainText('You were ten minutes late.');
+  await expect(mae.locator('.song')).toContainText('Dreams · Fleetwood Mac');
+
+  // A month is enough when you don't remember the day.
+  await mae.goto('/timeline');
+  await mae.getByRole('button', { name: 'Add', exact: true }).click();
+  await mae.getByLabel('What happened').selectOption('trip');
+  await expect(mae.getByLabel('Title')).toHaveValue('Our first trip together');
+  await mae.getByRole('radio', { name: 'Month' }).click();
+  await mae.getByLabel('Month', { exact: true }).fill('2021-05');
+  await mae.getByRole('button', { name: 'Add it' }).click();
+  await expect(mae.getByRole('heading', { name: 'Our first trip together' })).toBeVisible();
+  await mae.goto('/timeline');
+  await expect(mae.locator('.tl-card__title')).toHaveText(['Our first date', 'Our first trip together']);
+  await expect(mae.locator('.tl-year')).toHaveText(['2019', '2021']);
+
+  // Ivo reads hers right away and adds his own.
+  await ivo.goto('/timeline');
+  await ivo.locator('.tl-card', { hasText: 'Our first date' }).click();
+  await expect(ivo.locator('.memory.entry--partner')).toContainText('You were ten minutes late.');
+  await ivo.getByLabel('Your memory').fill('I was exactly on time.');
+  await ivo.getByRole('button', { name: 'Save memory' }).click();
+  await expect(ivo.locator('.memory.entry--me')).toContainText('I was exactly on time.');
+  await shot(ivo, '22-milestone');
+
+  // Either of them can change or remove a milestone.
+  await ivo.goto('/timeline');
+  await ivo.locator('.tl-card', { hasText: 'Our first trip together' }).click();
+  await ivo.getByRole('button', { name: 'Change' }).click();
+  ivo.once('dialog', (dialog) => void dialog.accept());
+  await ivo.getByRole('button', { name: 'Remove' }).click();
+  await expect(ivo.getByRole('heading', { name: 'Our timeline' })).toBeVisible();
+  await expect(ivo.locator('.tl-card__title')).toHaveText(['Our first date']);
+  await shot(ivo, '23-timeline');
+
+  // On its anniversary, a milestone comes back on Today.
+  const { today } = await call(mae, 'GET', '/timeline');
+  await call(mae, 'POST', '/timeline', { kind: 'first-kiss', title: 'Our first kiss', day: `${Number(today.slice(0, 4)) - 4}${today.slice(4)}` });
+  await mae.goto('/');
+  const anniversary = mae.locator('.timeline-card--anniversary');
+  await expect(anniversary).toContainText('4 years ago today');
+  await expect(anniversary).toContainText('Our first kiss');
+});

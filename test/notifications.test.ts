@@ -302,6 +302,38 @@ describe('partner activity notifications', () => {
     expect(pushes).toHaveLength(0);
   });
 
+  it('tells your partner about the timeline once a sitting, never what was written', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    await subscribe(b.client);
+    const first = await a.client.post('/api/timeline', { kind: 'first-date', title: 'SECRET-TITLE', day: '2019-06-14', place: 'SECRET-PLACE' });
+    await a.client.put(`/api/timeline/${first.body.id}/memory`, { text: 'SECRET-MEMORY' });
+    const second = await a.client.post('/api/timeline', { kind: 'met', title: 'Met', day: '2019' });
+    await t.ctx.flush();
+    expect(pushes.map((p) => p.payload)).toEqual([
+      { title: 'Alex added a milestone', body: 'Add your memory of it to your timeline.', url: `/timeline/${first.body.id}`, tag: `milestone-${first.body.id}`, badge: 0 },
+    ]);
+    expect(JSON.stringify(pushes)).not.toContain('SECRET');
+
+    // A new memory after a break is news; an edit isn't.
+    pushes = [];
+    const later = (ms: number) => [
+      t.env.DB.prepare('UPDATE milestones SET created_at = created_at - ? WHERE created_by = ?').bind(ms, a.id),
+      t.env.DB.prepare('UPDATE milestone_memories SET updated_at = updated_at - ? WHERE user_id = ?').bind(ms, a.id),
+    ];
+    await t.env.DB.batch(later(11 * 60 * 1000));
+    await a.client.put(`/api/timeline/${second.body.id}/memory`, { text: 'Another' });
+    await a.client.put(`/api/timeline/${first.body.id}/memory`, { text: 'SECRET-MEMORY, edited' });
+    await t.ctx.flush();
+    expect(pushes.map((p) => [p.payload.title, p.payload.url])).toEqual([['Alex wrote a memory', `/timeline/${second.body.id}`]]);
+
+    pushes = [];
+    await b.client.patch('/api/me', { notifyPartner: false });
+    await t.env.DB.batch(later(11 * 60 * 1000));
+    await a.client.post('/api/timeline', { kind: 'trip', title: 'Lisbon', day: '2022' });
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(0);
+  });
+
   it('respects the partner’s notification setting', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     await subscribe(b.client);

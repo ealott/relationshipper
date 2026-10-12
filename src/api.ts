@@ -19,12 +19,16 @@ import type {
   InviteResponse,
   JournalDay,
   JournalResponse,
+  MemoryInput,
   MeResponse,
+  MilestoneDTO,
+  MilestoneInput,
   ProgressResponse,
   QuestionDTO,
   QuestionResponse,
   QuestionState,
   SnugglesResponse,
+  TimelineResponse,
   TodayResponse,
   VersionsResponse,
 } from '../shared/api';
@@ -146,6 +150,14 @@ export const api = {
   dateCalendarUrl: (id: string) => `/api/dates/${enc(id)}/calendar.ics`,
   addDateIdea: (idea: { title: string; notes?: string; setting?: DateSetting | null }) => request<DateIdeaDTO>('POST', '/date-ideas', idea),
   deleteDateIdea: (id: string) => request<void>('DELETE', `/date-ideas/${enc(id)}`),
+
+  timeline: () => request<TimelineResponse>('GET', '/timeline'),
+  milestone: (id: string) => request<MilestoneDTO>('GET', `/timeline/${enc(id)}`),
+  addMilestone: (milestone: MilestoneInput) => request<MilestoneDTO>('POST', '/timeline', milestone),
+  updateMilestone: (id: string, milestone: Partial<MilestoneInput>) => request<MilestoneDTO>('PATCH', `/timeline/${enc(id)}`, milestone),
+  removeMilestone: (id: string) => request<void>('DELETE', `/timeline/${enc(id)}`),
+  /** Your own memory of it; all empty removes it. */
+  writeMemory: (id: string, memory: MemoryInput) => request<MilestoneDTO>('PUT', `/timeline/${enc(id)}/memory`, memory),
 
   snuggles: () => request<SnugglesResponse>('GET', '/snuggles'),
   /** Also marks your partner's snuggles as seen: snuggling back means you saw them. */

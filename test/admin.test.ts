@@ -35,6 +35,8 @@ describe('admin console', () => {
     await b.client.put('/api/journal/today', { good: ['TOP-SECRET-JOURNAL'], hard: [], thanks: [], note: '' });
     await a.client.post('/api/date-ideas', { title: 'TOP-SECRET-IDEA' });
     await a.client.post('/api/dates', { day: '2027-02-14', title: 'TOP-SECRET-DATE', notes: 'TOP-SECRET-NOTES' });
+    const milestone = await b.client.post('/api/timeline', { kind: 'first-date', title: 'TOP-SECRET-MILESTONE', day: '2020', place: 'TOP-SECRET-PLACE' });
+    await a.client.put(`/api/timeline/${milestone.body.id}/memory`, { text: 'TOP-SECRET-MEMORY', songTitle: 'TOP-SECRET-SONG' });
     for (const path of ['/api/admin/stats', '/api/admin/questions', '/api/admin/suggestions', '/api/admin/users']) {
       const res = await admin.client.get(path);
       expect(res.status, path).toBe(200);
@@ -46,6 +48,7 @@ describe('admin console', () => {
     expect(stats.journalEntries).toBeGreaterThanOrEqual(1);
     expect(stats.dateNights).toBeGreaterThanOrEqual(1);
     expect(stats.dateIdeas).toBeGreaterThanOrEqual(1);
+    expect(stats.milestones).toBeGreaterThanOrEqual(1);
     expect(stats.bank.active).toBeGreaterThan(10);
     const q = (await admin.client.get<{ questions: AdminQuestion[] }>('/api/admin/questions')).body.questions.find((x) => x.id === 'love-maps-001');
     expect(q?.answerCount).toBeGreaterThanOrEqual(2);
