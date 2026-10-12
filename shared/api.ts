@@ -1,4 +1,5 @@
 // Request/response shapes shared by the Worker and the client.
+import type { DateSetting } from './dates';
 import type { Audience, CategoryId, Depth } from './questions/types';
 
 export interface UserDTO {
@@ -10,6 +11,8 @@ export interface UserDTO {
   /** Local time of the daily reminder, "HH:MM" in the user's own timezone. */
   reminderTime: string;
   notifyPartner: boolean;
+  /** Date night notifications: when your partner plans, moves or cancels one, and a reminder on the day. */
+  notifyDates: boolean;
   isAdmin: boolean;
 }
 
@@ -111,6 +114,41 @@ export interface VersionsResponse {
 
 export type DraftKind = 'answer' | 'response';
 
+export interface DateIdeaDTO {
+  id: string;
+  title: string;
+  notes: string;
+  /** null when it could be either. */
+  setting: DateSetting | null;
+  authorId: string | null;
+  createdAt: number;
+}
+
+export interface DateNightDTO {
+  id: string;
+  /** YYYY-MM-DD in the couple's time zone. */
+  day: string;
+  /** HH:MM in the couple's time zone, or null for no set time. */
+  time: string | null;
+  title: string;
+  notes: string;
+  ideaId: string | null;
+  /** Who's planning it; null when you're planning it together. */
+  plannerId: string | null;
+  createdBy: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface DatesResponse {
+  /** Today in the couple's time zone; upcoming dates are on or after it. */
+  today: string;
+  upcoming: DateNightDTO[];
+  /** The most recent past dates, newest first. */
+  past: DateNightDTO[];
+  ideas: DateIdeaDTO[];
+}
+
 /** One day of the couple's journal. Each partner's entry is the answer to `questionId` (JSON, see shared/journal.ts). */
 export interface JournalDay {
   /** YYYY-MM-DD, in the couple's time zone. */
@@ -206,6 +244,8 @@ export interface AdminStats {
   answers7d: number;
   responses: number;
   journalEntries: number;
+  dateNights: number;
+  dateIdeas: number;
   customQuestions: number;
   pendingSuggestions: number;
   pushDevices: number;

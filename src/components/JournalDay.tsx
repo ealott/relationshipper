@@ -317,10 +317,10 @@ export function JournalPrompt() {
   else if (state?.partnerAnswered) text = `${partnerName} has written about their ${period(weekly)}. Write yours to read it.`;
   else text = weekly ? 'How was your week? A few lines, and a look back if you like.' : 'How was your day? Something good, something hard, and something you appreciated.';
   return (
-    <a class="card journal-card" href="/journal">
+    <a class="card link-card journal-card" href="/journal">
       <NotebookIcon size={22} />
-      <span class="journal-card__text">
-        <span class="journal-card__title">Journal</span>
+      <span class="link-card__text">
+        <span class="link-card__title">Journal</span>
         <span class="muted">{text}</span>
       </span>
       <ChevronIcon size={18} />

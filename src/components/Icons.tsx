@@ -103,6 +103,15 @@ export const CheckIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const CalendarIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M16 3v4" />
+    <path d="M8 3v4" />
+    <path d="M3 10h18" />
+  </Icon>
+);
+
 export const NotebookIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6Z" />

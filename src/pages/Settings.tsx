@@ -224,6 +224,18 @@ function Notifications({ saving, update }: { saving: boolean; update: (fn: () =>
           onChange={(v) => update(() => api.updateMe({ notifyPartner: v }))}
         />
       </div>
+      <div class="setting">
+        <div class="setting__text">
+          <span class="setting__label">Date nights</span>
+          <span class="setting__hint">When {me.partner!.name} plans or changes one, and a reminder on the day.</span>
+        </div>
+        <Switch
+          label="Date night notifications"
+          checked={me.user.notifyDates}
+          disabled={!canToggle}
+          onChange={(v) => update(() => api.updateMe({ notifyDates: v }))}
+        />
+      </div>
     </section>
   );
 }

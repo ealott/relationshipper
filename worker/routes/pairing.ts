@@ -29,6 +29,8 @@ export function deleteCoupleStatements(db: D1Database, coupleId: string): D1Prep
     db.prepare('DELETE FROM responses WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM daily_questions WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM drafts WHERE couple_id = ?').bind(coupleId),
+    db.prepare('DELETE FROM date_nights WHERE couple_id = ?').bind(coupleId),
+    db.prepare('DELETE FROM date_ideas WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM questions WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM couples WHERE id = ?').bind(coupleId),
   ];

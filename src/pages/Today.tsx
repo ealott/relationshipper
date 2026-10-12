@@ -6,6 +6,7 @@ import { CardsIcon, ChevronIcon, PencilIcon, ShuffleIcon } from '../components/I
 import { QuestionCard } from '../components/QuestionCard';
 import { QuestionRow } from '../components/QuestionRow';
 import { InstallCard } from '../components/Install';
+import { DatePrompt } from '../components/Dates';
 import { JournalPrompt } from '../components/JournalDay';
 import { ReminderPrompt } from '../components/ReminderPrompt';
 import { idsWithStatus, randomFresh, useAvailableBank, useCatalog, useProgress, useToday } from '../lib/data';
@@ -64,6 +65,7 @@ export function Today() {
       )}
 
       <JournalPrompt />
+      <DatePrompt />
       <InstallCard />
       <ReminderPrompt />
 

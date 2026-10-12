@@ -2,7 +2,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import type { TodayResponse } from '../shared/api';
 import { getOrAssignDaily } from '../worker/daily';
 import { base64url } from '../worker/lib/encoding';
-import { cleanupExpired, sendDailyReminders } from '../worker/reminders';
+import { addDays, zonedNow } from '../shared/time';
+import { zonedTimeToUtc } from '../worker/ics';
+import { cleanupExpired, sendDailyReminders, sendDateReminders } from '../worker/reminders';
 import { createTestEnv, pairedCouple, signUp } from './helpers/env';
 import { decryptPush, generateSubscriptionKeys, type SubscriptionKeys } from './helpers/push';
 
@@ -208,6 +210,68 @@ describe('partner activity notifications', () => {
     await t.ctx.flush();
     expect(pushes[0]!.payload).toMatchObject({ title: 'Sam responded to you', url: `/journal/${written.body.day}` });
     expect(pushes[0]!.payload.body).toMatch(/^In your journal: /);
+  });
+
+  it('tells your partner when you plan, move or cancel a date night, but not what it is', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    await subscribe(b.client);
+    const day = addDays(zonedNow('America/New_York').day, 4);
+    const planned = await a.client.post('/api/dates', { day, time: '19:30', title: 'SECRET-PLAN', notes: 'SECRET-NOTES' });
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(1);
+    expect(pushes[0]!.payload).toMatchObject({ title: 'Alex planned a date night', url: '/dates', tag: `date-${planned.body.id}` });
+    expect(pushes[0]!.payload.body).toMatch(/^\w+day, \w+ \d+ at 7:30 PM$/);
+    expect(JSON.stringify(pushes[0]!.payload)).not.toContain('SECRET');
+
+    pushes = [];
+    await a.client.patch(`/api/dates/${planned.body.id}`, { notes: 'Just the notes' }); // not a move
+    await a.client.patch(`/api/dates/${planned.body.id}`, { day: addDays(day, 1) });
+    await a.client.delete(`/api/dates/${planned.body.id}`);
+    await t.ctx.flush();
+    expect(pushes.map((p) => p.payload.title)).toEqual(['Alex moved your date night', 'Alex cancelled a date night']);
+    expect(pushes[0]!.payload.body).toMatch(/^Now /);
+
+    pushes = [];
+    await b.client.patch('/api/me', { notifyDates: false });
+    await a.client.post('/api/dates', { day, title: 'Quiet' });
+    await t.ctx.flush();
+    expect(pushes).toHaveLength(0);
+  });
+
+  it('reminds you both on the morning of a date night, once', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx); // the couple's time zone is New York
+    await subscribe(a.client);
+    await subscribe(b.client);
+    const day = addDays(zonedNow('America/New_York').day, 6);
+    const at = (time: string) => zonedTimeToUtc(day, time, 'America/New_York');
+    await a.client.post('/api/dates', { day, time: '19:00', title: 'Dinner', plannerId: a.id });
+    await a.client.post('/api/dates', { day, title: 'All day, no time' });
+    await t.ctx.flush();
+    pushes = [];
+
+    expect(await sendDateReminders(t.env, at('08:55'))).toBe(0);
+    expect(await sendDateReminders(t.env, at('09:00'))).toBe(4); // two dates, two partners
+    const byTitle = pushes.map((p) => [p.endpoint === pushes[0]!.endpoint, p.payload.title, p.payload.body]);
+    expect(byTitle).toEqual(
+      expect.arrayContaining([
+        [expect.any(Boolean), 'Date night tonight', 'At 7:00 PM. You’re planning it.'],
+        [expect.any(Boolean), 'Date night tonight', 'At 7:00 PM. Alex is planning it.'],
+        [expect.any(Boolean), 'Date night today', 'You’re planning it together.'],
+      ]),
+    );
+    expect(await sendDateReminders(t.env, at('09:05'))).toBe(0); // already reminded
+
+    // Moving a date gives it a new reminder; turning date notifications off skips you.
+    const later = await a.client.post('/api/dates', { day: addDays(day, 1), time: '18:00', title: 'Movie' });
+    await b.client.patch('/api/me', { notifyDates: false });
+    await t.ctx.flush(); // the "planned" notification for it
+    pushes = [];
+    expect(await sendDateReminders(t.env, zonedTimeToUtc(addDays(day, 1), '09:30', 'America/New_York'))).toBe(1);
+    expect(pushes).toHaveLength(1);
+    expect(JSON.stringify(pushes)).not.toContain('Movie');
+    // Too late once it's started.
+    await a.client.patch(`/api/dates/${later.body.id}`, { day: addDays(day, 2) });
+    expect(await sendDateReminders(t.env, zonedTimeToUtc(addDays(day, 2), '18:00', 'America/New_York'))).toBe(0);
   });
 
   it('respects the partner’s notification setting', async () => {

@@ -8,6 +8,9 @@ import type {
   AuthConfigResponse,
   BankResponse,
   CustomQuestionsResponse,
+  DateIdeaDTO,
+  DateNightDTO,
+  DatesResponse,
   DraftDTO,
   DraftKind,
   DraftsResponse,
@@ -24,8 +27,19 @@ import type {
   TodayResponse,
   VersionsResponse,
 } from '../shared/api';
+import type { DateSetting } from '../shared/dates';
 import type { JournalEntry } from '../shared/journal';
 import type { Audience, CategoryId, Depth } from '../shared/questions/types';
+
+/** What you send to plan or change a date night. `plannerId` null means you're planning it together. */
+export interface DatePlan {
+  day: string;
+  time: string | null;
+  title: string;
+  notes: string;
+  plannerId: string | null;
+  ideaId?: string | null;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -86,7 +100,7 @@ export const api = {
     request<MeResponse>('POST', '/auth/password', { name, password, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
   me: () => request<MeResponse>('GET', '/me'),
   logout: () => request<void>('POST', '/auth/logout', {}),
-  updateMe: (body: Partial<{ name: string; timezone: string; reminderEnabled: boolean; reminderTime: string; notifyPartner: boolean }>) =>
+  updateMe: (body: Partial<{ name: string; timezone: string; reminderEnabled: boolean; reminderTime: string; notifyPartner: boolean; notifyDates: boolean }>) =>
     request<MeResponse>('PATCH', '/me', body),
   deleteAccount: () => request<void>('POST', '/me/delete', { confirm: 'DELETE' }),
 
@@ -122,6 +136,15 @@ export const api = {
   /** `day` is YYYY-MM-DD or `today`. Opening a day creates it, so drafts and replies can belong to it. */
   journalDay: (day: string) => request<JournalDay>('GET', `/journal/${enc(day)}`),
   writeJournal: (day: string, entry: JournalEntry) => request<JournalDay>('PUT', `/journal/${enc(day)}`, entry),
+
+  dates: () => request<DatesResponse>('GET', '/dates'),
+  planDate: (date: DatePlan) => request<DateNightDTO>('POST', '/dates', date),
+  updateDate: (id: string, date: Partial<DatePlan>) => request<DateNightDTO>('PATCH', `/dates/${enc(id)}`, date),
+  cancelDate: (id: string) => request<void>('DELETE', `/dates/${enc(id)}`),
+  /** A one-event calendar file for the date, to open on your phone. */
+  dateCalendarUrl: (id: string) => `/api/dates/${enc(id)}/calendar.ics`,
+  addDateIdea: (idea: { title: string; notes?: string; setting?: DateSetting | null }) => request<DateIdeaDTO>('POST', '/date-ideas', idea),
+  deleteDateIdea: (id: string) => request<void>('DELETE', `/date-ideas/${enc(id)}`),
 
   pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) => request<void>('POST', '/push/subscribe', sub),
   pushUnsubscribe: (endpoint: string) => request<void>('POST', '/push/unsubscribe', { endpoint }),

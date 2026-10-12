@@ -1,4 +1,5 @@
-import { zonedNow } from '../shared/time';
+import { DATE_REMINDER_MINUTES, formatClock } from '../shared/dates';
+import { addDays, timeToMinutes, zonedNow } from '../shared/time';
 import { getOrAssignDaily } from './daily';
 import type { AppEnv } from './env';
 import { pushToUser, quote, vapidKeys, type PushPayload } from './notify';
@@ -85,6 +86,51 @@ export async function sendDailyReminders(env: AppEnv, now = new Date()): Promise
       badge: await countYourTurn(env.DB, u.couple_id, u.id),
     };
     sent += (await pushToUser(env, u.id, payload, { topic: 'daily', ttl: 6 * 60 * 60 })) > 0 ? 1 : 0;
+  }
+  return sent;
+}
+
+/**
+ * Runs from the cron trigger. On the day of a planned date night, both partners get a reminder
+ * from 9:00 in the couple's time zone until the date starts (21:00 with no set time). Like the
+ * other notifications, it says when, never what.
+ */
+export async function sendDateReminders(env: AppEnv, now = new Date()): Promise<number> {
+  if (!vapidKeys(env)) return 0;
+  const utcDay = now.toISOString().slice(0, 10);
+  const { results } = await env.DB.prepare(
+    `SELECT d.id, d.couple_id, d.day, d.start_time, d.planner_id, c.timezone FROM date_nights d
+       JOIN couples c ON c.id = d.couple_id
+      WHERE d.reminded_on IS NULL AND d.day BETWEEN ?1 AND ?2`,
+  )
+    .bind(addDays(utcDay, -1), addDays(utcDay, 1))
+    .all<{ id: string; couple_id: string; day: string; start_time: string | null; planner_id: string | null; timezone: string }>();
+
+  let sent = 0;
+  for (const d of results) {
+    const local = zonedNow(d.timezone, now);
+    const until = d.start_time ? timeToMinutes(d.start_time)! : 21 * 60;
+    if (d.day !== local.day || local.minutes < DATE_REMINDER_MINUTES || local.minutes >= until) continue;
+    // Claim it first so overlapping cron runs can't double-send.
+    const claim = await env.DB.prepare('UPDATE date_nights SET reminded_on = ?1 WHERE id = ?2 AND reminded_on IS NULL').bind(d.day, d.id).run();
+    if (!claim.meta.changes) continue;
+    const { results: people } = await env.DB.prepare('SELECT id, name, notify_dates FROM users WHERE couple_id = ?')
+      .bind(d.couple_id)
+      .all<{ id: string; name: string; notify_dates: number }>();
+    for (const person of people) {
+      if (person.notify_dates !== 1) continue;
+      const partner = people.find((p) => p.id !== person.id);
+      const who =
+        d.planner_id === null ? 'You’re planning it together.' : d.planner_id === person.id ? 'You’re planning it.' : `${partner?.name ?? 'Your partner'} is planning it.`;
+      const evening = d.start_time !== null && until >= 17 * 60;
+      const payload: PushPayload = {
+        title: evening ? 'Date night tonight' : 'Date night today',
+        body: `${d.start_time ? `At ${formatClock(d.start_time)}. ` : ''}${who}`,
+        url: '/dates',
+        tag: `date-${d.id}`,
+      };
+      sent += (await pushToUser(env, person.id, payload, { ttl: 12 * 60 * 60 })) > 0 ? 1 : 0;
+    }
   }
   return sent;
 }

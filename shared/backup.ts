@@ -17,6 +17,8 @@ export const BACKUP_TABLES = [
   'response_versions',
   'daily_questions',
   'drafts',
+  'date_ideas',
+  'date_nights',
   'push_subscriptions',
 ] as const;
 

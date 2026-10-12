@@ -1419,7 +1419,7 @@ select.input {
   min-height: 110px;
 }
 
-.journal-card {
+.link-card {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -1427,18 +1427,18 @@ select.input {
   text-decoration: none;
 }
 
-.journal-card > svg:first-child {
+.link-card > svg:first-child {
   flex: none;
   color: var(--primary);
 }
 
-.journal-card__text {
+.link-card__text {
   flex: 1;
   display: grid;
   gap: 2px;
 }
 
-.journal-card__title {
+.link-card__title {
   font-weight: 700;
 }
 
@@ -1498,6 +1498,242 @@ select.input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ---------- Date nights ---------- */
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.next-date {
+  gap: 6px;
+}
+
+.next-date__title {
+  font-family: var(--font-serif);
+  font-size: calc(22px * var(--text-scale));
+  line-height: 1.3;
+}
+
+.next-date__when {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+  color: var(--primary-strong);
+}
+
+.next-date__notes {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.next-date .row {
+  margin-top: 6px;
+}
+
+.calendar {
+  gap: 8px;
+}
+
+.calendar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calendar__title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar__hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.calendar__weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.calendar__day {
+  aspect-ratio: 1;
+  min-height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.calendar__day:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.calendar__day:disabled {
+  color: var(--text-muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.calendar__day.is-today {
+  box-shadow: inset 0 0 0 2px var(--primary);
+  font-weight: 700;
+}
+
+.calendar__day.has-date {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.calendar__day.has-date.is-past {
+  background: color-mix(in srgb, var(--primary) 35%, var(--surface));
+  color: var(--text);
+}
+
+.plan-form {
+  gap: 14px;
+}
+
+.plan-form__when {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.date-list,
+.idea-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.date-row__main {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.date-row--past .date-row__main {
+  cursor: default;
+}
+
+.date-row__when {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.date-row__title {
+  font-family: var(--font-serif);
+  font-size: calc(17px * var(--text-scale));
+  overflow-wrap: anywhere;
+}
+
+.date-row__who {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.date-row__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  font-size: 14px;
+}
+
+.date-row__links a {
+  color: var(--primary-strong);
+}
+
+.idea-form {
+  gap: 10px;
+}
+
+.idea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.idea__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.idea__title {
+  overflow-wrap: anywhere;
+}
+
+.idea__meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.suggestions {
+  display: grid;
+  gap: 8px;
+}
+
+.suggestions > summary {
+  cursor: pointer;
+  font-weight: 650;
+  color: var(--primary-strong);
+  margin-bottom: 4px;
 }
 
 /* ---------- Library ---------- */
