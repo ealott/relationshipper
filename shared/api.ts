@@ -80,6 +80,8 @@ export interface AnswerDTO {
   text: string;
   createdAt: number;
   updatedAt: number;
+  /** When it was last edited after the reveal; its earlier versions are kept (see VersionsResponse). */
+  editedAt: number | null;
 }
 
 export interface ResponseDTO {
@@ -87,6 +89,23 @@ export interface ResponseDTO {
   userId: string;
   text: string;
   createdAt: number;
+  /** When it was last edited; its earlier versions are kept. */
+  editedAt: number | null;
+}
+
+/** An earlier version of an answer or reply, kept when it was edited after the reveal. */
+export interface VersionDTO {
+  text: string;
+  writtenAt: number;
+  replacedAt: number;
+}
+
+/** Earlier versions, newest first. Only available once both partners have answered. */
+export interface VersionsResponse {
+  /** By the answer's author (user id). */
+  answers: Record<string, VersionDTO[]>;
+  /** By reply id. */
+  responses: Record<string, VersionDTO[]>;
 }
 
 export type DraftKind = 'answer' | 'response';

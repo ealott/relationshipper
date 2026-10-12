@@ -1,4 +1,4 @@
-import type { AnswerDTO, QuestionState, ResponseDTO } from '../shared/api';
+import type { AnswerDTO, QuestionState, ResponseDTO, VersionDTO, VersionsResponse } from '../shared/api';
 
 export interface AnswerRow {
   question_id: string;
@@ -6,6 +6,7 @@ export interface AnswerRow {
   text: string;
   created_at: number;
   updated_at: number;
+  edited_at: number | null;
 }
 
 export interface ResponseRow {
@@ -14,10 +15,11 @@ export interface ResponseRow {
   user_id: string;
   text: string;
   created_at: number;
+  edited_at: number | null;
 }
 
-const toAnswer = (r: AnswerRow): AnswerDTO => ({ text: r.text, createdAt: r.created_at, updatedAt: r.updated_at });
-const toResponse = (r: ResponseRow): ResponseDTO => ({ id: r.id, userId: r.user_id, text: r.text, createdAt: r.created_at });
+const toAnswer = (r: AnswerRow): AnswerDTO => ({ text: r.text, createdAt: r.created_at, updatedAt: r.updated_at, editedAt: r.edited_at });
+const toResponse = (r: ResponseRow): ResponseDTO => ({ id: r.id, userId: r.user_id, text: r.text, createdAt: r.created_at, editedAt: r.edited_at });
 
 /**
  * The only place a partner's answer is turned into a response. It is included
@@ -48,13 +50,13 @@ export async function getQuestionStates(db: D1Database, coupleId: string, meId: 
   const [answers, responses] = await db.batch<AnswerRow | ResponseRow>([
     db
       .prepare(
-        `SELECT question_id, user_id, text, created_at, updated_at FROM answers
+        `SELECT question_id, user_id, text, created_at, updated_at, edited_at FROM answers
           WHERE couple_id = ?1 AND question_id IN (SELECT value FROM json_each(?2))`,
       )
       .bind(coupleId, ids),
     db
       .prepare(
-        `SELECT id, question_id, user_id, text, created_at FROM responses
+        `SELECT id, question_id, user_id, text, created_at, edited_at FROM responses
           WHERE couple_id = ?1 AND question_id IN (SELECT value FROM json_each(?2))`,
       )
       .bind(coupleId, ids),
@@ -65,6 +67,39 @@ export async function getQuestionStates(db: D1Database, coupleId: string, meId: 
 export async function getQuestionState(db: D1Database, coupleId: string, meId: string, questionId: string) {
   const [state] = await getQuestionStates(db, coupleId, meId, [questionId]);
   return state!;
+}
+
+/**
+ * Earlier versions of the answers and replies to these questions, by question id. Like the
+ * answers themselves, they're only read for questions both partners have answered.
+ */
+export async function getVersions(db: D1Database, coupleId: string, states: QuestionState[]): Promise<Map<string, VersionsResponse>> {
+  const revealed = states.filter((s) => s.revealedAt !== null).map((s) => s.questionId);
+  const out = new Map<string, VersionsResponse>(revealed.map((id) => [id, { answers: {}, responses: {} }]));
+  if (!revealed.length) return out;
+  const ids = JSON.stringify(revealed);
+  type Row = { question_id: string; key: string; text: string; written_at: number; replaced_at: number };
+  const [answers, responses] = await db.batch<Row>([
+    db
+      .prepare(
+        `SELECT question_id, user_id AS key, text, written_at, replaced_at FROM answer_versions
+          WHERE couple_id = ?1 AND question_id IN (SELECT value FROM json_each(?2)) ORDER BY replaced_at DESC`,
+      )
+      .bind(coupleId, ids),
+    db
+      .prepare(
+        `SELECT r.question_id, v.response_id AS key, v.text, v.written_at, v.replaced_at
+           FROM response_versions v JOIN responses r ON r.id = v.response_id
+          WHERE r.couple_id = ?1 AND r.question_id IN (SELECT value FROM json_each(?2)) ORDER BY v.replaced_at DESC`,
+      )
+      .bind(coupleId, ids),
+  ]);
+  const add = (rows: Row[], pick: (v: VersionsResponse) => Record<string, VersionDTO[]>) => {
+    for (const r of rows) (pick(out.get(r.question_id)!)[r.key] ??= []).push({ text: r.text, writtenAt: r.written_at, replacedAt: r.replaced_at });
+  };
+  add(answers!.results, (v) => v.answers);
+  add(responses!.results, (v) => v.responses);
+  return out;
 }
 
 /** Questions the partner has answered and the user hasn't. */

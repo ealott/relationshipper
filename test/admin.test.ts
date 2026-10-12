@@ -24,11 +24,14 @@ describe('admin console', () => {
     }
   });
 
-  it('never exposes answers or responses', async () => {
+  it('never exposes answers, responses or their earlier versions', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     await a.client.put('/api/questions/love-maps-001/answer', { text: 'TOP-SECRET-ANSWER' });
     await b.client.put('/api/questions/love-maps-001/answer', { text: 'TOP-SECRET-REPLY' });
-    await a.client.post('/api/questions/love-maps-001/responses', { text: 'TOP-SECRET-RESPONSE' });
+    const replied = await a.client.post('/api/questions/love-maps-001/responses', { text: 'TOP-SECRET-RESPONSE' });
+    // …nor earlier versions of edited ones.
+    await a.client.put('/api/questions/love-maps-001/answer', { text: 'TOP-SECRET-ANSWER, EDITED' });
+    await a.client.patch(`/api/questions/love-maps-001/responses/${replied.body.responses[0].id}`, { text: 'TOP-SECRET-RESPONSE, EDITED' });
     for (const path of ['/api/admin/stats', '/api/admin/questions', '/api/admin/suggestions', '/api/admin/users']) {
       const res = await admin.client.get(path);
       expect(res.status, path).toBe(200);

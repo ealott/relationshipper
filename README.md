@@ -8,7 +8,8 @@ It runs as an installable web app (PWA) at **https://relationshipper.evanlott.co
 
 - **Write, don't tap.** Every question is open-ended and every answer is a journal entry, not a multiple-choice pick. Drafts are saved to your account as you type, so they survive closing the app and follow you to other devices. Only you ever see them.
 - **Private until you've both answered.** Your partner can see *that* you've answered, never *what*, until they've written their own answer. The server enforces this: your partner's answer is never sent to your device until you've written yours.
-- **Then talk about it.** Once both answers are revealed they're locked, and the conversation continues as responses underneath. Tips on responding come from research on responsiveness.
+- **Then talk about it.** Once both answers are revealed, the conversation continues as responses underneath. Tips on responding come from research on responsiveness.
+- **Edits keep their history.** You can edit your answer or a reply at any time. Before the reveal, an edit replaces your answer, since your partner hasn't read it. After the reveal, the version your partner read is kept: the answer says "Edited", and either of you can see what changed. The journal download includes earlier versions too.
 - **A question a day.** Both partners get the same daily question in the couple's time zone. Questions start light and deepen over the first three weeks. After the first week, Sundays bring a check-in on the relationship itself.
 - **Questions that fit where you are.** Hypotheticals about marriage, children and living together are matched to whether you're married, have kids, or live together. You can change these at any time.
 - **Your own questions.** Either partner can write a question for both of you. These are labelled as written by you or your partner, apart from the research-based bank. You can also suggest one for the shared bank, where an admin reviews it.
@@ -26,7 +27,7 @@ The app shows a plain-language version, with links to every source, at `/researc
 ## Privacy
 
 - **Simple sign-in.** A fixed list of people (`LOGIN_USERS`) sign in with their name and one shared password (`LOGIN_PASSWORD`). Both are Cloudflare secrets, so neither is in the code or the database. With exactly two names, the accounts are created and paired on first sign-in, so there's no invite code to exchange. Guessing is rate-limited, per device and overall. Google sign-in also works if it's configured. Sessions are random tokens, stored only as SHA-256 hashes.
-- **Answers belong to the couple.** Only the two partners can read their answers and responses. The admin console shows counts, questions, suggestions and accounts, but never answers or responses.
+- **Answers belong to the couple.** Only the two partners can read their answers and responses, and the earlier versions of edited ones. The admin console shows counts, questions, suggestions and accounts, but never answers, responses or earlier versions.
 - **Leaving deletes.** If either partner leaves the couple, its answers, responses and custom questions are deleted. Deleting your account (Settings → Account) also ends the pairing and deletes everything the two of you wrote. A couple made from the two `LOGIN_USERS` names can't unpair at all, since they'd only be paired again at the next sign-in.
 - **Backups.** Nightly backups (below) contain everything, answers included. They stay in the same Cloudflare account as the database, and the admin console shows only their dates and sizes.
 
@@ -161,7 +162,7 @@ worker/            API (Hono), auth, reveal rules, daily question, reminders, We
 src/               Preact client: pages/, components/, lib/, sw.ts (service worker)
 shared/            types shared by client and Worker, themes, research notes, time helpers
   questions/       the research-based question bank, one file per theme
-migrations/        D1 schema (0001), the generated question bank (0002, 0004), drafts (0003)
+migrations/        D1 schema (0001), the generated question bank (0002, 0004), drafts (0003), edit history (0005)
 public/            icons, manifest, _headers (CSP), prefs.js (applies display preferences before the first paint)
 scripts/           seed builder, VAPID keys, icon renderer, service worker build, restore-backup, deploy-inline
 test/              API tests (Vitest)

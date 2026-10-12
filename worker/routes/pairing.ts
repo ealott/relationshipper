@@ -23,6 +23,8 @@ export function normalizeCode(code: string): string {
 export function deleteCoupleStatements(db: D1Database, coupleId: string): D1PreparedStatement[] {
   return [
     db.prepare('UPDATE users SET couple_id = NULL, last_reminded_on = NULL WHERE couple_id = ?').bind(coupleId),
+    db.prepare('DELETE FROM answer_versions WHERE couple_id = ?').bind(coupleId),
+    db.prepare('DELETE FROM response_versions WHERE response_id IN (SELECT id FROM responses WHERE couple_id = ?)').bind(coupleId),
     db.prepare('DELETE FROM answers WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM responses WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM daily_questions WHERE couple_id = ?').bind(coupleId),

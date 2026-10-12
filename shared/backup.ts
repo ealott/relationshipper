@@ -13,6 +13,8 @@ export const BACKUP_TABLES = [
   'question_suggestions',
   'answers',
   'responses',
+  'answer_versions',
+  'response_versions',
   'daily_questions',
   'drafts',
   'push_subscriptions',
