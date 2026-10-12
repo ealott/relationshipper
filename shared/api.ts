@@ -51,7 +51,8 @@ export interface AuthConfigResponse {
   dev: boolean;
 }
 
-export type QuestionSource = 'research' | 'community' | 'custom';
+/** `journal`: a couple's journal day (see shared/journal.ts), never listed with the questions. */
+export type QuestionSource = 'research' | 'community' | 'custom' | 'journal';
 
 export interface QuestionDTO {
   id: string;
@@ -109,6 +110,25 @@ export interface VersionsResponse {
 }
 
 export type DraftKind = 'answer' | 'response';
+
+/** One day of the couple's journal. Each partner's entry is the answer to `questionId` (JSON, see shared/journal.ts). */
+export interface JournalDay {
+  /** YYYY-MM-DD, in the couple's time zone. */
+  day: string;
+  /** Sundays ask for a longer look back at the week. */
+  weekly: boolean;
+  questionId: string;
+  state: QuestionState;
+}
+
+export interface JournalResponse {
+  /** Today in the couple's time zone. */
+  today: string;
+  /** Days either of you has written about, newest first. */
+  days: JournalDay[];
+  /** Pass as `before` to load older days. */
+  nextCursor: string | null;
+}
 
 /** An unsent draft. Only ever returned to its author. */
 export interface DraftDTO {
@@ -185,6 +205,7 @@ export interface AdminStats {
   answers: number;
   answers7d: number;
   responses: number;
+  journalEntries: number;
   customQuestions: number;
   pendingSuggestions: number;
   pushDevices: number;

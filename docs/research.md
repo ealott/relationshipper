@@ -79,6 +79,16 @@ That checkup used a clinician and personalized feedback. Our weekly check-in (a 
 
 The shared lesson is to talk transitions through in advance; the prompts invite that without promising what a full program delivers.
 
+### 8. A few lines about your day
+**Strength:** Moderate for the ingredients; the journal itself is untested.
+
+The journal asks three small things each day, each drawn from research covered elsewhere in this document:
+- **Something good.** Enthusiastic, engaged responses to good news go with more intimacy and higher daily satisfaction (Gable et al., 2004), and how partners responded to good news predicted relationship well-being and breakups (Gable et al., 2006).
+- **Something hard.** How partners signal stress and support each other is strongly associated with relationship satisfaction (Bodenmann, 2005; Falconier et al., 2015). Stress from outside the relationship makes daily satisfaction react more strongly to everyday ups and downs (Neff & Karney, 2009).
+- **Something you appreciated.** Gratitude helps partners notice a responsive partner and draw closer (Algoe, 2012), and appreciation predicted responsiveness, commitment and staying together (Gordon et al., 2012).
+
+On Sundays it also asks for a longer look back at the week, an occasional dose of the expressive writing in section 1 (Pennebaker, 1997). The journal follows the same reveal rule as the questions. Putting these prompts together as a daily journal is our design; no study has tested it.
+
 ### Popular ideas we handle with care
 
 - **The "five love languages."** Chapman's (1992) framework makes three core claims: each person has one preferred "language," there are exactly five, and partners are happier when they match. These claims have limited support (Impett et al., 2024), and direct tests are mixed. Matching added little in a study of 67 couples (Bunt & Hazelwood, 2017) but was linked to satisfaction in a study of 100 couples (Mostova et al., 2022). The app doesn't sort people into types.

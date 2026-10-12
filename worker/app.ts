@@ -5,6 +5,7 @@ import type { ApiErrorBody } from '../shared/api';
 import type { HonoEnv } from './env';
 import { ApiError } from './http';
 import { adminRoutes } from './routes/admin';
+import { journalRoutes } from './routes/journal';
 import { authRoutes } from './routes/auth';
 import { meRoutes } from './routes/me';
 import { pairingRoutes } from './routes/pairing';
@@ -26,6 +27,7 @@ app.route('/auth', authRoutes);
 app.route('/me', meRoutes);
 app.route('/push', pushRoutes);
 app.route('/admin', adminRoutes);
+app.route('/journal', journalRoutes);
 app.route('/', pairingRoutes);
 app.route('/', questionRoutes);
 

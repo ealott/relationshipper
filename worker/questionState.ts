@@ -1,4 +1,5 @@
 import type { AnswerDTO, QuestionState, ResponseDTO, VersionDTO, VersionsResponse } from '../shared/api';
+import { JOURNAL_PREFIX } from '../shared/journal';
 
 export interface AnswerRow {
   question_id: string;
@@ -102,15 +103,15 @@ export async function getVersions(db: D1Database, coupleId: string, states: Ques
   return out;
 }
 
-/** Questions the partner has answered and the user hasn't. */
+/** Questions (not journal days) the partner has answered and the user hasn't. */
 export async function countYourTurn(db: D1Database, coupleId: string, userId: string): Promise<number> {
   const row = await db
     .prepare(
       `SELECT COUNT(*) AS n FROM answers p
-        WHERE p.couple_id = ?1 AND p.user_id <> ?2
+        WHERE p.couple_id = ?1 AND p.user_id <> ?2 AND p.question_id NOT LIKE ?3
           AND NOT EXISTS (SELECT 1 FROM answers m WHERE m.couple_id = p.couple_id AND m.question_id = p.question_id AND m.user_id = ?2)`,
     )
-    .bind(coupleId, userId)
+    .bind(coupleId, userId, `${JOURNAL_PREFIX}%`)
     .first<{ n: number }>();
   return row?.n ?? 0;
 }

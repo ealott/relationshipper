@@ -1,6 +1,8 @@
 import { questionText } from '../shared/categories';
+import { isWeeklyDay, JOURNAL_PREFIX } from '../shared/journal';
 import type { AppEnv } from './env';
 import { sendPush, type PushTarget, type SendOptions, type VapidKeys } from './push/webpush';
+import { dayLabel } from './journal';
 import { countYourTurn } from './questionState';
 
 /** What the service worker receives (see src/sw.ts). Never contains answer text. */
@@ -48,7 +50,7 @@ export async function pushToUser(env: AppEnv, userId: string, payload: PushPaylo
   return outcomes.filter(Boolean).length;
 }
 
-export type ActivityKind = 'answered-daily' | 'answered' | 'revealed' | 'responded' | 'wrote-question';
+export type ActivityKind = 'answered-daily' | 'answered' | 'revealed' | 'responded' | 'wrote-question' | 'journal' | 'journal-revealed';
 
 // Answering a batch of library questions shouldn't buzz the partner's phone for each one.
 // (Bursts of responses are handled per thread, where they're posted.)
@@ -68,19 +70,24 @@ export async function notifyPartner(
   const throttle = THROTTLE_MS[kind];
   if (throttle && partner.last_activity_push_at && now - partner.last_activity_push_at < throttle) return;
 
-  const q = quote(question, from.name);
+  // Journal days live at /journal/<day>; their question text isn't shown.
+  const day = question.id.startsWith(JOURNAL_PREFIX) ? question.id.slice(-10) : null;
+  const q = day ? `In your journal: ${dayLabel(day)}` : quote(question, from.name);
+  const period = day && isWeeklyDay(day) ? 'week' : 'day';
   const copy: Record<ActivityKind, { title: string; body: string }> = {
     'answered-daily': { title: `${from.name} answered today’s question`, body: `${q} Write yours to read theirs.` },
     answered: { title: `${from.name} answered a question`, body: `${q} Write yours to read theirs.` },
     revealed: { title: `${from.name} answered too`, body: `Read what you both wrote: ${q}` },
     responded: { title: `${from.name} responded to you`, body: q },
     'wrote-question': { title: `${from.name} wrote a question for you both`, body: q },
+    journal: { title: `${from.name} wrote about their ${period}`, body: `Write about yours to read theirs.` },
+    'journal-revealed': { title: `${from.name} wrote about their ${period} too`, body: `Read about each other’s ${period}.` },
   };
   await env.DB.prepare('UPDATE users SET last_activity_push_at = ? WHERE id = ?').bind(now, partnerId).run();
   await pushToUser(env, partnerId, {
     ...copy[kind],
-    url: `/q/${question.id}`,
-    tag: `q-${question.id}`,
+    url: day ? `/journal/${day}` : `/q/${question.id}`,
+    tag: day ? `journal-${day}` : `q-${question.id}`,
     badge: await countYourTurn(env.DB, coupleId, partnerId),
   });
 }

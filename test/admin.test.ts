@@ -32,6 +32,7 @@ describe('admin console', () => {
     // …nor earlier versions of edited ones.
     await a.client.put('/api/questions/love-maps-001/answer', { text: 'TOP-SECRET-ANSWER, EDITED' });
     await a.client.patch(`/api/questions/love-maps-001/responses/${replied.body.responses[0].id}`, { text: 'TOP-SECRET-RESPONSE, EDITED' });
+    await b.client.put('/api/journal/today', { good: ['TOP-SECRET-JOURNAL'], hard: [], thanks: [], note: '' });
     for (const path of ['/api/admin/stats', '/api/admin/questions', '/api/admin/suggestions', '/api/admin/users']) {
       const res = await admin.client.get(path);
       expect(res.status, path).toBe(200);
@@ -40,6 +41,7 @@ describe('admin console', () => {
     const stats = (await admin.client.get<AdminStats>('/api/admin/stats')).body;
     expect(stats.answers).toBeGreaterThanOrEqual(2);
     expect(stats.responses).toBeGreaterThanOrEqual(1);
+    expect(stats.journalEntries).toBeGreaterThanOrEqual(1);
     expect(stats.bank.active).toBeGreaterThan(10);
     const q = (await admin.client.get<{ questions: AdminQuestion[] }>('/api/admin/questions')).body.questions.find((x) => x.id === 'love-maps-001');
     expect(q?.answerCount).toBeGreaterThanOrEqual(2);
