@@ -94,7 +94,7 @@ function PairedApp() {
         <Route path="/join/:code" component={Join} />
         <Route default component={NotFound} />
       </Router>
-      <TabBar badges={{ '/answers': yourTurn, '/journal': journalTurn }} />
+      <TabBar badges={{ '/questions': yourTurn, '/journal': journalTurn }} />
     </>
   );
 }

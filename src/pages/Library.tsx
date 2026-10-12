@@ -12,6 +12,7 @@ export function Library() {
   const available = useAvailableBank();
   const { route } = useLocation();
   const partnerName = me.partner!.name;
+  const count = (status: 'partner' | 'mine' | 'both') => Object.values(progress ?? {}).filter((v) => v === status).length;
 
   return (
     <main class="page">
@@ -21,6 +22,17 @@ export function Library() {
           <p class="page__lede">Research-based prompts, organized by what keeps relationships strong — plus the ones you write.</p>
         </div>
       </header>
+      <nav class="answer-links" aria-label="Your answers">
+        <a class={`answer-link${count('partner') ? ' answer-link--turn' : ''}`} href="/answers?tab=your-turn">
+          <strong>{count('partner')}</strong> Your turn
+        </a>
+        <a class="answer-link" href="/answers?tab=waiting">
+          <strong>{count('mine')}</strong> Waiting
+        </a>
+        <a class="answer-link" href="/answers">
+          <strong>{count('both')}</strong> Shared
+        </a>
+      </nav>
       <div class="row">
         <a class="btn btn--primary" href="/questions/new">
           <PencilIcon size={18} /> Write a question

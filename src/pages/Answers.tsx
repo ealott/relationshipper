@@ -4,6 +4,7 @@ import type { HistoryItem, QuestionDTO } from '../../shared/api';
 import { questionText } from '../../shared/categories';
 import { api } from '../api';
 import { Avatar } from '../components/Avatar';
+import { BackIcon } from '../components/Icons';
 import { ErrorNotice, Spinner } from '../components/Feedback';
 import { CategoryLabel } from '../components/QuestionMeta';
 import { QuestionRow } from '../components/QuestionRow';
@@ -28,6 +29,9 @@ export function Answers() {
 
   return (
     <main class="page">
+      <a href="/questions" class="back-link">
+        <BackIcon size={18} /> Questions
+      </a>
       <header class="page__header">
         <div>
           <h1 class="page__title">Answers</h1>
