@@ -2,7 +2,7 @@ import { useLocation } from 'preact-iso';
 import { CATEGORIES } from '../../shared/categories';
 import { BookIcon, PencilIcon, ShuffleIcon } from '../components/Icons';
 import { QuestionRow } from '../components/QuestionRow';
-import { fitsCouple, progressStatus, randomFresh, useAvailableBank, useCatalog, useProgress } from '../lib/data';
+import { fitsCouple, progressStatus, randomFresh, useAvailableBank, useCatalog, useDrafts, useProgress } from '../lib/data';
 import { useMe } from '../lib/session';
 
 export function Library() {
@@ -13,6 +13,7 @@ export function Library() {
   const { route } = useLocation();
   const partnerName = me.partner!.name;
   const count = (status: 'partner' | 'mine' | 'both') => Object.values(progress ?? {}).filter((v) => v === status).length;
+  const drafts = useDrafts().items.length;
 
   return (
     <main class="page">
@@ -31,6 +32,9 @@ export function Library() {
         </a>
         <a class="answer-link" href="/answers">
           <strong>{count('both')}</strong> Shared
+        </a>
+        <a class="answer-link" href="/drafts">
+          <strong>{drafts}</strong> {drafts === 1 ? 'Draft' : 'Drafts'}
         </a>
       </nav>
       <div class="row">

@@ -6,6 +6,9 @@ import { useCatalog, useUnfinished } from '../lib/data';
 import { useMe } from '../lib/session';
 import { ChevronIcon, NotebookIcon, PencilIcon } from './Icons';
 
+/** How long Today keeps offering back what you started. Questions → Drafts keeps all of it. */
+const UNFINISHED_DAYS = 14;
+
 /** Below a day kept on screen past midnight (see useHeldDay): why, and the way to move on. */
 export function NewDayNotice({ children, action, onMoveOn }: { children: ComponentChildren; action: string; onMoveOn: () => void }) {
   return (
@@ -38,7 +41,8 @@ export function UnfinishedCards({ today, exclude }: { today: string; exclude: st
   const { byId } = useCatalog();
   const drafts = useUnfinished().data?.drafts ?? [];
   const partnerName = me.partner?.name ?? 'your partner';
-  const shown = drafts.filter((d) => !exclude.includes(d.questionId) && d.journalDay !== today).slice(0, 2);
+  const since = Date.now() - UNFINISHED_DAYS * 24 * 60 * 60 * 1000;
+  const shown = drafts.filter((d) => d.updatedAt > since && !exclude.includes(d.questionId) && d.journalDay !== today).slice(0, 2);
 
   const title = (d: UnfinishedDraft) => {
     if (d.kind === 'response') return 'You started a reply';

@@ -663,3 +663,51 @@ test('past midnight, what you’re writing stays on screen, and you can find it 
   await expect(rae.locator('.new-day')).toContainText('What you’re writing about yesterday is saved');
   await expect(rae.getByLabel('Something good', { exact: true })).toHaveValue('A slow morning');
 });
+
+test('drafts: a hard question left for later, found again on Questions, and discarded everywhere', async ({ browser }) => {
+  const stamp = Date.now();
+  const kit = await signInAs(browser, 'Kit', stamp);
+  const lou = await signInAs(browser, 'Lou', stamp);
+  await pair(kit, lou);
+
+  // Kit starts an answer and leaves it.
+  await kit.goto('/q/love-maps-002');
+  const question = (await kit.locator('.qcard__text').textContent())!;
+  const saved = kit.waitForResponse((r) => r.url().includes('/drafts/answer') && r.request().method() === 'PUT');
+  await kit.getByLabel('Your answer').fill('Still thinking about this one');
+  await saved;
+
+  // Questions counts it, and Drafts lists it, with how far it's got but not the text.
+  await tab(kit, 'Questions').click();
+  const tile = kit.getByRole('link', { name: /^\d+ Drafts?$/ });
+  await expect(tile).toHaveText('1 Draft');
+  await shot(kit, '26-drafts-tile');
+  await tile.click();
+  const row = kit.locator('.draft-row');
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText(question);
+  await expect(row).toContainText('Answer · 5 words · saved just now');
+  await expect(row).not.toContainText('Still thinking');
+  await shot(kit, '27-drafts');
+  await row.getByRole('link').click();
+  await expect(kit.getByLabel('Your answer')).toHaveValue('Still thinking about this one');
+
+  // The same account on another device has it too; Lou has none of it.
+  const laptop = await signInAs(browser, 'Kit', stamp);
+  await laptop.goto('/q/love-maps-002');
+  await expect(laptop.getByLabel('Your answer')).toHaveValue('Still thinking about this one');
+  await lou.goto('/drafts');
+  await expect(lou.getByText('No drafts.')).toBeVisible();
+
+  // Discarded on one device, it's gone from both, and the laptop doesn't send its copy back up.
+  await kit.goto('/drafts');
+  kit.once('dialog', (dialog) => void dialog.accept());
+  await kit.locator('.draft-row').getByRole('button', { name: 'Discard' }).click();
+  await expect(kit.getByText('No drafts.')).toBeVisible();
+  await tab(kit, 'Questions').click();
+  await expect(tile).toHaveText('0 Drafts');
+  await laptop.goto('/q/love-maps-002');
+  await expect(laptop.getByLabel('Your answer')).toHaveValue('');
+  await laptop.waitForTimeout(1500);
+  expect((await call(laptop, 'GET', '/drafts')).drafts).toEqual([]);
+});

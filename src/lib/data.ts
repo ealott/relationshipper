@@ -1,4 +1,4 @@
-import type { CoupleDTO, Progress, QuestionDTO } from '../../shared/api';
+import type { CoupleDTO, Progress, QuestionDTO, UnfinishedDraft } from '../../shared/api';
 import { CATEGORIES } from '../../shared/categories';
 import type { Audience } from '../../shared/questions/types';
 import { api } from '../api';
@@ -7,6 +7,7 @@ import { useMe } from './session';
 
 export const useProgress = () => useQuery('progress', api.progress, { refreshInterval: 30_000 });
 export const useToday = () => useQuery('today', api.today, { refreshInterval: 20_000 });
+/** Everything you've started writing and haven't sent (Today shows the last two weeks'). */
 export const useUnfinished = () => useQuery('unfinished', api.unfinished, { refreshInterval: 60_000 });
 export const useBank = () => useQuery('bank', api.bank);
 export const useCustomQuestions = () => useQuery('custom-questions', api.customQuestions, { refreshInterval: 60_000 });
@@ -31,6 +32,23 @@ export function useCatalog(): { byId: Map<string, QuestionDTO>; bank: QuestionDT
     custom: custom.data?.questions ?? [],
     loading: !bank.data,
   };
+}
+
+export interface DraftItem extends UnfinishedDraft {
+  /** What it answers or replies to; null for a journal day. */
+  question: QuestionDTO | null;
+}
+
+/** Your drafts that can be opened here, newest first, for Questions → Drafts and its count. */
+export function useDrafts(): { items: DraftItem[]; loading: boolean } {
+  const unfinished = useUnfinished();
+  const { byId, loading } = useCatalog();
+  const items = (unfinished.data?.drafts ?? []).flatMap((d): DraftItem[] => {
+    if (d.journalDay) return [{ ...d, question: null }];
+    const question = byId.get(d.questionId);
+    return question ? [{ ...d, question }] : [];
+  });
+  return { items, loading: !unfinished.data || loading };
 }
 
 export type Status = 'new' | 'your-turn' | 'waiting' | 'revealed';
