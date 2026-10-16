@@ -14,6 +14,8 @@
   --me: #9d3b55;
   --partner: #4c6a8c;
   --success: #3d7a57;
+  /* Boogers: a goofy green. */
+  --booger: #6b8a2c;
   --danger: #b4372f;
   --shadow: 0 1px 2px rgb(60 40 30 / 0.04), 0 8px 24px rgb(60 40 30 / 0.05);
   --radius: 18px;
@@ -49,6 +51,7 @@
   --me: #d9768f;
   --partner: #8fadd0;
   --success: #74b98f;
+  --booger: #a6c46b;
   --danger: #f07c72;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.25);
   --rc-fur: #9b938c;
@@ -1530,14 +1533,14 @@ select.input {
 
 .bootycall > svg:first-child {
   flex: none;
-  color: var(--accent);
+  color: var(--booger);
 }
 
 .bootycall--asked {
   grid-template-columns: auto 1fr;
   align-items: center;
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: color-mix(in srgb, var(--booger) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--booger) 35%, var(--border));
   animation: reveal-in 0.4s ease-out;
 }
 

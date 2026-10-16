@@ -142,9 +142,11 @@ export const SparkleIcon = (p: IconProps) => (
   </Icon>
 );
 
-export const FlameIcon = (p: IconProps) => (
+/** A drip, for boogers. */
+export const BoogerIcon = (p: IconProps) => (
   <Icon {...p}>
-    <path d="M12 21.5c-3.9 0-6.5-2.6-6.5-6.2 0-2.8 1.7-4.6 3.1-6.2.9 1.4 1.9 2.2 2.9 2.4-.4-3 .9-5.8 3.6-8 .3 2.9 1.6 4.9 2.8 6.7.8 1.3 1.6 2.8 1.6 5.1 0 3.6-3.6 6.2-7.5 6.2Z" />
+    <path d="M12 3.5c2.9 3.7 6 7.3 6 10.9a6 6 0 0 1-12 0c0-3.6 3.1-7.2 6-10.9Z" />
+    <path d="M9.4 14.6a2.7 2.7 0 0 0 2.2 2.6" />
   </Icon>
 );
 

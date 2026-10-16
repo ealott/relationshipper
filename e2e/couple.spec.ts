@@ -580,7 +580,7 @@ test('our timeline: milestones, both memories, and the day they come back', asyn
   await expect(anniversary).toContainText('Our first kiss');
 });
 
-test('a booger: on for everyone, one sends, the other answers, and either can turn them off', async ({ browser }) => {
+test('a booger: on for everyone, answered with something goofy, and either can turn them off', async ({ browser }) => {
   const stamp = Date.now();
   const ada = await signInAs(browser, 'Ada', stamp);
   const leo = await signInAs(browser, 'Leo', stamp);
@@ -595,24 +595,27 @@ test('a booger: on for everyone, one sends, the other answers, and either can tu
   await leo.goto('/');
   const asked = leo.locator('.bootycall--asked');
   await expect(asked).toContainText('Ada sent you a booger');
+  await expect(asked.getByRole('button')).toHaveText(['Flick one back', 'Ew', 'Bless you']);
+  await asked.scrollIntoViewIfNeeded();
   await shot(leo, '24-booger');
-  await asked.getByRole('button', { name: 'Rain check' }).click();
+  await asked.getByRole('button', { name: 'Flick one back' }).click();
   await expect(asked).toHaveCount(0);
-  // A rain check can turn into an ask of your own.
-  await expect(leo.locator('.bootycall')).toContainText('Booger?');
   await ada.reload();
   await expect(ada.locator('.bootycall .link-card__title')).toHaveText('Booger');
-  await expect(ada.locator('.bootycall')).toContainText('Leo asked for a rain check');
-  // Leo asks back, and Ada says yes.
+  await expect(ada.locator('.bootycall')).toContainText('Leo flicked one back');
+  await ada.locator('.bootycall').scrollIntoViewIfNeeded();
+  await shot(ada, '28-booger-answered');
+
+  // Once it's answered, either of them can send the next one: Leo sends one, Ada says ew, and
+  // Leo sends another from that card.
   await leo.locator('.bootycall').getByRole('button', { name: 'Send a booger' }).click();
   await expect(leo.locator('.bootycall')).toContainText('You sent Ada a booger');
   await ada.reload();
-  await ada.locator('.bootycall--asked').getByRole('button', { name: 'Yes', exact: true }).click();
+  await ada.locator('.bootycall--asked').getByRole('button', { name: 'Ew', exact: true }).click();
   await leo.reload();
-  await expect(leo.locator('.bootycall .link-card__title')).toHaveText('Booger');
-  await expect(leo.locator('.bootycall')).toContainText('Ada said yes');
-  await leo.locator('.bootycall').scrollIntoViewIfNeeded();
-  await shot(leo, '28-booger-yes');
+  await expect(leo.locator('.bootycall')).toContainText('Ada said ew');
+  await leo.locator('.bootycall').getByRole('button', { name: 'Send another booger' }).click();
+  await expect(leo.locator('.bootycall')).toContainText('You sent Ada a booger');
 
   // Either of them can turn them off, which hides them for both.
   await leo.goto('/settings');
