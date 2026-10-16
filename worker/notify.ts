@@ -145,8 +145,8 @@ export async function notifyTimeline(
 }
 
 /**
- * A booty call, or its answer. Discreet on purpose: a lock screen only ever shows "a wink", and
- * what was asked or answered is only in the app.
+ * A booger (a booty call, in the code), or its answer. Discreet on purpose: a lock screen only
+ * ever says "booger", and what was asked or answered is only in the app.
  */
 export async function notifyBootyCall(
   env: AppEnv,
@@ -155,7 +155,7 @@ export async function notifyBootyCall(
   if (!vapidKeys(env)) return;
   const copy =
     kind === 'asked'
-      ? { title: `${from.name} sent you a wink`, body: 'Open Relationshipper to answer.' }
-      : { title: `${from.name} answered your wink`, body: 'Open Relationshipper to see.' };
-  await pushToUser(env, partnerId, { ...copy, url: '/', tag: 'wink', badge: await countYourTurn(env.DB, coupleId, partnerId) });
+      ? { title: `${from.name} sent you a booger`, body: 'Open Relationshipper to answer.' }
+      : { title: `${from.name} answered your booger`, body: 'Open Relationshipper to see.' };
+  await pushToUser(env, partnerId, { ...copy, url: '/', tag: 'booger', badge: await countYourTurn(env.DB, coupleId, partnerId) });
 }

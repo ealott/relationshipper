@@ -580,7 +580,7 @@ test('our timeline: milestones, both memories, and the day they come back', asyn
   await expect(anniversary).toContainText('Our first kiss');
 });
 
-test('a booty call: both opt in, one asks, the other answers', async ({ browser }) => {
+test('a booger: both opt in, one sends, the other answers', async ({ browser }) => {
   const stamp = Date.now();
   const ada = await signInAs(browser, 'Ada', stamp);
   const leo = await signInAs(browser, 'Leo', stamp);
@@ -591,28 +591,28 @@ test('a booty call: both opt in, one asks, the other answers', async ({ browser 
   await expect(ada.locator('.snuggle')).toBeVisible();
   await expect(ada.locator('.bootycall')).toHaveCount(0);
   await tab(ada, 'Settings').click();
-  await ada.getByRole('switch', { name: 'Booty calls' }).click();
+  await ada.getByRole('switch', { name: 'Boogers' }).click();
   await expect(ada.getByText('On for you. It shows once Leo turns it on too.')).toBeVisible();
   await tab(ada, 'Today').click();
   await expect(ada.locator('.bootycall')).toHaveCount(0);
   await leo.goto('/settings');
-  await leo.getByRole('switch', { name: 'Booty calls' }).click();
-  await expect(leo.getByText('On for both of you. Lock screens only ever say “a wink”.')).toBeVisible();
+  await leo.getByRole('switch', { name: 'Boogers' }).click();
+  await expect(leo.getByText('On for both of you.')).toBeVisible();
 
-  // Ada asks; Leo answers from the top of Today.
+  // Ada sends one; Leo answers from the top of Today.
   await ada.reload();
   const ask = ada.locator('.bootycall');
-  await expect(ask).toContainText('Booty call?');
-  await ask.getByRole('button', { name: 'Ask' }).click();
-  await expect(ask).toContainText('You asked Leo');
+  await expect(ask).toContainText('Booger?');
+  await ask.getByRole('button', { name: 'Send' }).click();
+  await expect(ask).toContainText('You sent Leo a booger');
   await leo.goto('/');
   const asked = leo.locator('.bootycall--asked');
-  await expect(asked).toContainText('Ada is asking for a booty call');
-  await shot(leo, '24-booty-call');
+  await expect(asked).toContainText('Ada sent you a booger');
+  await shot(leo, '24-booger');
   await asked.getByRole('button', { name: 'Rain check' }).click();
   await expect(asked).toHaveCount(0);
   // A rain check can turn into an ask of your own.
-  await expect(leo.locator('.bootycall')).toContainText('Booty call?');
+  await expect(leo.locator('.bootycall')).toContainText('Booger?');
   await ada.reload();
   await expect(ada.locator('.bootycall')).toContainText('Leo would like a rain check');
 });

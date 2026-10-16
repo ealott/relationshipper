@@ -16,7 +16,7 @@ export interface UserDTO {
   notifyDates: boolean;
   /** A notification when your partner sends a snuggle. */
   notifySnuggles: boolean;
-  /** You've turned on booty calls; the button shows once your partner has too. */
+  /** You've turned on boogers (booty calls); the button shows once your partner has too. */
   bootyCalls: boolean;
   isAdmin: boolean;
 }
@@ -189,7 +189,7 @@ export interface BootyCallDTO {
 }
 
 export interface BootyCallsResponse {
-  /** Whether each of you has turned booty calls on. The button shows once you both have. */
+  /** Whether each of you has turned boogers (booty calls) on. The button shows once you both have. */
   mine: boolean;
   partner: boolean;
   /** The latest ask from the last 12 hours, either way, unless it was taken back. */
