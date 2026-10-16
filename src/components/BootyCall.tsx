@@ -60,16 +60,16 @@ export function BootyCallCard({ query, place }: { query: Query<BootyCallsRespons
     );
   }
 
-  // How your own ask went, for the 12 hours it's open.
+  // How your own ask went, for the 12 hours it's open. Each one says booger, so it reads on its own.
   if (latest?.fromMe) {
     const status =
       latest.answer === null
         ? { title: `You sent ${partnerName} a booger`, hint: 'No answer yet.' }
         : latest.answer === 'yes'
-          ? { title: `${partnerName} said yes`, hint: `Answered ${relativeTime(latest.answeredAt!)}.` }
+          ? { title: `${partnerName} said yes to your booger`, hint: `Answered ${relativeTime(latest.answeredAt!)}.` }
           : latest.answer === 'later'
-            ? { title: `${partnerName} would like a rain check`, hint: `Answered ${relativeTime(latest.answeredAt!)}.` }
-            : { title: `${partnerName} said not tonight`, hint: 'That’s OK. You can ask another time.' };
+            ? { title: `${partnerName} would like a rain check on your booger`, hint: `Answered ${relativeTime(latest.answeredAt!)}.` }
+            : { title: `${partnerName} said not tonight to your booger`, hint: 'That’s OK. You can ask another time.' };
     return (
       <section class="card link-card bootycall">
         <FlameIcon size={22} />
