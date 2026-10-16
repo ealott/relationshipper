@@ -179,7 +179,7 @@ export interface DatesResponse {
   ideas: DateIdeaDTO[];
 }
 
-/** How a booger is answered: flick one back, ew, or bless you. */
+/** How a booger is answered: booger back ('flick', its first name), ew, or bless you. */
 export type BootyCallReaction = 'flick' | 'ew' | 'bless';
 
 /** A booger (booty calls, in the code, which is how they started). */

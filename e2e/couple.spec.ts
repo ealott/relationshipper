@@ -595,14 +595,14 @@ test('a booger: on for everyone, answered with something goofy, and either can t
   await leo.goto('/');
   const asked = leo.locator('.bootycall--asked');
   await expect(asked).toContainText('Ada sent you a booger');
-  await expect(asked.getByRole('button')).toHaveText(['Flick one back', 'Ew', 'Bless you']);
+  await expect(asked.getByRole('button')).toHaveText(['Booger back', 'Ew', 'Bless you']);
   await asked.scrollIntoViewIfNeeded();
   await shot(leo, '24-booger');
-  await asked.getByRole('button', { name: 'Flick one back' }).click();
+  await asked.getByRole('button', { name: 'Booger back' }).click();
   await expect(asked).toHaveCount(0);
   await ada.reload();
   await expect(ada.locator('.bootycall .link-card__title')).toHaveText('Booger');
-  await expect(ada.locator('.bootycall')).toContainText('Leo flicked one back');
+  await expect(ada.locator('.bootycall')).toContainText('Leo boogered back');
   await ada.locator('.bootycall').scrollIntoViewIfNeeded();
   await shot(ada, '28-booger-answered');
 

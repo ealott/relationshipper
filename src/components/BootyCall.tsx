@@ -9,7 +9,7 @@ import { BoogerIcon } from './Icons';
 
 /** The answers to a booger: the button, what the sender then sees, and the note for whoever answered. */
 const REACTIONS: { key: BootyCallReaction; label: string; seen: (name: string) => string; done: string }[] = [
-  { key: 'flick', label: 'Flick one back', seen: (name) => `${name} flicked one back`, done: 'Flicked one back.' },
+  { key: 'flick', label: 'Booger back', seen: (name) => `${name} boogered back`, done: 'Boogered back.' },
   { key: 'ew', label: 'Ew', seen: (name) => `${name} said ew`, done: 'You said ew.' },
   { key: 'bless', label: 'Bless you', seen: (name) => `${name} said bless you`, done: 'You said bless you.' },
 ];
