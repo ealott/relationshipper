@@ -433,10 +433,10 @@ function Relationship({ saving, update }: { saving: boolean; update: (fn: () => 
           <span class="setting__label">Boogers</span>
           <span class="setting__hint">
             {!me.user.bootyCalls
-              ? `A button on Today to send ${me.partner!.name} a booger. It shows once you’ve both turned it on.`
-              : bootyCalls.data?.partner
-                ? 'On for both of you.'
-                : `On for you. It shows once ${me.partner!.name} turns it on too.`}
+              ? `Off. Turn them back on to send and get boogers again.`
+              : bootyCalls.data && !bootyCalls.data.partner
+                ? `${me.partner!.name} has turned them off, so the button is hidden for now.`
+                : `A button on Today to send ${me.partner!.name} a booger. Either of you can turn them off.`}
           </span>
         </div>
         <Switch

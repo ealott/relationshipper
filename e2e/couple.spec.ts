@@ -112,7 +112,7 @@ test('two partners pair up, write privately, and talk about their answers', asyn
   await write(sam.page, `Sam’s reflection ${stamp}`, /Save & read Alex’s/);
   await expect(sam.page.locator('.entry--partner')).toContainText(secret);
   await sam.page.getByLabel('Respond to Alex').fill('I didn’t know that. What made you think of it?');
-  await sam.page.getByRole('button', { name: 'Send' }).click();
+  await sam.page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(sam.page.locator('.message--me')).toContainText('What made you think of it?');
   await shot(sam.page, '08-revealed');
 
@@ -120,7 +120,7 @@ test('two partners pair up, write privately, and talk about their answers', asyn
   await expect(alex.page.locator('.entry--partner')).toContainText(`Sam’s reflection ${stamp}`);
   await expect(alex.page.locator('.message--partner')).toContainText('What made you think of it?');
   await alex.page.getByLabel('Respond to Sam').fill('It came up when we were cooking on Sunday.');
-  await alex.page.getByRole('button', { name: 'Send' }).click();
+  await alex.page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(alex.page.locator('.message--me')).toContainText('cooking on Sunday');
 
   // After the reveal Alex adds to their answer and corrects their reply. Sam sees both edits,
@@ -397,7 +397,7 @@ test('the journal: a few lines about your day, read once you’ve both written',
   await expect(lee.locator('.entry--partner')).toContainText(secret);
   await expect(lee.locator('.entry--partner')).toContainText('A long meeting');
   await lee.getByLabel('Respond to Jo').fill('What was the long meeting about?');
-  await lee.getByRole('button', { name: 'Send' }).click();
+  await lee.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(lee.locator('.message--me')).toContainText('long meeting');
   await shot(lee, '19-journal-shared');
 
@@ -580,30 +580,17 @@ test('our timeline: milestones, both memories, and the day they come back', asyn
   await expect(anniversary).toContainText('Our first kiss');
 });
 
-test('a booger: both opt in, one sends, the other answers', async ({ browser }) => {
+test('a booger: on for everyone, one sends, the other answers, and either can turn them off', async ({ browser }) => {
   const stamp = Date.now();
   const ada = await signInAs(browser, 'Ada', stamp);
   const leo = await signInAs(browser, 'Leo', stamp);
   await pair(ada, leo);
 
-  // Nothing shows until both have turned it on.
+  // On from the start: Ada sends one; Leo answers from the top of Today.
   await ada.goto('/');
-  await expect(ada.locator('.snuggle')).toBeVisible();
-  await expect(ada.locator('.bootycall')).toHaveCount(0);
-  await tab(ada, 'Settings').click();
-  await ada.getByRole('switch', { name: 'Boogers' }).click();
-  await expect(ada.getByText('On for you. It shows once Leo turns it on too.')).toBeVisible();
-  await tab(ada, 'Today').click();
-  await expect(ada.locator('.bootycall')).toHaveCount(0);
-  await leo.goto('/settings');
-  await leo.getByRole('switch', { name: 'Boogers' }).click();
-  await expect(leo.getByText('On for both of you.')).toBeVisible();
-
-  // Ada sends one; Leo answers from the top of Today.
-  await ada.reload();
   const ask = ada.locator('.bootycall');
   await expect(ask).toContainText('Booger?');
-  await ask.getByRole('button', { name: 'Send' }).click();
+  await ask.getByRole('button', { name: 'Send a booger' }).click();
   await expect(ask).toContainText('You sent Leo a booger');
   await leo.goto('/');
   const asked = leo.locator('.bootycall--asked');
@@ -615,7 +602,18 @@ test('a booger: both opt in, one sends, the other answers', async ({ browser }) 
   await expect(leo.locator('.bootycall')).toContainText('Booger?');
   await ada.reload();
   await expect(ada.locator('.bootycall')).toContainText('Leo would like a rain check');
+
+  // Either of them can turn them off, which hides them for both.
+  await leo.goto('/settings');
+  await leo.getByRole('switch', { name: 'Boogers' }).click();
+  await expect(leo.getByText('Off. Turn them back on to send and get boogers again.')).toBeVisible();
+  await ada.goto('/settings');
+  await expect(ada.getByText('Leo has turned them off, so the button is hidden for now.')).toBeVisible();
+  await tab(ada, 'Today').click();
+  await expect(ada.locator('.snuggle')).toBeVisible();
+  await expect(ada.locator('.bootycall')).toHaveCount(0);
 });
+
 
 test('past midnight, what you’re writing stays on screen, and you can find it again', async ({ browser }) => {
   const stamp = Date.now();

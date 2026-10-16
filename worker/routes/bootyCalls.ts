@@ -6,8 +6,8 @@ import { randomId } from '../lib/crypto';
 import { notifyBootyCall } from '../notify';
 import { requireCouple, type PairedContext } from '../session';
 
-// Booty calls (#42), called boogers in the app (#46). Each partner opts in; an ask shows once both
-// have. Answers are yes, a rain check or not tonight, and nothing is counted. Notifications only
+// Booty calls (#42), called boogers in the app (#46). On for every couple (#48); either partner can
+// turn them off, which hides them for both. Answers are yes, a rain check or not tonight, and nothing is counted. Notifications only
 // ever say "booger".
 
 /** An ask stays open, and blocks asking again, for this long. */
@@ -27,14 +27,14 @@ interface BootyCallRow {
 async function load(c: Context<HonoEnv>, auth: PairedContext, now = Date.now()) {
   const db = c.env.DB;
   const [partner, recent] = await db.batch([
-    db.prepare('SELECT booty_calls FROM users WHERE id = ?').bind(auth.partner.id),
+    db.prepare('SELECT booty_calls_off FROM users WHERE id = ?').bind(auth.partner.id),
     db
       .prepare('SELECT id, from_user, created_at, answer, answered_at FROM booty_calls WHERE couple_id = ? AND created_at > ? AND cancelled_at IS NULL ORDER BY created_at DESC')
       .bind(auth.couple.id, now - BOOTY_CALL_WINDOW_MS),
   ]);
   const rows = recent!.results as unknown as BootyCallRow[];
-  const mine = auth.user.booty_calls === 1;
-  const theirs = (partner!.results[0] as { booty_calls: number } | undefined)?.booty_calls === 1;
+  const mine = auth.user.booty_calls_off === 0;
+  const theirs = (partner!.results[0] as { booty_calls_off: number } | undefined)?.booty_calls_off === 0;
   // You can ask unless you already have in this window, or your partner's ask is waiting on you.
   const blocked = rows.some((r) => r.from_user === auth.user.id || r.answer === null);
   return { mine, theirs, latest: rows[0] ?? null, canAsk: mine && theirs && !blocked };
@@ -67,7 +67,7 @@ export const bootyCallRoutes = new Hono<HonoEnv>()
     const auth = requireCouple(c);
     const now = Date.now();
     const state = await load(c, auth, now);
-    if (!state.mine || !state.theirs) throw new ApiError(409, 'not_on', 'Boogers are on once you’ve both turned them on in Settings.');
+    if (!state.mine || !state.theirs) throw new ApiError(409, 'not_on', 'Boogers are off: one of you has turned them off in Settings.');
     if (!state.canAsk) throw new ApiError(409, 'already_asked', 'There’s already an ask from the last 12 hours.');
     const db = c.env.DB;
     // Counting asks taken back, so asking again right away doesn't notify twice.
