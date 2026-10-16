@@ -7,8 +7,11 @@ import { api } from '../api';
 import { ErrorNotice } from '../components/Feedback';
 import { BackIcon } from '../components/Icons';
 import { JournalDayCard } from '../components/JournalDay';
+import { dayWord, NewDayNotice } from '../components/NewDay';
 import { useJournal, useJournalDay } from '../lib/data';
+import { hasDraft, readDraft } from '../lib/drafts';
 import { formatDay } from '../lib/format';
+import { typingIn, useHeldDay } from '../lib/heldDay';
 import { useMe } from '../lib/session';
 import { toastError } from '../lib/toast';
 
@@ -18,9 +21,19 @@ const loadingCard = (
   </div>
 );
 
+/** A journal draft with something in it (an emptied line doesn't count). */
+function entryStarted(text: string): boolean {
+  if (!text.trim()) return false;
+  const e = parseEntry(text);
+  return JOURNAL_PROMPTS.some(({ key }) => e[key].some((line) => line.trim())) || Boolean(e.note.trim());
+}
+
 export function Journal() {
   const me = useMe();
   const today = useJournalDay('today');
+  // Past midnight, keep the day you're writing about on screen until you move on.
+  const held = useHeldDay(today.data, (d) => entryStarted(readDraft(me.user.id, d.questionId, 'answer')) || hasDraft(me.user.id, d.questionId, 'response') || typingIn('.qcard'));
+  const shown = held.shown;
   const list = useJournal();
   const { route } = useLocation();
   const [older, setOlder] = useState<{ days: JournalDay[]; next: string | null } | null>(null);
@@ -48,17 +61,22 @@ export function Journal() {
     <main class="page">
       <header class="page__header">
         <div>
-          <p class="eyebrow">{today.data ? formatDay(today.data.day) : ' '}</p>
+          <p class="eyebrow">{shown ? formatDay(shown.day) : ' '}</p>
           <h1 class="page__title">Journal</h1>
         </div>
       </header>
 
-      {today.data ? (
-        <JournalDayCard day={today.data} onChange={(d) => today.mutate(d)} />
+      {shown ? (
+        <JournalDayCard day={shown} onChange={(d) => (held.holding ? held.update(d) : today.mutate(d))} />
       ) : today.error ? (
         <ErrorNotice error={today.error} onRetry={today.refresh} />
       ) : (
         loadingCard
+      )}
+      {held.holding && shown && (
+        <NewDayNotice action="Go to today" onMoveOn={held.moveOn}>
+          It’s past midnight. What you’re writing about {dayWord(shown.day, today.data?.day ?? shown.day)} is saved; finish it when you’re ready.
+        </NewDayNotice>
       )}
 
       <section class="section">

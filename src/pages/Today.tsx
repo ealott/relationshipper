@@ -1,5 +1,6 @@
 import { useLocation } from 'preact-iso';
 import type { QuestionDTO } from '../../shared/api';
+import { zonedNow } from '../../shared/time';
 import { CoupleAvatars } from '../components/Avatar';
 import { ErrorNotice, Spinner } from '../components/Feedback';
 import { CardsIcon, ChevronIcon, PencilIcon, ShuffleIcon } from '../components/Icons';
@@ -11,14 +12,24 @@ import { JournalPrompt } from '../components/JournalDay';
 import { ReminderPrompt } from '../components/ReminderPrompt';
 import { BootyCallCard } from '../components/BootyCall';
 import { SnuggleCard } from '../components/Snuggle';
+import { NewDayNotice, UnfinishedCards } from '../components/NewDay';
 import { TimelinePrompt } from '../components/Timeline';
 import { idsWithStatus, randomFresh, useAvailableBank, useBootyCalls, useCatalog, useProgress, useSnuggles, useTimeline, useToday } from '../lib/data';
+import { hasDraft } from '../lib/drafts';
 import { formatDay } from '../lib/format';
+import { typingIn, useHeldDay } from '../lib/heldDay';
+import { invalidate } from '../lib/query';
 import { useMe } from '../lib/session';
 
 export function Today() {
   const me = useMe();
   const today = useToday();
+  // Past midnight, keep the question you're writing on screen until you move on.
+  const held = useHeldDay(
+    today.data,
+    (d) => hasDraft(me.user.id, d.question.id, 'answer') || hasDraft(me.user.id, d.question.id, 'response') || typingIn('.qcard'),
+  );
+  const shown = held.shown;
   const progress = useProgress();
   const catalog = useCatalog();
   const available = useAvailableBank();
@@ -29,12 +40,12 @@ export function Today() {
   const partnerName = me.partner!.name;
 
   const yourTurn = idsWithStatus(progress.data?.progress, 'partner')
-    .filter((id) => id !== today.data?.question.id)
+    .filter((id) => id !== shown?.question.id)
     .map((id) => catalog.byId.get(id))
     .filter((q): q is QuestionDTO => Boolean(q));
 
   const surprise = () => {
-    const q = randomFresh(available, progress.data?.progress, today.data?.question.id);
+    const q = randomFresh(available, progress.data?.progress, shown?.question.id);
     if (q) route(`/q/${q.id}`);
   };
 
@@ -42,13 +53,13 @@ export function Today() {
     <main class="page">
       <header class="page__header">
         <div>
-          <p class="eyebrow">{today.data ? formatDay(today.data.day) : ' '}</p>
+          <p class="eyebrow">{shown ? formatDay(shown.day) : ' '}</p>
           <h1 class="page__title">Today</h1>
         </div>
         <div class="page__header-side">
-          {today.data && today.data.streak > 1 && (
+          {shown && shown.streak > 1 && (
             <span class="streak" title="Days in a row you’ve both answered the daily question">
-              {today.data.streak} days in a row
+              {shown.streak} days in a row
             </span>
           )}
           <CoupleAvatars me={me.user.name} partner={partnerName} />
@@ -59,12 +70,13 @@ export function Today() {
       <SnuggleCard query={snuggles} place="top" />
       <TimelinePrompt query={timeline} place="top" />
 
-      {today.data ? (
+      {shown ? (
         <QuestionCard
-          question={today.data.question}
-          state={today.data.state}
-          daily
-          onChange={(state) => today.mutate({ ...today.data!, state })}
+          question={shown.question}
+          state={shown.state}
+          daily={!held.holding}
+          chip={held.holding ? 'Yesterday’s question' : undefined}
+          onChange={(state) => (held.holding ? held.update({ ...shown, state }) : today.mutate({ ...shown, state }))}
         />
       ) : today.error ? (
         <ErrorNotice error={today.error} onRetry={today.refresh} />
@@ -73,6 +85,19 @@ export function Today() {
           <Spinner />
         </div>
       )}
+
+      {held.holding && (
+        <NewDayNotice
+          action="Go to today’s question"
+          onMoveOn={() => {
+            held.moveOn();
+            invalidate('unfinished');
+          }}
+        >
+          It’s past midnight, so there’s a new question for today. What you’re writing here is saved; finish it when you’re ready.
+        </NewDayNotice>
+      )}
+      <UnfinishedCards today={zonedNow(me.couple!.timezone).day} exclude={shown ? [shown.question.id] : []} />
 
       <JournalPrompt />
       <DatePrompt />

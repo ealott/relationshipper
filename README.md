@@ -6,7 +6,7 @@ It runs as an installable web app (PWA) at **https://relationshipper.evanlott.co
 
 ## How it works
 
-- **Write, don't tap.** Every question is open-ended and every answer is a journal entry, not a multiple-choice pick. Drafts are saved to your account as you type, so they survive closing the app and follow you to other devices. Only you ever see them.
+- **Write, don't tap.** Every question is open-ended and every answer is a journal entry, not a multiple-choice pick. Drafts are saved to your account as you type, so they survive closing the app and follow you to other devices. Only you ever see them. If midnight passes while you're writing, the question or journal day stays on screen until you move on, and anything you started and haven't sent waits on Today.
 - **Private until you've both answered.** Your partner can see *that* you've answered, never *what*, until they've written their own answer. The server enforces this: your partner's answer is never sent to your device until you've written yours.
 - **Then talk about it.** Once both answers are revealed, the conversation continues as responses underneath. Tips on responding come from research on responsiveness.
 - **A journal for your days.** Each day you can both jot down something good, something hard and something you appreciated about each other: a line or two each, with room to say more, and a longer look back on Sundays. As with the questions, you read each other's day once you've both written it, then reply.

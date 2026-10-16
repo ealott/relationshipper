@@ -31,6 +31,18 @@ describe('pairing', () => {
     expect((await a.client.post('/api/invite')).status).toBe(409);
   });
 
+  it('keeps every invite code working when two are asked for at once', async () => {
+    const a = await signUp(t.env, t.ctx, 'Avery');
+    // Say, the pairing screen open in two tabs: neither may cancel the other's code.
+    const codes = (await Promise.all([a.client.post('/api/invite'), a.client.post('/api/invite')])).map((r) => r.body.code as string);
+    for (const code of codes) expect((await new TestClient(t.env, t.ctx).get(`/api/invite/${code}`)).status, code).toBe(200);
+    // An expired one is replaced.
+    await t.env.DB.prepare('UPDATE invites SET expires_at = 1 WHERE user_id = ?').bind(a.id).run();
+    const fresh = (await a.client.post('/api/invite')).body.code;
+    expect(codes).not.toContain(fresh);
+    for (const code of codes) expect((await new TestClient(t.env, t.ctx).get(`/api/invite/${code}`)).status).toBe(404);
+  });
+
   it('keeps couple-only endpoints closed to unpaired people', async () => {
     const solo = await signUp(t.env, t.ctx, 'Solo');
     for (const path of ['/api/today', '/api/progress', '/api/history', '/api/questions/love-maps-001', '/api/custom-questions']) {

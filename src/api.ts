@@ -33,6 +33,7 @@ import type {
   SnugglesResponse,
   TimelineResponse,
   TodayResponse,
+  UnfinishedResponse,
   VersionsResponse,
 } from '../shared/api';
 import type { DateSetting } from '../shared/dates';
@@ -139,6 +140,8 @@ export const api = {
   saveDraft: (id: string, kind: DraftKind, text: string, keepalive = false) =>
     request<DraftDTO | undefined>('PUT', `/questions/${enc(id)}/drafts/${kind}`, { text }, { keepalive }),
   nudge: () => request<{ delivered: boolean }>('POST', '/nudge', {}),
+  /** What you've started writing and not sent: which question, never the text. */
+  unfinished: () => request<UnfinishedResponse>('GET', '/drafts'),
 
   journal: (before?: string) => request<JournalResponse>('GET', `/journal${before ? `?before=${before}` : ''}`),
   /** `day` is YYYY-MM-DD or `today`. Opening a day creates it, so drafts and replies can belong to it. */

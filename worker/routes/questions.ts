@@ -11,6 +11,7 @@ import {
   type ProgressResponse,
   type QuestionResponse,
   type TodayResponse,
+  type UnfinishedResponse,
   type VersionsResponse,
 } from '../../shared/api';
 import { isCategoryId } from '../../shared/categories';
@@ -18,6 +19,7 @@ import { JOURNAL_PREFIX } from '../../shared/journal';
 import { zonedNow } from '../../shared/time';
 import { saveAnswer } from '../answers';
 import { getOrAssignDaily, getStreak } from '../daily';
+import { journalDayOf } from '../journal';
 import type { HonoEnv } from '../env';
 import { exportJournal } from '../export';
 import { ApiError, badRequest, readJson } from '../http';
@@ -29,6 +31,8 @@ import { requireAuth, requireCouple } from '../session';
 
 const NUDGE_COOLDOWN = 3 * 60 * 60 * 1000;
 const RESPONSE_BURST_MS = 3 * 60 * 1000;
+/** How far back unfinished drafts are offered again. */
+const UNFINISHED_DAYS = 14;
 
 function writtenText(body: Record<string, unknown>, max: number, what: string): string {
   if (typeof body.text !== 'string') throw badRequest(`Write your ${what} first.`);
@@ -211,6 +215,30 @@ export const questionRoutes = new Hono<HonoEnv>()
     if (state.revealedAt === null) throw new ApiError(409, 'not_revealed', 'Earlier versions appear once you’ve both answered.');
     const versions = await getVersions(c.env.DB, couple.id, [state]);
     return c.json<VersionsResponse>(versions.get(q.id)!);
+  })
+
+  // What you've started writing and not sent, so nothing gets stranded (say, when the day turns
+  // over mid-answer). Only your own, and never the text, which opens with the question.
+  .get('/drafts', async (c) => {
+    const { user, couple } = requireCouple(c);
+    const { results } = await c.env.DB.prepare(
+      `SELECT d.question_id, d.kind, d.updated_at,
+              (SELECT MAX(day) FROM daily_questions dq WHERE dq.couple_id = d.couple_id AND dq.question_id = d.question_id) AS daily_day
+         FROM drafts d
+        WHERE d.user_id = ? AND d.couple_id = ? AND d.updated_at > ?
+        ORDER BY d.updated_at DESC LIMIT 10`,
+    )
+      .bind(user.id, couple.id, Date.now() - UNFINISHED_DAYS * 24 * 60 * 60 * 1000)
+      .all<{ question_id: string; kind: DraftKind; updated_at: number; daily_day: string | null }>();
+    return c.json<UnfinishedResponse>({
+      drafts: results.map((r) => ({
+        questionId: r.question_id,
+        kind: r.kind,
+        updatedAt: r.updated_at,
+        journalDay: r.question_id.startsWith(JOURNAL_PREFIX) ? journalDayOf(r.question_id) : null,
+        dailyDay: r.daily_day,
+      })),
+    });
   })
 
   // Unsent drafts, saved as you write so they survive closed tabs and follow you to other

@@ -28,6 +28,13 @@ function readLocal(userId: string, questionId: string, kind: DraftKind): Stored 
   return { text: raw, at: 0 };
 }
 
+/** What you've started writing on this device and haven't sent, or ''. */
+export function readDraft(userId: string, questionId: string, kind: DraftKind): string {
+  return readLocal(userId, questionId, kind)?.text ?? '';
+}
+
+export const hasDraft = (userId: string, questionId: string, kind: DraftKind) => Boolean(readDraft(userId, questionId, kind).trim());
+
 function writeLocal(userId: string, questionId: string, kind: DraftKind, text: string, at: number) {
   setFlag(key(userId, questionId, kind), text.trim() ? JSON.stringify({ text, at }) : null);
 }

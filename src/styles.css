@@ -794,6 +794,24 @@ select.input {
   justify-items: start;
 }
 
+/* A day kept on screen past midnight (src/lib/heldDay.ts). */
+.notice--info {
+  background: color-mix(in srgb, var(--primary-soft) 55%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--border));
+  color: var(--text);
+}
+
+.notice--info p {
+  margin: 0;
+}
+
+.unfinished-card__question {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .notice--error {
   background: color-mix(in srgb, var(--danger) 10%, var(--surface));
   color: var(--danger);
