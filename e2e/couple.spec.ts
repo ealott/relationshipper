@@ -601,7 +601,16 @@ test('a booger: on for everyone, one sends, the other answers, and either can tu
   // A rain check can turn into an ask of your own.
   await expect(leo.locator('.bootycall')).toContainText('Booger?');
   await ada.reload();
-  await expect(ada.locator('.bootycall')).toContainText('Leo would like a rain check');
+  await expect(ada.locator('.bootycall')).toContainText('Leo would like a rain check on your booger');
+  // Leo asks back, and Ada says yes.
+  await leo.locator('.bootycall').getByRole('button', { name: 'Send a booger' }).click();
+  await expect(leo.locator('.bootycall')).toContainText('You sent Ada a booger');
+  await ada.reload();
+  await ada.locator('.bootycall--asked').getByRole('button', { name: 'Yes', exact: true }).click();
+  await leo.reload();
+  await expect(leo.locator('.bootycall')).toContainText('Ada said yes to your booger');
+  await leo.locator('.bootycall').scrollIntoViewIfNeeded();
+  await shot(leo, '28-booger-yes');
 
   // Either of them can turn them off, which hides them for both.
   await leo.goto('/settings');
