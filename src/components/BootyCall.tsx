@@ -10,7 +10,7 @@ import { FlameIcon } from './Icons';
 const ANSWERED: Record<BootyCallAnswer, string> = { yes: 'You said yes.', later: 'You asked for a rain check.', no: 'You said not tonight.' };
 
 /**
- * On Today, once you've both turned boogers on (booty calls, in the code): your partner's at the top, with an answer
+ * On Today, while neither of you has turned boogers off (booty calls, in the code): your partner's at the top, with an answer
  * that's easy to give either way; further down, a way to ask, or how your ask went.
  */
 export function BootyCallCard({ query, place }: { query: Query<BootyCallsResponse>; place: 'top' | 'below' }) {
@@ -96,7 +96,7 @@ export function BootyCallCard({ query, place }: { query: Query<BootyCallsRespons
         <span class="link-card__title">Booger?</span>
         <span class="muted">Send one to {partnerName}.</span>
       </span>
-      <button class="btn btn--ghost btn--sm" disabled={busy} onClick={() => run(api.askBootyCall, `Sent ${partnerName} a booger.`)}>
+      <button class="btn btn--ghost btn--sm" aria-label="Send a booger" disabled={busy} onClick={() => run(api.askBootyCall, `Sent ${partnerName} a booger.`)}>
         Send
       </button>
     </section>

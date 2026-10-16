@@ -11,30 +11,28 @@ afterAll(() => t?.dispose());
 
 type Partner = Awaited<ReturnType<typeof pairedCouple>>['a'];
 const state = async (p: Partner) => (await p.client.get<BootyCallsResponse>('/api/booty-calls')).body;
-const turnOn = (...people: Partner[]) => Promise.all(people.map((p) => p.client.patch('/api/me', { bootyCalls: true })));
 const ago = (ms: number, coupleOf: Partner) =>
   t.env.DB.prepare('UPDATE booty_calls SET created_at = created_at - ? WHERE couple_id = (SELECT couple_id FROM users WHERE id = ?)').bind(ms, coupleOf.id).run();
 const HOUR = 60 * 60 * 1000;
 
 describe('booty calls', () => {
-  it('show only once you’ve both turned them on', async () => {
+  it('are on for everyone, and either of you can turn them off', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
-    expect(await state(a)).toEqual({ mine: false, partner: false, latest: null, canAsk: false });
-    expect((await a.client.post('/api/booty-calls')).body.error.code).toBe('not_on');
+    expect((await a.client.get<MeResponse>('/api/me')).body.user.bootyCalls).toBe(true);
+    expect(await state(a)).toEqual({ mine: true, partner: true, latest: null, canAsk: true });
 
-    const me = await a.client.patch<MeResponse>('/api/me', { bootyCalls: true });
-    expect(me.body.user.bootyCalls).toBe(true);
+    const off = await b.client.patch<MeResponse>('/api/me', { bootyCalls: false });
+    expect(off.body.user.bootyCalls).toBe(false);
     expect(await state(a)).toMatchObject({ mine: true, partner: false, canAsk: false });
     expect(await state(b)).toMatchObject({ mine: false, partner: true, canAsk: false });
-    expect((await a.client.post('/api/booty-calls')).status).toBe(409);
+    expect((await a.client.post('/api/booty-calls')).body.error.code).toBe('not_on');
 
-    await turnOn(b);
+    await b.client.patch('/api/me', { bootyCalls: true });
     expect(await state(a)).toMatchObject({ mine: true, partner: true, canAsk: true });
   });
 
   it('are asked once, answered once, and open for 12 hours', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
-    await turnOn(a, b);
     const asked = await a.client.post<BootyCallsResponse>('/api/booty-calls');
     expect(asked.status).toBe(201);
     expect(asked.body).toMatchObject({ latest: { fromMe: true, answer: null, answeredAt: null }, canAsk: false });
@@ -64,7 +62,6 @@ describe('booty calls', () => {
 
   it('can be taken back before an answer, and “not tonight” is an answer like any other', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
-    await turnOn(a, b);
     const { latest } = (await a.client.post<BootyCallsResponse>('/api/booty-calls')).body;
     const takenBack = await a.client.delete<BootyCallsResponse>(`/api/booty-calls/${latest!.id}`);
     expect(takenBack.body).toMatchObject({ latest: null, canAsk: true });
@@ -79,7 +76,6 @@ describe('booty calls', () => {
 
   it('go quiet when either of you turns them off', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
-    await turnOn(a, b);
     const { latest } = (await a.client.post<BootyCallsResponse>('/api/booty-calls')).body;
     await b.client.patch('/api/me', { bootyCalls: false });
     expect(await state(a)).toMatchObject({ mine: true, partner: false, latest: null, canAsk: false });
@@ -89,7 +85,6 @@ describe('booty calls', () => {
   it('stay within the couple, and don’t last', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     const others = await pairedCouple(t.env, t.ctx);
-    await turnOn(a, b, others.a, others.b);
     const { latest } = (await a.client.post<BootyCallsResponse>('/api/booty-calls')).body;
     expect((await others.b.client.post(`/api/booty-calls/${latest!.id}/answer`, { answer: 'yes' })).status).toBe(404);
     expect((await others.a.client.delete(`/api/booty-calls/${latest!.id}`)).status).toBe(404);

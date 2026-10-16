@@ -337,7 +337,6 @@ describe('partner activity notifications', () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     const alexDevice = await subscribe(a.client);
     await subscribe(b.client);
-    await Promise.all([a.client.patch('/api/me', { bootyCalls: true }), b.client.patch('/api/me', { bootyCalls: true })]);
     const asked = await a.client.post('/api/booty-calls');
     await t.ctx.flush();
     expect(pushes.map((p) => p.payload)).toEqual([{ title: 'Alex sent you a booger', body: 'Open Relationshipper to answer.', url: '/', tag: 'booger', badge: 0 }]);
@@ -351,7 +350,6 @@ describe('partner activity notifications', () => {
     // Taking an ask back and asking again right away doesn't buzz twice.
     const other = await pairedCouple(t.env, t.ctx);
     await subscribe(other.b.client);
-    await Promise.all([other.a.client.patch('/api/me', { bootyCalls: true }), other.b.client.patch('/api/me', { bootyCalls: true })]);
     pushes = [];
     const first = await other.a.client.post('/api/booty-calls');
     await other.a.client.delete(`/api/booty-calls/${first.body.latest.id}`);
