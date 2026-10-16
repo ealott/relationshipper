@@ -1260,6 +1260,49 @@ select.input {
   color: var(--primary);
 }
 
+/* On Drafts: one opens where you left off; Discard sits beside it. */
+.draft-row {
+  --cat: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.draft-row__link {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 12px;
+  padding: 14px 4px 14px 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.draft-row__link:active {
+  background: var(--surface-2);
+}
+
+.draft-row__text {
+  display: grid;
+  gap: 4px;
+}
+
+.draft-row__title {
+  font-family: var(--font-serif);
+  font-size: calc(16px * var(--text-scale));
+  line-height: 1.4;
+}
+
+.draft-row__meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .status {
   flex: none;
   font-size: 12px;
@@ -1837,11 +1880,17 @@ select.input {
 }
 
 /* ---------- Library ---------- */
-/* On Questions: the way into your answers. */
+/* On Questions: the way into your answers and drafts. Two by two on a phone. */
 .answer-links {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+}
+
+@media (min-width: 520px) {
+  .answer-links {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .answer-link {

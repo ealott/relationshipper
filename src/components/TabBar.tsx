@@ -1,14 +1,14 @@
 import { useLocation } from 'preact-iso';
 import { CalendarIcon, CardsIcon, NotebookIcon, SlidersIcon, SunIcon } from './Icons';
 
-// Questions holds the library and your answers, which keeps the bar to five tabs.
+// Questions holds the library, your answers and your drafts, which keeps the bar to five tabs.
 const TABS = [
   { href: '/', label: 'Today', Icon: SunIcon, match: (p: string) => p === '/' || p === '/today' },
   {
     href: '/questions',
     label: 'Questions',
     Icon: CardsIcon,
-    match: (p: string) => p.startsWith('/questions') || p.startsWith('/q/') || p.startsWith('/answers'),
+    match: (p: string) => p.startsWith('/questions') || p.startsWith('/q/') || p.startsWith('/answers') || p.startsWith('/drafts'),
   },
   { href: '/journal', label: 'Journal', Icon: NotebookIcon, match: (p: string) => p.startsWith('/journal') },
   { href: '/dates', label: 'Dates', Icon: CalendarIcon, match: (p: string) => p.startsWith('/dates') },

@@ -11,6 +11,7 @@ import { Admin } from './pages/Admin';
 import { Answers } from './pages/Answers';
 import { CategoryPage } from './pages/Category';
 import { Dates } from './pages/Dates';
+import { Drafts } from './pages/Drafts';
 import { Join } from './pages/Join';
 import { Journal, JournalDayPage } from './pages/Journal';
 import { Library } from './pages/Library';
@@ -88,6 +89,7 @@ function PairedApp() {
         <Route path="/timeline" component={Timeline} />
         <Route path="/timeline/:id" component={MilestonePage} />
         <Route path="/answers" component={Answers} />
+        <Route path="/drafts" component={Drafts} />
         <Route path="/settings" component={Settings} />
         <Route path="/research" component={Research} />
         <Route path="/admin" component={Admin} />

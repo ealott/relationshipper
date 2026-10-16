@@ -124,6 +124,8 @@ export interface UnfinishedDraft {
   questionId: string;
   kind: DraftKind;
   updatedAt: number;
+  /** How far you've got: words in the draft, or, for a journal entry, across its lines. */
+  words: number;
   /** For a journal day, its date (YYYY-MM-DD). */
   journalDay: string | null;
   /** When it was a daily question, the day it was asked. */
@@ -131,7 +133,7 @@ export interface UnfinishedDraft {
 }
 
 export interface UnfinishedResponse {
-  /** Newest first, from the last two weeks. */
+  /** Every draft you have, newest first. They're kept until you send or discard them. */
   drafts: UnfinishedDraft[];
 }
 
@@ -270,7 +272,10 @@ export interface JournalResponse {
   nextCursor: string | null;
 }
 
-/** An unsent draft. Only ever returned to its author. */
+/**
+ * An unsent draft. Only ever returned to its author. Empty text means it was cleared or
+ * discarded at `updatedAt`, so an older copy kept on a device is dropped rather than sent back up.
+ */
 export interface DraftDTO {
   text: string;
   updatedAt: number;

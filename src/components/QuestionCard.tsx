@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { LIMITS, type AnswerDTO, type QuestionDTO, type QuestionState } from '../../shared/api';
 import { questionText } from '../../shared/categories';
+import { wordCount } from '../../shared/text';
 import { api } from '../api';
 import { useDraft } from '../lib/drafts';
-import { wordCount } from '../lib/format';
 import { invalidate } from '../lib/query';
 import { useMe } from '../lib/session';
 import { toast, toastError } from '../lib/toast';

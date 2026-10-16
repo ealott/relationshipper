@@ -15,7 +15,8 @@ import {
   type VersionsResponse,
 } from '../../shared/api';
 import { isCategoryId } from '../../shared/categories';
-import { JOURNAL_PREFIX } from '../../shared/journal';
+import { entryWords, JOURNAL_PREFIX, parseEntry } from '../../shared/journal';
+import { wordCount } from '../../shared/text';
 import { zonedNow } from '../../shared/time';
 import { saveAnswer } from '../answers';
 import { getOrAssignDaily, getStreak } from '../daily';
@@ -31,8 +32,6 @@ import { requireAuth, requireCouple } from '../session';
 
 const NUDGE_COOLDOWN = 3 * 60 * 60 * 1000;
 const RESPONSE_BURST_MS = 3 * 60 * 1000;
-/** How far back unfinished drafts are offered again. */
-const UNFINISHED_DAYS = 14;
 
 function writtenText(body: Record<string, unknown>, max: number, what: string): string {
   if (typeof body.text !== 'string') throw badRequest(`Write your ${what} first.`);
@@ -217,32 +216,39 @@ export const questionRoutes = new Hono<HonoEnv>()
     return c.json<VersionsResponse>(versions.get(q.id)!);
   })
 
-  // What you've started writing and not sent, so nothing gets stranded (say, when the day turns
-  // over mid-answer). Only your own, and never the text, which opens with the question.
+  // Everything you've started writing and haven't sent: Questions → Drafts lists it, and Today
+  // brings back the last two weeks' (say, when the day turns over mid-answer). Only your own, and
+  // never the text, just how many words, so a glance at the list doesn't show what you wrote.
   .get('/drafts', async (c) => {
     const { user, couple } = requireCouple(c);
     const { results } = await c.env.DB.prepare(
-      `SELECT d.question_id, d.kind, d.updated_at,
+      `SELECT d.question_id, d.kind, d.text, d.updated_at,
               (SELECT MAX(day) FROM daily_questions dq WHERE dq.couple_id = d.couple_id AND dq.question_id = d.question_id) AS daily_day
          FROM drafts d
-        WHERE d.user_id = ? AND d.couple_id = ? AND d.updated_at > ?
-        ORDER BY d.updated_at DESC LIMIT 10`,
+         JOIN questions q ON q.id = d.question_id AND (q.couple_id IS NULL OR q.couple_id = d.couple_id)
+        WHERE d.user_id = ? AND d.couple_id = ? AND d.text <> ''
+        ORDER BY d.updated_at DESC`,
     )
-      .bind(user.id, couple.id, Date.now() - UNFINISHED_DAYS * 24 * 60 * 60 * 1000)
-      .all<{ question_id: string; kind: DraftKind; updated_at: number; daily_day: string | null }>();
+      .bind(user.id, couple.id)
+      .all<{ question_id: string; kind: DraftKind; text: string; updated_at: number; daily_day: string | null }>();
     return c.json<UnfinishedResponse>({
-      drafts: results.map((r) => ({
-        questionId: r.question_id,
-        kind: r.kind,
-        updatedAt: r.updated_at,
-        journalDay: r.question_id.startsWith(JOURNAL_PREFIX) ? journalDayOf(r.question_id) : null,
-        dailyDay: r.daily_day,
-      })),
+      drafts: results.map((r) => {
+        const journalDay = r.question_id.startsWith(JOURNAL_PREFIX) ? journalDayOf(r.question_id) : null;
+        return {
+          questionId: r.question_id,
+          kind: r.kind,
+          updatedAt: r.updated_at,
+          // A journal entry is stored as JSON; replies on a journal day are plain text.
+          words: journalDay && r.kind === 'answer' ? entryWords(parseEntry(r.text)) : wordCount(r.text),
+          journalDay,
+          dailyDay: r.daily_day,
+        };
+      }),
     });
   })
 
   // Unsent drafts, saved as you write so they survive closed tabs and follow you to other
-  // devices. Only ever returned to their author.
+  // devices. Only ever returned to their author. A cleared one comes back with empty text.
   .get('/questions/:id/drafts', async (c) => {
     const { user, couple } = requireCouple(c);
     const q = await questionFor(c.env.DB, c.req.param('id'), couple.id);
@@ -265,22 +271,22 @@ export const questionRoutes = new Hono<HonoEnv>()
     const max = kind === 'answer' ? LIMITS.answerMax : LIMITS.responseMax;
     if (text.length > max) throw badRequest(`That’s a little long — keep it under ${max.toLocaleString('en-US')} characters.`);
     const db = c.env.DB;
-    if (!text.trim()) {
-      await db.prepare('DELETE FROM drafts WHERE user_id = ? AND question_id = ? AND kind = ?').bind(user.id, q.id, kind).run();
-      return c.body(null, 204);
-    }
-    if (kind === 'answer') {
+    const cleared = !text.trim();
+    if (!cleared && kind === 'answer') {
       const answered = await db.prepare('SELECT 1 FROM answers WHERE couple_id = ? AND question_id = ? AND user_id = ?').bind(couple.id, q.id, user.id).first();
       if (answered) throw new ApiError(409, 'already_answered', 'You’ve already answered this one.');
     }
     const now = Date.now();
+    // Clearing or discarding a draft keeps its row, empty, as a note of when, so an older copy
+    // on another device is dropped there rather than sent back up (src/lib/drafts.ts).
     await db
       .prepare(
         `INSERT INTO drafts (couple_id, question_id, user_id, kind, text, updated_at) VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT (user_id, question_id, kind) DO UPDATE SET couple_id = excluded.couple_id, text = excluded.text, updated_at = excluded.updated_at`,
       )
-      .bind(couple.id, q.id, user.id, kind, text, now)
+      .bind(couple.id, q.id, user.id, kind, cleared ? '' : text, now)
       .run();
+    if (cleared) return c.body(null, 204);
     return c.json<DraftDTO>({ text, updatedAt: now });
   })
 
@@ -357,7 +363,11 @@ export const questionRoutes = new Hono<HonoEnv>()
       .bind(couple.id, q.id)
       .first<{ n: number }>();
     if (answered?.n) throw new ApiError(409, 'has_answers', 'This question already has answers, so it can’t be deleted.');
-    await c.env.DB.prepare('DELETE FROM questions WHERE id = ? AND couple_id = ?').bind(q.id, couple.id).run();
+    // With either partner's drafts on it, which couldn't be opened or sent any more.
+    await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM questions WHERE id = ? AND couple_id = ?').bind(q.id, couple.id),
+      c.env.DB.prepare('DELETE FROM drafts WHERE question_id = ? AND couple_id = ?').bind(q.id, couple.id),
+    ]);
     return c.body(null, 204);
   })
 

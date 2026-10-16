@@ -32,13 +32,18 @@ describe('unsent drafts', () => {
     for (const r of adminViews) expect(r.raw).not.toContain('DRAFT-ONLY-ALEX-SEES');
   });
 
-  it('are replaced as you write, deleted when emptied, and gone once the answer is sent', async () => {
+  it('are replaced as you write, cleared when emptied, and gone once the answer is sent', async () => {
     const { a } = await pairedCouple(t.env, t.ctx);
     await a.client.put('/api/questions/love-maps-002/drafts/answer', { text: 'first' });
     await a.client.put('/api/questions/love-maps-002/drafts/answer', { text: 'second' });
     expect((await drafts(a.client, 'love-maps-002')).answer?.text).toBe('second');
+    // Emptied, it comes back with no text and the time it was cleared, so a device holding an
+    // older copy drops it instead of sending it back up.
+    const before = Date.now();
     expect((await a.client.put('/api/questions/love-maps-002/drafts/answer', { text: '   ' })).status).toBe(204);
-    expect((await drafts(a.client, 'love-maps-002')).answer).toBeNull();
+    const cleared = (await drafts(a.client, 'love-maps-002')).answer;
+    expect(cleared?.text).toBe('');
+    expect(cleared?.updatedAt).toBeGreaterThanOrEqual(before);
 
     await a.client.put('/api/questions/love-maps-002/drafts/answer', { text: 'almost done' });
     await a.client.put('/api/questions/love-maps-002/answer', { text: 'Done.' });
@@ -67,30 +72,56 @@ describe('unsent drafts', () => {
     expect((await a.client.put('/api/questions/love-maps-001/drafts/response', { text: 'x'.repeat(4001) })).status).toBe(400);
   });
 
-  it('can be found again, without their text, by their author only', async () => {
+  it('are all listed, with how many words but never their text, for their author only', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     const daily = (await a.client.get<TodayResponse>('/api/today')).body;
+    const [old, cleared] = ['love-maps-003', 'love-maps-004', 'love-maps-005'].filter((id) => id !== daily.question.id);
     const day = zonedNow('America/New_York').day;
-    await a.client.put(`/api/questions/${daily.question.id}/drafts/answer`, { text: 'UNSENT-ANSWER' });
+    await a.client.put(`/api/questions/${daily.question.id}/drafts/answer`, { text: 'UNSENT-ANSWER, in exactly five words' });
     const journal = await a.client.get<{ questionId: string }>('/api/journal/today');
-    await a.client.put(`/api/questions/${journal.body.questionId}/drafts/answer`, { text: 'UNSENT-ENTRY' });
-    await a.client.put('/api/questions/love-maps-003/drafts/answer', { text: 'OLD' });
-    await t.env.DB.prepare(`UPDATE drafts SET updated_at = updated_at - ? WHERE question_id = 'love-maps-003' AND user_id = ?`).bind(15 * 86_400_000, a.id).run();
+    const entry = { good: ['UNSENT-ENTRY a slow morning'], hard: [], thanks: ['the coffee'], note: '' };
+    await a.client.put(`/api/questions/${journal.body.questionId}/drafts/answer`, { text: JSON.stringify(entry) });
+    await a.client.put(`/api/questions/${journal.body.questionId}/drafts/response`, { text: 'UNSENT-REPLY on the day' });
+    // Drafts wait until they're sent or discarded, however long that takes.
+    await a.client.put(`/api/questions/${old}/drafts/answer`, { text: 'UNSENT-OLD' });
+    await t.env.DB.prepare('UPDATE drafts SET updated_at = updated_at - ? WHERE question_id = ? AND user_id = ?').bind(90 * 86_400_000, old, a.id).run();
+    // Cleared ones aren't listed, nor anything whose question is gone.
+    await a.client.put(`/api/questions/${cleared}/drafts/answer`, { text: 'UNSENT-CLEARED' });
+    await a.client.put(`/api/questions/${cleared}/drafts/answer`, { text: '' });
+    await t.env.DB.prepare(`INSERT INTO drafts (couple_id, question_id, user_id, kind, text, updated_at) SELECT couple_id, 'gone-001', id, 'answer', 'x', ? FROM users WHERE id = ?`)
+      .bind(Date.now(), a.id)
+      .run();
 
     const mine = await a.client.get<UnfinishedResponse>('/api/drafts');
-    expect(mine.raw).not.toContain('UNSENT');
-    expect(mine.body.drafts.map((d) => [d.questionId, d.kind, d.journalDay, d.dailyDay])).toEqual(
+    expect(mine.raw).not.toMatch(/UNSENT|slow morning|coffee/);
+    const list = mine.body.drafts;
+    expect(list.map((d) => [d.questionId, d.kind, d.words, d.journalDay, d.dailyDay])).toEqual(
       expect.arrayContaining([
-        [daily.question.id, 'answer', null, daily.day],
-        [journal.body.questionId, 'answer', day, null],
+        [daily.question.id, 'answer', 5, null, daily.day],
+        [journal.body.questionId, 'answer', 6, day, null],
+        [journal.body.questionId, 'response', 4, day, null],
+        [old, 'answer', 1, null, null],
       ]),
     );
-    expect(mine.body.drafts.map((d) => d.questionId)).not.toContain('love-maps-003'); // more than two weeks old
+    expect(list).toHaveLength(4);
+    expect(list.at(-1)!.questionId).toBe(old); // newest first
     expect((await b.client.get<UnfinishedResponse>('/api/drafts')).body.drafts).toEqual([]);
 
     // Sending the answer finishes it.
     await a.client.put(`/api/questions/${daily.question.id}/answer`, { text: 'Sent.' });
     expect((await a.client.get<UnfinishedResponse>('/api/drafts')).body.drafts.map((d) => d.questionId)).not.toContain(daily.question.id);
+  });
+
+  it('go with a question its author deletes, both partners’ drafts', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    const own = await a.client.post<{ id: string }>('/api/custom-questions', { text: 'What should we cook this winter?' });
+    await a.client.put(`/api/questions/${own.body.id}/drafts/answer`, { text: 'Soup' });
+    await b.client.put(`/api/questions/${own.body.id}/drafts/answer`, { text: 'Stew' });
+    expect((await b.client.get<UnfinishedResponse>('/api/drafts')).body.drafts.map((d) => d.questionId)).toEqual([own.body.id]);
+    expect((await a.client.delete(`/api/custom-questions/${own.body.id}`)).status).toBe(204);
+    expect((await b.client.get<UnfinishedResponse>('/api/drafts')).body.drafts).toEqual([]);
+    const left = await t.env.DB.prepare('SELECT COUNT(*) AS n FROM drafts WHERE question_id = ?').bind(own.body.id).first<{ n: number }>();
+    expect(left?.n).toBe(0);
   });
 
   it('are deleted with the account', async () => {

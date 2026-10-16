@@ -3,6 +3,8 @@
 // stored as that question's answer, as JSON. So the reveal rule, replies, edit history and
 // drafts work exactly as they do for questions.
 
+import { wordCount } from './text';
+
 /** Journal question ids are `journal-<couple id>-<YYYY-MM-DD>`. */
 export const JOURNAL_PREFIX = 'journal-';
 
@@ -33,6 +35,9 @@ export const WEEKLY_PROMPT = 'Looking back on your week: what stood out, what we
 export const emptyEntry = (): JournalEntry => ({ good: [], hard: [], thanks: [], note: '' });
 
 export const isEmptyEntry = (e: JournalEntry) => !e.good.length && !e.hard.length && !e.thanks.length && !e.note.trim();
+
+/** Words in an entry, across its lines and its note. */
+export const entryWords = (e: JournalEntry) => wordCount([...e.good, ...e.hard, ...e.thanks, e.note].join(' '));
 
 /** Sundays ask for a longer look back at the week. */
 export const isWeeklyDay = (day: string) => new Date(`${day}T12:00:00Z`).getUTCDay() === 0;

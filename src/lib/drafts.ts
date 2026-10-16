@@ -5,7 +5,8 @@ import { getFlag, setFlag } from './platform';
 
 // Drafts are kept on this device as you type (instant, and works offline) and saved to your
 // account a moment later, so they survive a cleared browser and follow you to other devices.
-// Only you ever see them; the server deletes its copy when the answer or reply is sent.
+// Only you ever see them; the server deletes its copy when the answer or reply is sent. When you
+// clear or discard one, the server keeps the time, so other devices drop their older copies.
 
 const SAVE_DELAY = 1000;
 
@@ -37,6 +38,12 @@ export const hasDraft = (userId: string, questionId: string, kind: DraftKind) =>
 
 function writeLocal(userId: string, questionId: string, kind: DraftKind, text: string, at: number) {
   setFlag(key(userId, questionId, kind), text.trim() ? JSON.stringify({ text, at }) : null);
+}
+
+/** Deletes a draft from your account, and from this device, so it's gone everywhere. */
+export async function discardDraft(userId: string, questionId: string, kind: DraftKind) {
+  await api.saveDraft(questionId, kind, '');
+  writeLocal(userId, questionId, kind, '', 0);
 }
 
 export interface Draft {
@@ -87,8 +94,9 @@ export function useDraft(
     return inflight.current;
   }
 
-  // Use a newer draft from another device, unless you've started typing here. A draft only on
-  // this device (written offline, say) goes up to your account.
+  // Use a newer draft from another device, unless you've started typing here; a newer clear or
+  // discard there empties it here. A draft only on this device (written offline, say, or since
+  // it was cleared elsewhere) goes up to your account.
   useEffect(() => {
     if (editing) {
       writeLocal(userId, questionId, kind, '', 0);
@@ -104,7 +112,7 @@ export function useDraft(
         if (remote && (!local || remote.updatedAt > local.at)) {
           writeLocal(userId, questionId, kind, remote.text, remote.updatedAt);
           setTextState(remote.text);
-        } else if (!remote && local && local.at >= staleBefore) {
+        } else if (!remote?.text && local && local.at >= staleBefore) {
           unsaved.current = local.text;
           void save();
         }
