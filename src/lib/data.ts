@@ -7,6 +7,7 @@ import { useMe } from './session';
 
 export const useProgress = () => useQuery('progress', api.progress, { refreshInterval: 30_000 });
 export const useToday = () => useQuery('today', api.today, { refreshInterval: 20_000 });
+export const useUnfinished = () => useQuery('unfinished', api.unfinished, { refreshInterval: 60_000 });
 export const useBank = () => useQuery('bank', api.bank);
 export const useCustomQuestions = () => useQuery('custom-questions', api.customQuestions, { refreshInterval: 60_000 });
 /** Days either of you has written about (the first page). */

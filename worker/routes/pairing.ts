@@ -67,14 +67,17 @@ export const pairingRoutes = new Hono<HonoEnv>()
       .first<{ code: string; expires_at: number }>();
     if (existing) return c.json<InviteResponse>({ code: existing.code, expiresAt: existing.expires_at });
 
-    await db.prepare('DELETE FROM invites WHERE user_id = ?').bind(user.id).run();
+    await db.prepare('DELETE FROM invites WHERE user_id = ? AND expires_at <= ?').bind(user.id, now).run();
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = randomString(CODE_ALPHABET, CODE_LENGTH);
       try {
-        await db.prepare('INSERT INTO invites (code, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)')
+        // Each person has one code. If a request racing this one (a second tab, say) made it a
+        // moment ago, both get that one, rather than one cancelling the other's.
+        await db.prepare('INSERT INTO invites (code, user_id, created_at, expires_at) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO NOTHING')
           .bind(code, user.id, now, now + INVITE_TTL)
           .run();
-        return c.json<InviteResponse>({ code, expiresAt: now + INVITE_TTL });
+        const row = (await db.prepare('SELECT code, expires_at FROM invites WHERE user_id = ?').bind(user.id).first<{ code: string; expires_at: number }>())!;
+        return c.json<InviteResponse>({ code: row.code, expiresAt: row.expires_at });
       } catch (err) {
         if (!String(err).includes('UNIQUE')) throw err;
       }

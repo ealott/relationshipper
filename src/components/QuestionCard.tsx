@@ -20,9 +20,11 @@ interface Props {
   state: QuestionState | undefined;
   onChange: (state: QuestionState) => void;
   daily?: boolean;
+  /** A label in place of "Today’s question", such as for yesterday's kept past midnight. */
+  chip?: string;
 }
 
-export function QuestionCard({ question, state, onChange, daily }: Props) {
+export function QuestionCard({ question, state, onChange, daily, chip }: Props) {
   const me = useMe();
   const partnerName = me.partner?.name ?? 'your partner';
   const [editing, setEditing] = useState(false);
@@ -56,7 +58,7 @@ export function QuestionCard({ question, state, onChange, daily }: Props) {
       <div class="qcard__meta">
         <CategoryLabel question={question} />
         <SourceBadge question={question} />
-        {daily && <span class="chip chip--daily">Today’s question</span>}
+        {(daily || chip) && <span class="chip chip--daily">{chip ?? 'Today’s question'}</span>}
       </div>
       <h2 class="qcard__text">{questionText(question, partnerName)}</h2>
       {!state ? (

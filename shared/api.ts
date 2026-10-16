@@ -119,6 +119,22 @@ export interface VersionsResponse {
 
 export type DraftKind = 'answer' | 'response';
 
+/** Something you started writing and haven't sent. Never its text: the question opens it. */
+export interface UnfinishedDraft {
+  questionId: string;
+  kind: DraftKind;
+  updatedAt: number;
+  /** For a journal day, its date (YYYY-MM-DD). */
+  journalDay: string | null;
+  /** When it was a daily question, the day it was asked. */
+  dailyDay: string | null;
+}
+
+export interface UnfinishedResponse {
+  /** Newest first, from the last two weeks. */
+  drafts: UnfinishedDraft[];
+}
+
 export interface SnugglesResponse {
   /** Snuggles from your partner you haven't seen yet. */
   unseen: number;

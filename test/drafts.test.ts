@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { DraftsResponse } from '../shared/api';
+import type { DraftsResponse, TodayResponse, UnfinishedResponse } from '../shared/api';
+import { zonedNow } from '../shared/time';
 import { createTestEnv, pairedCouple, signUp } from './helpers/env';
 
 let t: Awaited<ReturnType<typeof createTestEnv>>;
@@ -64,6 +65,32 @@ describe('unsent drafts', () => {
     expect((await a.client.put('/api/questions/nope-001/drafts/answer', { text: 'x' })).status).toBe(404);
     expect((await a.client.put('/api/questions/love-maps-001/drafts/poem', { text: 'x' })).status).toBe(400);
     expect((await a.client.put('/api/questions/love-maps-001/drafts/response', { text: 'x'.repeat(4001) })).status).toBe(400);
+  });
+
+  it('can be found again, without their text, by their author only', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    const daily = (await a.client.get<TodayResponse>('/api/today')).body;
+    const day = zonedNow('America/New_York').day;
+    await a.client.put(`/api/questions/${daily.question.id}/drafts/answer`, { text: 'UNSENT-ANSWER' });
+    const journal = await a.client.get<{ questionId: string }>('/api/journal/today');
+    await a.client.put(`/api/questions/${journal.body.questionId}/drafts/answer`, { text: 'UNSENT-ENTRY' });
+    await a.client.put('/api/questions/love-maps-003/drafts/answer', { text: 'OLD' });
+    await t.env.DB.prepare(`UPDATE drafts SET updated_at = updated_at - ? WHERE question_id = 'love-maps-003' AND user_id = ?`).bind(15 * 86_400_000, a.id).run();
+
+    const mine = await a.client.get<UnfinishedResponse>('/api/drafts');
+    expect(mine.raw).not.toContain('UNSENT');
+    expect(mine.body.drafts.map((d) => [d.questionId, d.kind, d.journalDay, d.dailyDay])).toEqual(
+      expect.arrayContaining([
+        [daily.question.id, 'answer', null, daily.day],
+        [journal.body.questionId, 'answer', day, null],
+      ]),
+    );
+    expect(mine.body.drafts.map((d) => d.questionId)).not.toContain('love-maps-003'); // more than two weeks old
+    expect((await b.client.get<UnfinishedResponse>('/api/drafts')).body.drafts).toEqual([]);
+
+    // Sending the answer finishes it.
+    await a.client.put(`/api/questions/${daily.question.id}/answer`, { text: 'Sent.' });
+    expect((await a.client.get<UnfinishedResponse>('/api/drafts')).body.drafts.map((d) => d.questionId)).not.toContain(daily.question.id);
   });
 
   it('are deleted with the account', async () => {

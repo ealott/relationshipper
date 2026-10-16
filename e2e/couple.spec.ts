@@ -32,8 +32,15 @@ async function devSignIn(page: Page, name: string, email: string) {
  * than the page, so it can't race the app's own navigation right after signing in.
  */
 async function call(page: Page, method: string, path: string, body?: unknown) {
-  const res = await page.request.fetch(new URL(`/api${path}`, page.url()).href, { method, data: body });
-  return res.status() === 204 ? null : res.json();
+  // The local preview server now and then fails to reach the Worker ("fetch failed" in its log)
+  // and answers with the app's HTML page instead. The API never sends HTML, so try again.
+  for (let attempt = 1; ; attempt++) {
+    const res = await page.request.fetch(new URL(`/api${path}`, page.url()).href, { method, data: body });
+    if (res.status() === 204) return null;
+    if (!(res.headers()['content-type'] ?? '').includes('text/html')) return res.json();
+    if (attempt === 3) throw new Error(`${method} /api${path} got an HTML page ${attempt} times (status ${res.status()})`);
+    await page.waitForTimeout(250);
+  }
 }
 
 /** A fresh browser signed in through the local-only test route. The same name and stamp is the same account. */
@@ -608,4 +615,53 @@ test('a booty call: both opt in, one asks, the other answers', async ({ browser 
   await expect(leo.locator('.bootycall')).toContainText('Booty call?');
   await ada.reload();
   await expect(ada.locator('.bootycall')).toContainText('Leo would like a rain check');
+});
+
+test('past midnight, what you’re writing stays on screen, and you can find it again', async ({ browser }) => {
+  const stamp = Date.now();
+  const rae = await signInAs(browser, 'Rae', stamp);
+  const tom = await signInAs(browser, 'Tom', stamp);
+  await pair(rae, tom);
+  const nextDay = (day: string) => new Date(Date.parse(`${day}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+  const midnight = () => rae.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+
+  // Rae is partway through today's question.
+  await rae.goto('/');
+  const card = rae.locator('.qcard').first();
+  const question = (await card.locator('.qcard__text').textContent())!;
+  await rae.getByLabel('Your answer').fill('Half a thought, still going');
+  await rae.waitForTimeout(1500); // it reaches the account a second later
+
+  // Midnight passes: the server has a new day and a new question. (Played from the browser's
+  // side, since the server's clock can't be moved.)
+  const real = await call(rae, 'GET', '/today');
+  const other = await call(rae, 'GET', `/questions/${real.question.id === 'love-maps-001' ? 'love-maps-002' : 'love-maps-001'}`);
+  await rae.route('**/api/today', (route) => route.fulfill({ json: { ...real, day: nextDay(real.day), question: other.question, state: other.state, streak: 0 } }));
+  await midnight();
+  await expect(rae.locator('.new-day')).toContainText('It’s past midnight');
+  await expect(card.locator('.qcard__text')).toHaveText(question);
+  await expect(card.locator('.chip--daily')).toHaveText('Yesterday’s question');
+  await expect(rae.getByLabel('Your answer')).toHaveValue('Half a thought, still going');
+  await shot(rae, '25-past-midnight');
+
+  // Moving on shows the new question, and the one she started waits on Today.
+  await rae.getByRole('button', { name: 'Go to today’s question' }).click();
+  await expect(card.locator('.qcard__text')).not.toHaveText(question);
+  await expect(rae.getByLabel('Your answer')).toHaveValue('');
+  const unfinished = rae.locator('.unfinished-card');
+  await expect(unfinished).toContainText('You started an answer');
+  await expect(unfinished).toContainText(question);
+  await unfinished.click();
+  await expect(rae.getByLabel('Your answer')).toHaveValue('Half a thought, still going');
+
+  // The journal holds its day the same way.
+  await tab(rae, 'Journal').click();
+  await rae.getByLabel('Something good', { exact: true }).fill('A slow morning');
+  const journalDay = await call(rae, 'GET', '/journal/today');
+  await rae.route('**/api/journal/today', (route) =>
+    route.fulfill({ json: { ...journalDay, day: nextDay(journalDay.day), questionId: `${journalDay.questionId.slice(0, -10)}${nextDay(journalDay.day)}` } }),
+  );
+  await midnight();
+  await expect(rae.locator('.new-day')).toContainText('What you’re writing about yesterday is saved');
+  await expect(rae.getByLabel('Something good', { exact: true })).toHaveValue('A slow morning');
 });
