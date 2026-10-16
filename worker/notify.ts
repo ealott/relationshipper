@@ -145,8 +145,8 @@ export async function notifyTimeline(
 }
 
 /**
- * A booger (a booty call, in the code), or its answer. Discreet on purpose: a lock screen only
- * ever says "booger", and what was asked or answered is only in the app.
+ * A booger (`booty_calls` in the code, which is how they started), or its answer. A lock screen
+ * only ever says "booger"; which answer it was is only in the app.
  */
 export async function notifyBootyCall(
   env: AppEnv,

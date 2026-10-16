@@ -16,7 +16,7 @@ export interface UserDTO {
   notifyDates: boolean;
   /** A notification when your partner sends a snuggle. */
   notifySnuggles: boolean;
-  /** Boogers (booty calls) are on for you: they're on for everyone unless turned off. */
+  /** Boogers are on for you: they're on for everyone unless turned off. */
   bootyCalls: boolean;
   isAdmin: boolean;
 }
@@ -179,23 +179,26 @@ export interface DatesResponse {
   ideas: DateIdeaDTO[];
 }
 
-export type BootyCallAnswer = 'yes' | 'later' | 'no';
+/** How a booger is answered: flick one back, ew, or bless you. */
+export type BootyCallReaction = 'flick' | 'ew' | 'bless';
 
+/** A booger (booty calls, in the code, which is how they started). */
 export interface BootyCallDTO {
   id: string;
   fromMe: boolean;
   createdAt: number;
-  /** 'later' is a rain check, 'no' is not tonight. */
-  answer: BootyCallAnswer | null;
+  /** Null until it's answered, and for boogers answered before they had reactions (#56). */
+  reaction: BootyCallReaction | null;
   answeredAt: number | null;
 }
 
 export interface BootyCallsResponse {
-  /** Whether each of you has boogers (booty calls) on. The button shows while you both do. */
+  /** Whether each of you has boogers on. The button shows while you both do. */
   mine: boolean;
   partner: boolean;
-  /** The latest ask from the last 12 hours, either way, unless it was taken back. */
+  /** The latest booger from the last 12 hours, either way, unless it was taken back. */
   latest: BootyCallDTO | null;
+  /** One at a time: true while no booger is waiting for an answer. */
   canAsk: boolean;
 }
 
