@@ -6,8 +6,9 @@ import { randomId } from '../lib/crypto';
 import { notifyBootyCall } from '../notify';
 import { requireCouple, type PairedContext } from '../session';
 
-// Booty calls (#42). Each partner opts in; an ask shows once both have. Answers are yes, a rain
-// check or not tonight, and nothing is counted. Notifications only ever say "a wink".
+// Booty calls (#42), called boogers in the app (#46). Each partner opts in; an ask shows once both
+// have. Answers are yes, a rain check or not tonight, and nothing is counted. Notifications only
+// ever say "booger".
 
 /** An ask stays open, and blocks asking again, for this long. */
 export const BOOTY_CALL_WINDOW_MS = 12 * 60 * 60 * 1000;
@@ -66,7 +67,7 @@ export const bootyCallRoutes = new Hono<HonoEnv>()
     const auth = requireCouple(c);
     const now = Date.now();
     const state = await load(c, auth, now);
-    if (!state.mine || !state.theirs) throw new ApiError(409, 'not_on', 'Booty calls are on once you’ve both turned them on in Settings.');
+    if (!state.mine || !state.theirs) throw new ApiError(409, 'not_on', 'Boogers are on once you’ve both turned them on in Settings.');
     if (!state.canAsk) throw new ApiError(409, 'already_asked', 'There’s already an ask from the last 12 hours.');
     const db = c.env.DB;
     // Counting asks taken back, so asking again right away doesn't notify twice.
@@ -86,7 +87,7 @@ export const bootyCallRoutes = new Hono<HonoEnv>()
     if (!ANSWERS.includes(answer)) throw badRequest('Answer yes, later or no.');
     const now = Date.now();
     const state = await load(c, auth, now);
-    if (!state.mine || !state.theirs) throw new ApiError(409, 'not_on', 'Booty calls are off.');
+    if (!state.mine || !state.theirs) throw new ApiError(409, 'not_on', 'Boogers are off.');
     const res = await c.env.DB.prepare(
       `UPDATE booty_calls SET answer = ?, answered_at = ?
         WHERE id = ? AND couple_id = ? AND from_user = ? AND answer IS NULL AND cancelled_at IS NULL AND created_at > ?`,

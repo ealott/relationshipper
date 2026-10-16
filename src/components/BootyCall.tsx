@@ -10,7 +10,7 @@ import { FlameIcon } from './Icons';
 const ANSWERED: Record<BootyCallAnswer, string> = { yes: 'You said yes.', later: 'You asked for a rain check.', no: 'You said not tonight.' };
 
 /**
- * On Today, once you've both turned booty calls on: your partner's ask at the top, with an answer
+ * On Today, once you've both turned boogers on (booty calls, in the code): your partner's at the top, with an answer
  * that's easy to give either way; further down, a way to ask, or how your ask went.
  */
 export function BootyCallCard({ query, place }: { query: Query<BootyCallsResponse>; place: 'top' | 'below' }) {
@@ -42,8 +42,8 @@ export function BootyCallCard({ query, place }: { query: Query<BootyCallsRespons
       <section class="card bootycall bootycall--asked">
         <FlameIcon size={24} />
         <div class="bootycall__text">
-          <p class="bootycall__title">{partnerName} is asking for a booty call</p>
-          <p class="muted">Asked {relativeTime(forMe.createdAt)}</p>
+          <p class="bootycall__title">{partnerName} sent you a booger</p>
+          <p class="muted">Sent {relativeTime(forMe.createdAt)}</p>
         </div>
         <div class="row bootycall__actions">
           <button class="btn btn--primary btn--sm" disabled={busy} onClick={() => answer('yes')}>
@@ -64,7 +64,7 @@ export function BootyCallCard({ query, place }: { query: Query<BootyCallsRespons
   if (latest?.fromMe) {
     const status =
       latest.answer === null
-        ? { title: `You asked ${partnerName}`, hint: 'No answer yet. Their phone just says “a wink”.' }
+        ? { title: `You sent ${partnerName} a booger`, hint: 'No answer yet.' }
         : latest.answer === 'yes'
           ? { title: `${partnerName} said yes`, hint: `Answered ${relativeTime(latest.answeredAt!)}.` }
           : latest.answer === 'later'
@@ -93,11 +93,11 @@ export function BootyCallCard({ query, place }: { query: Query<BootyCallsRespons
     <section class="card link-card bootycall">
       <FlameIcon size={22} />
       <span class="link-card__text">
-        <span class="link-card__title">Booty call?</span>
-        <span class="muted">Ask {partnerName}. Their phone just says “a wink”.</span>
+        <span class="link-card__title">Booger?</span>
+        <span class="muted">Send one to {partnerName}.</span>
       </span>
-      <button class="btn btn--ghost btn--sm" disabled={busy} onClick={() => run(api.askBootyCall, `Asked ${partnerName}.`)}>
-        Ask
+      <button class="btn btn--ghost btn--sm" disabled={busy} onClick={() => run(api.askBootyCall, `Sent ${partnerName} a booger.`)}>
+        Send
       </button>
     </section>
   );
