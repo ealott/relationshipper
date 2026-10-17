@@ -4,7 +4,7 @@ import { api, JOURNAL_EXPORT_URL } from '../api';
 import { CoupleAvatars } from '../components/Avatar';
 import { Segmented, Switch } from '../components/Field';
 import { InstallSteps } from '../components/Install';
-import { BookIcon, DownloadIcon, ShareIcon, ShieldIcon } from '../components/Icons';
+import { BackIcon, BookIcon, DownloadIcon, ShareIcon, ShieldIcon } from '../components/Icons';
 import { StageFields } from './Stage';
 import { useBootyCalls } from '../lib/data';
 import { isStandalone } from '../lib/platform';
@@ -54,6 +54,9 @@ export function Settings() {
 
   return (
     <main class="page">
+      <a href="/self" class="back-link">
+        <BackIcon size={18} /> Self
+      </a>
       <header class="page__header">
         <div>
           <h1 class="page__title">Settings</h1>

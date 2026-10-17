@@ -23,6 +23,9 @@ export const BACKUP_TABLES = [
   'milestone_memories',
   'calendar_feeds',
   'push_subscriptions',
+  'self_profiles',
+  'life_chapters',
+  'life_notes',
 ] as const;
 
 export type BackupTable = (typeof BACKUP_TABLES)[number];

@@ -47,6 +47,10 @@ export function deleteUserStatements(db: D1Database, userId: string, coupleId: s
   return [
     ...(coupleId ? deleteCoupleStatements(db, coupleId) : []),
     db.prepare('DELETE FROM drafts WHERE user_id = ?').bind(userId),
+    // Self is theirs alone, so it goes with them (and stays if they only unpair).
+    db.prepare('DELETE FROM life_notes WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM life_chapters WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM self_profiles WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM identities WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM push_subscriptions WHERE user_id = ?').bind(userId),

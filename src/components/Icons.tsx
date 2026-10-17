@@ -270,6 +270,13 @@ export const BookIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const PersonIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
+  </Icon>
+);
+
 export const UsersIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="9" cy="8" r="4" />
