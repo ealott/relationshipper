@@ -2902,3 +2902,278 @@ select.input {
     padding-top: 40px;
   }
 }
+
+/* ---------- Self ---------- */
+/* Chapter colors on the life calendar. */
+:root {
+  --ch-rose: #c76b7e;
+  --ch-amber: #c8963a;
+  --ch-sage: #7d9a64;
+  --ch-teal: #3f948e;
+  --ch-blue: #5a7db8;
+  --ch-violet: #8a6bb8;
+  --ch-slate: #7b8593;
+}
+
+:root[data-theme='dark'] {
+  --ch-rose: #e38c9d;
+  --ch-amber: #e2b45e;
+  --ch-sage: #a5c28b;
+  --ch-teal: #6cc1ba;
+  --ch-blue: #8aa9dc;
+  --ch-violet: #b496de;
+  --ch-slate: #a7b1be;
+}
+
+.ch--rose { --ch: var(--ch-rose); }
+.ch--amber { --ch: var(--ch-amber); }
+.ch--sage { --ch: var(--ch-sage); }
+.ch--teal { --ch: var(--ch-teal); }
+.ch--blue { --ch: var(--ch-blue); }
+.ch--violet { --ch: var(--ch-violet); }
+.ch--slate { --ch: var(--ch-slate); }
+
+.life-card {
+  display: grid;
+  gap: 12px;
+}
+
+.life-card__open {
+  justify-self: start;
+}
+
+.life-stats {
+  font-weight: 650;
+}
+
+.life-grid {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.life-grid__label {
+  font-family: var(--font);
+  font-size: 14px;
+  fill: var(--text-muted);
+}
+
+/* A square: a week in the whole-life grid (lw), in a year (lyw), or in the legend. Later rules win. */
+.lw,
+.lyw,
+.life-legend__square {
+  --sq: color-mix(in srgb, var(--text-muted) 16%, transparent);
+}
+
+.lw--lived,
+.lyw--lived {
+  --sq: color-mix(in srgb, var(--text-muted) 55%, transparent);
+}
+
+.lw--ch,
+.lyw--ch {
+  --sq: var(--ch);
+}
+
+.lw--ahead.lw--ch,
+.lyw--ahead.lyw--ch {
+  --sq: color-mix(in srgb, var(--ch) 40%, transparent);
+}
+
+.lw--marked:not(.lw--ahead),
+.lyw--marked:not(.lyw--ahead) {
+  --sq: var(--primary);
+}
+
+/* This week wins over a note on it; the note still shows in the year's list. */
+.lw.lw--now,
+.lyw.lyw--now,
+.life-legend__square.lw--now {
+  --sq: var(--accent);
+}
+
+.lw {
+  fill: var(--sq);
+}
+
+.lw--ahead.lw--marked {
+  stroke: var(--primary);
+  stroke-width: 2.5;
+}
+
+.lw--now {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.life-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.life-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.life-legend__square {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--sq);
+}
+
+.life-legend__square.lw--ahead.lw--marked {
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.life-year__weeks {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 5px;
+}
+
+.lyw {
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: var(--sq);
+  cursor: pointer;
+}
+
+.lyw--ahead.lyw--marked {
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.lyw[aria-pressed='true'] {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.life-week {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.life-year__nav {
+  margin-top: 4px;
+}
+
+.life-profile,
+.note-form,
+.chapter-form {
+  display: grid;
+  gap: 12px;
+}
+
+.chapter-list,
+.life-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.chapter-list {
+  margin-bottom: 10px;
+}
+
+.chapter-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chapter-row--static {
+  cursor: default;
+}
+
+.chapter-row__swatch {
+  grid-row: span 2;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--ch);
+}
+
+.chapter-row__title {
+  font-weight: 650;
+}
+
+.chapter-row__dates {
+  grid-column: 2;
+  font-size: 13px;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.swatch {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--ch);
+  cursor: pointer;
+}
+
+.swatch.is-selected {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
+}
+
+.life-note {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.life-note > svg {
+  flex: none;
+  align-self: center;
+  color: var(--partner);
+}
+
+.life-note__day {
+  flex: none;
+  min-width: 92px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-muted);
+}

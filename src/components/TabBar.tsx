@@ -1,7 +1,8 @@
 import { useLocation } from 'preact-iso';
-import { CalendarIcon, CardsIcon, NotebookIcon, SlidersIcon, SunIcon } from './Icons';
+import { CalendarIcon, CardsIcon, NotebookIcon, PersonIcon, SunIcon } from './Icons';
 
-// Questions holds the library, your answers and your drafts, which keeps the bar to five tabs.
+// Questions holds the library, your answers and your drafts, and Self holds Settings, which keeps
+// the bar to five tabs.
 const TABS = [
   { href: '/', label: 'Today', Icon: SunIcon, match: (p: string) => p === '/' || p === '/today' },
   {
@@ -12,7 +13,7 @@ const TABS = [
   },
   { href: '/journal', label: 'Journal', Icon: NotebookIcon, match: (p: string) => p.startsWith('/journal') },
   { href: '/dates', label: 'Dates', Icon: CalendarIcon, match: (p: string) => p.startsWith('/dates') },
-  { href: '/settings', label: 'Settings', Icon: SlidersIcon, match: (p: string) => p.startsWith('/settings') },
+  { href: '/self', label: 'Self', Icon: PersonIcon, match: (p: string) => p.startsWith('/self') || p.startsWith('/settings') },
 ];
 
 export function TabBar({ badges = {} }: { badges?: Record<string, number> }) {

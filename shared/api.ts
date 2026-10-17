@@ -1,6 +1,7 @@
 // Request/response shapes shared by the Worker and the client.
 import type { DateSetting } from './dates';
 import type { Audience, CategoryId, Depth } from './questions/types';
+import type { ChapterColor } from './self';
 import type { MilestoneKind } from './timeline';
 
 export interface UserDTO {
@@ -200,6 +201,43 @@ export interface BootyCallsResponse {
   latest: BootyCallDTO | null;
   /** One at a time: true while no booger is waiting for an answer. */
   canAsk: boolean;
+}
+
+/** Self (#60): only ever returned to its owner. */
+export interface SelfProfileDTO {
+  birthday: string;
+  /** How many years the life calendar shows. */
+  years: number;
+}
+
+/** A stretch of your life, shown in color on your life calendar. */
+export interface LifeChapterDTO {
+  id: string;
+  title: string;
+  start: string;
+  /** Null while it's still going. */
+  end: string | null;
+  color: ChapterColor;
+}
+
+/** A line on a day: a moment, or, ahead of today, a plan. */
+export interface LifeNoteDTO {
+  id: string;
+  day: string;
+  text: string;
+}
+
+export interface SelfResponse {
+  /** Today in your time zone. */
+  today: string;
+  /** Null until you've given your birthday. */
+  profile: SelfProfileDTO | null;
+  /** By start, oldest first. */
+  chapters: LifeChapterDTO[];
+  /** By day, oldest first. */
+  notes: LifeNoteDTO[];
+  /** From our timeline, which you both see anyway: milestones known to the day or the month. */
+  milestones: { id: string; day: string; title: string }[];
 }
 
 /** Your private calendar feed of date nights, for Google Calendar or Apple Calendar. */

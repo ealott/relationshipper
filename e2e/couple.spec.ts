@@ -9,6 +9,12 @@ const shot = async (page: Page, name: string) => {
 
 const tab = (page: Page, name: string) => page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: new RegExp(`^${name}`) });
 
+/** Settings opens from the top of Self. */
+async function openSettings(page: Page) {
+  await tab(page, 'Self').click();
+  await page.getByRole('link', { name: 'Settings' }).click();
+}
+
 async function newPage(browser: Browser, colorScheme: 'light' | 'dark' = 'light') {
   const context = await browser.newContext({ colorScheme, serviceWorkers: 'block' });
   const page = await context.newPage();
@@ -181,7 +187,7 @@ test('two partners pair up, write privately, and talk about their answers', asyn
   await expect(alex.page.locator('.hcard')).toHaveCount(1);
   await shot(alex.page, '11-answers');
 
-  await tab(alex.page, 'Settings').click();
+  await openSettings(alex.page);
   await expect(alex.page.getByText('Alex & Sam')).toBeVisible();
   await shot(alex.page, '12-settings');
 });
@@ -249,7 +255,7 @@ test('an unsent draft follows you to another device, and the journal downloads',
   await expect(partner.getByLabel('Your answer')).toHaveValue('');
   await expect(partner.getByText('has written their answer')).toHaveCount(0);
 
-  await tab(laptop, 'Settings').click();
+  await openSettings(laptop);
   const download = laptop.waitForEvent('download');
   await laptop.getByRole('link', { name: 'Download our journal' }).click();
   expect((await download).suggestedFilename()).toMatch(/^relationshipper-journal-\d{4}-\d\d-\d\d\.md$/);
@@ -327,7 +333,7 @@ test('display preferences apply before the first paint and stay with the device'
   const fontSize = async () => parseFloat(await answer.evaluate((el) => getComputedStyle(el).fontSize));
   expect(await fontSize()).toBe(18);
   await expect(page.locator('.composer__tip')).toBeVisible();
-  await tab(page, 'Settings').click();
+  await openSettings(page);
   await option('Text size', 'Larger').click();
   await appearance.getByRole('switch', { name: 'Writing tips' }).click();
   await tab(page, 'Today').click();
@@ -336,7 +342,7 @@ test('display preferences apply before the first paint and stay with the device'
   await expect(page.getByRole('button', { name: 'Save answer' })).toBeVisible();
 
   // Reduced motion turns off transitions even though the device doesn't ask for it.
-  await tab(page, 'Settings').click();
+  await openSettings(page);
   const tips = appearance.getByRole('switch', { name: 'Writing tips' });
   const transition = () => tips.evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration));
   expect(await transition()).toBe(0.2);
@@ -724,4 +730,56 @@ test('drafts: a hard question left for later, found again on Questions, and disc
   await expect(laptop.getByLabel('Your answer')).toHaveValue('');
   await laptop.waitForTimeout(1500);
   expect((await call(laptop, 'GET', '/drafts')).drafts).toEqual([]);
+});
+
+test('self: a private life calendar, a square for every week', async ({ browser }) => {
+  const stamp = Date.now();
+  const noa = await signInAs(browser, 'Noa', stamp);
+  const eli = await signInAs(browser, 'Eli', stamp);
+  await pair(noa, eli);
+
+  await noa.goto('/');
+  await tab(noa, 'Self').click();
+  await expect(noa.getByRole('heading', { name: 'Self' })).toBeVisible();
+  await noa.getByLabel('Your birthday').fill('1990-10-03');
+  await noa.getByRole('button', { name: 'Show my life in weeks' }).click();
+  await expect(noa.locator('.life-grid rect')).toHaveCount(90 * 52);
+  await expect(noa.locator('.life-stats')).toHaveText(/^Week [\d,]+ of 4,680 · age \d+$/);
+
+  // A chapter of life, colored in, and a plan ahead.
+  await noa.getByRole('button', { name: 'Add a chapter' }).click();
+  await noa.getByLabel('Name').fill('College');
+  await noa.getByLabel('Started').fill('2008-08-25');
+  await noa.getByLabel('Ended').fill('2012-05-12');
+  await noa.getByRole('radio', { name: 'Violet' }).click();
+  await noa.getByRole('button', { name: 'Add it' }).click();
+  await expect(noa.locator('.chapter-row')).toContainText('College');
+  expect(await noa.locator('.life-grid .ch--violet').count()).toBeGreaterThan(150);
+  const note = noa.locator('.note-form');
+  await note.getByLabel('When').fill('2031-06-01');
+  await note.getByLabel('Note').fill('Walk the Camino');
+  await note.getByRole('button', { name: 'Add note' }).click();
+  await expect(noa.locator('.life-notes')).toContainText('Walk the Camino');
+  await noa.evaluate(() => window.scrollTo(0, 0));
+  await shot(noa, '29-self');
+
+  // This year, week by week, with a note on this week.
+  await noa.getByRole('link', { name: 'Open this year' }).click();
+  await expect(noa.locator('.lyw')).toHaveCount(52);
+  await expect(noa.locator('.lyw--now')).toHaveCount(1);
+  const week = noa.locator('.life-week');
+  await week.getByLabel('Note').fill('Started a life calendar');
+  await week.getByRole('button', { name: 'Add note' }).click();
+  await expect(week.locator('.life-note')).toContainText('Started a life calendar');
+  await shot(noa, '30-self-year');
+
+  // Eli has none of it.
+  await eli.goto('/self');
+  await expect(eli.getByLabel('Your birthday')).toBeVisible();
+  await expect(eli.getByText('College')).toHaveCount(0);
+
+  // Settings is one tap from Self, and Self stays lit there.
+  await openSettings(noa);
+  await expect(noa.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(tab(noa, 'Self')).toHaveAttribute('aria-current', 'page');
 });

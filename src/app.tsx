@@ -11,6 +11,7 @@ import { Admin } from './pages/Admin';
 import { Answers } from './pages/Answers';
 import { CategoryPage } from './pages/Category';
 import { Dates } from './pages/Dates';
+import { LifeYear } from './pages/LifeYear';
 import { Drafts } from './pages/Drafts';
 import { Join } from './pages/Join';
 import { Journal, JournalDayPage } from './pages/Journal';
@@ -20,6 +21,7 @@ import { NotFound } from './pages/NotFound';
 import { Pair } from './pages/Pair';
 import { QuestionPage } from './pages/QuestionPage';
 import { Research } from './pages/Research';
+import { Self } from './pages/Self';
 import { Settings } from './pages/Settings';
 import { StageSetup } from './pages/Stage';
 import { Timeline } from './pages/Timeline';
@@ -91,6 +93,8 @@ function PairedApp() {
         <Route path="/answers" component={Answers} />
         <Route path="/drafts" component={Drafts} />
         <Route path="/settings" component={Settings} />
+        <Route path="/self" component={Self} />
+        <Route path="/self/year/:year" component={LifeYear} />
         <Route path="/research" component={Research} />
         <Route path="/admin" component={Admin} />
         <Route path="/join/:code" component={Join} />

@@ -14,6 +14,7 @@ import { meRoutes } from './routes/me';
 import { pairingRoutes } from './routes/pairing';
 import { pushRoutes } from './routes/push';
 import { questionRoutes } from './routes/questions';
+import { selfRoutes } from './routes/self';
 import { snuggleRoutes } from './routes/snuggles';
 import { timelineRoutes } from './routes/timeline';
 import { sessionMiddleware } from './session';
@@ -39,6 +40,7 @@ app.route('/calendar', calendarRoutes);
 app.route('/snuggles', snuggleRoutes);
 app.route('/booty-calls', bootyCallRoutes);
 app.route('/timeline', timelineRoutes);
+app.route('/self', selfRoutes);
 app.route('/', pairingRoutes);
 app.route('/', questionRoutes);
 
