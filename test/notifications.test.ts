@@ -333,6 +333,21 @@ describe('partner activity notifications', () => {
     expect(pushes).toHaveLength(0);
   });
 
+  it('never notifies anyone about Self, even when you share', async () => {
+    const { a, b } = await pairedCouple(t.env, t.ctx);
+    await subscribe(a.client);
+    await subscribe(b.client);
+    expect((await a.client.put('/api/self/profile', { birthday: '1990-10-03' })).status).toBe(200);
+    expect((await a.client.post('/api/self/chapters', { title: 'College', start: '2008-08-25', color: 'teal' })).status).toBe(201);
+    expect((await a.client.post('/api/self/questionnaires/big-five', { answers: Array(50).fill(3) })).status).toBe(201);
+    expect((await a.client.post('/api/self/questionnaires/check-in', { answers: Array(15).fill(3) })).status).toBe(201);
+    for (const instrument of ['big-five', 'check-in']) {
+      expect((await a.client.put(`/api/self/questionnaires/${instrument}/share`, { shared: true })).status).toBe(204);
+    }
+    await t.ctx.flush();
+    expect(pushes).toEqual([]);
+  });
+
   it('says only “booger” about a booger, and about its answer', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     const alexDevice = await subscribe(a.client);

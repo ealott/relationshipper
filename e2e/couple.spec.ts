@@ -9,6 +9,11 @@ const shot = async (page: Page, name: string) => {
 
 const tab = (page: Page, name: string) => page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: new RegExp(`^${name}`) });
 
+/** Opens Self once its questionnaires have loaded, since they decide where its cards lead. */
+async function openSelf(page: Page) {
+  await Promise.all([page.waitForResponse((res) => new URL(res.url()).pathname === '/api/self/questionnaires'), tab(page, 'Self').click()]);
+}
+
 /** Settings opens from the top of Self. */
 async function openSettings(page: Page) {
   await tab(page, 'Self').click();
@@ -797,7 +802,7 @@ test('self: the Big Five, private unless shared', async ({ browser }) => {
   await pair(ivy, jon);
 
   await ivy.goto('/');
-  await tab(ivy, 'Self').click();
+  await openSelf(ivy);
   await ivy.getByRole('link', { name: /^Your personality/ }).click();
   await ivy.getByRole('button', { name: 'Begin' }).click();
   const count = ivy.locator('.take .eyebrow');
@@ -815,7 +820,7 @@ test('self: the Big Five, private unless shared', async ({ browser }) => {
     await accurate.click();
   }
   expect((await call(ivy, 'GET', '/self/questionnaires')).mine).toEqual([]);
-  await ivy.getByRole('button', { name: 'See your profile' }).click();
+  await ivy.getByRole('button', { name: 'See your scores' }).click();
 
   // Every statement answered "Moderately accurate": the reversed ones count as 2, the rest as 4.
   await expect(ivy.getByRole('heading', { name: 'Your personality' })).toBeVisible();
@@ -867,3 +872,61 @@ test('self: the Big Five, private unless shared', async ({ browser }) => {
   await expect(ivy.getByRole('link', { name: 'Start' })).toBeVisible();
   await expect(share).toHaveCount(0);
 });
+
+test('self: a check-in on anxiety and mood, private unless shared', async ({ browser }) => {
+  const stamp = Date.now();
+  const uma = await signInAs(browser, 'Uma', stamp);
+  const ted = await signInAs(browser, 'Ted', stamp);
+  await pair(uma, ted);
+
+  await uma.goto('/');
+  await openSelf(uma);
+  await uma.getByRole('link', { name: /^How you’ve been/ }).click();
+  await expect(uma.getByRole('link', { name: '988lifeline.org' })).toBeVisible();
+  await uma.getByRole('button', { name: 'Begin' }).click();
+  const count = uma.locator('.take .eyebrow');
+  for (let i = 0; i < 15; i++) {
+    await expect(count).toHaveText(`${i + 1} of 15`);
+    if (i === 7) {
+      // The PHQ-8 has its own question, as printed on its form.
+      await expect(uma.locator('.take__prompt')).toHaveText('Over the last 2 weeks, how often have you been bothered by any of the following problems?');
+      await shot(uma, '35-check-in-take');
+    }
+    await uma.getByRole('radio', { name: i < 7 ? 'More than half the days' : 'Several days' }).click();
+  }
+  await uma.getByRole('button', { name: 'See your scores' }).click();
+
+  // Seven anxiety questions at 2 make 14; eight mood questions at 1 make 8.
+  const scores = uma.locator('.check-in .trait__score');
+  await expect(scores).toHaveText(['14 Moderate', '8 Mild']);
+  await expect(uma.locator('.check-in__closer')).toContainText('talk with a doctor or counselor');
+  await expect(uma.getByRole('link', { name: '988lifeline.org' })).toBeVisible();
+  await shot(uma, '36-check-in');
+
+  // Checked in again, it shows what changed, and both scores over time.
+  await call(uma, 'POST', '/self/questionnaires/check-in', { answers: Array(15).fill(0) });
+  await uma.reload();
+  await expect(scores).toHaveText(['0 Minimal', '0 Minimal']);
+  await expect(uma.locator('.check-in .trait__ends').first()).toContainText('−14 since last time');
+  await expect(uma.locator('.check-in__closer')).toHaveCount(0);
+  await expect(uma.locator('.trend__chart')).toHaveCount(2);
+  const readout = uma.locator('.trend__readout');
+  await expect(readout).toContainText('anxiety 0, low mood 0');
+  await uma.locator('.trend__chart svg').first().focus();
+  await uma.keyboard.press('ArrowLeft');
+  await expect(readout).toContainText('anxiety 14, low mood 8');
+  await expect(uma.locator('.result-row')).toHaveCount(2);
+  await shot(uma, '37-check-in-trend');
+
+  // Ted sees none of it until Uma shares, and then only her latest scores.
+  expect((await call(ted, 'GET', '/self/questionnaires')).partner).toEqual([]);
+  const share = uma.getByRole('switch', { name: 'Share with Ted' });
+  await share.click();
+  await expect(share).toHaveAttribute('aria-checked', 'true');
+  await ted.goto('/self');
+  await ted.getByRole('link', { name: /^Uma’s check-in/ }).click();
+  await expect(ted.locator('#partner .trait__score')).toHaveText(['0 Minimal', '0 Minimal']);
+  await expect(ted.locator('#partner')).toBeInViewport();
+  await shot(ted, '38-check-in-partner');
+});
+

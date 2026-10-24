@@ -202,6 +202,14 @@ const R = {
     cite: 'Kardas, M., Kumar, A., & Epley, N. (2022). Overly shallow?: Miscalibrated expectations create a barrier to deeper conversation. Journal of Personality and Social Psychology, 122(3), 367–398.',
     url: 'https://doi.org/10.1037/pspa0000281',
   },
+  kroenkeEtAl2001: {
+    cite: 'Kroenke, K., Spitzer, R. L., & Williams, J. B. W. (2001). The PHQ-9: Validity of a brief depression severity measure. Journal of General Internal Medicine, 16(9), 606–613.',
+    url: 'https://doi.org/10.1046/j.1525-1497.2001.016009606.x',
+  },
+  kroenkeEtAl2009: {
+    cite: 'Kroenke, K., Strine, T. W., Spitzer, R. L., Williams, J. B. W., Berry, J. T., & Mokdad, A. H. (2009). The PHQ-8 as a measure of current depression in the general population. Journal of Affective Disorders, 114(1–3), 163–173.',
+    url: 'https://doi.org/10.1016/j.jad.2008.06.026',
+  },
   kuperberg2014: {
     cite: 'Kuperberg, A. (2014). Age at coresidence, premarital cohabitation, and marriage dissolution: 1985–2009. Journal of Marriage and Family, 76(2), 352–369.',
     url: 'https://doi.org/10.1111/jomf.12092',
@@ -266,6 +274,10 @@ const R = {
     cite: 'Pennebaker, J. W. (1997). Writing about emotional experiences as a therapeutic process. Psychological Science, 8(3), 162–166.',
     url: 'https://doi.org/10.1111/j.1467-9280.1997.tb00403.x',
   },
+  plummerEtAl2016: {
+    cite: 'Plummer, F., Manea, L., Trepel, D., & McMillan, D. (2016). Screening for anxiety disorders with the GAD-7 and GAD-2: A systematic review and diagnostic metaanalysis. General Hospital Psychiatry, 39, 24–31.',
+    url: 'https://doi.org/10.1016/j.genhosppsych.2015.11.005',
+  },
   primeEtAl2024: {
     cite: 'Prime, H., Muise, A., Jambon, M., Koven, M., Markwell, A., & Wade, M. (2024). A pilot randomized controlled trial of a brief conflict reappraisal intervention for community couples with young children. Cognitive Therapy and Research, 48(5), 895–909.',
     url: 'https://doi.org/10.1007/s10608-024-10485-x',
@@ -302,6 +314,10 @@ const R = {
     cite: 'Slatcher, R. B., & Pennebaker, J. W. (2006). How do I love thee? Let me count the words: The social effects of expressive writing. Psychological Science, 17(8), 660–664.',
     url: 'https://doi.org/10.1111/j.1467-9280.2006.01762.x',
   },
+  spitzerEtAl2006: {
+    cite: 'Spitzer, R. L., Kroenke, K., Williams, J. B. W., & Löwe, B. (2006). A brief measure for assessing generalized anxiety disorder: The GAD-7. Archives of Internal Medicine, 166(10), 1092–1097.',
+    url: 'https://doi.org/10.1001/archinte.166.10.1092',
+  },
   sprecherEtAl2013: {
     cite: 'Sprecher, S., Treger, S., Wondra, J. D., Hilaire, N., & Wallpe, K. (2013). Taking turns: Reciprocal self-disclosure promotes liking in initial interactions. Journal of Experimental Social Psychology, 49(5), 860–866.',
     url: 'https://doi.org/10.1016/j.jesp.2013.03.017',
@@ -333,6 +349,10 @@ const R = {
   woodsEtAl2015: {
     cite: 'Woods, S., Lambert, N., Brown, P., Fincham, F., & May, R. (2015). "I\'m so excited for you!" How an enthusiastic responding intervention enhances close relationships. Journal of Social and Personal Relationships, 32(1), 24–40.',
     url: 'https://doi.org/10.1177/0265407514523545',
+  },
+  wuEtAl2020: {
+    cite: 'Wu, Y., Levis, B., Riehm, K. E., Saadat, N., Levis, A. W., Azar, M., Rice, D. B., Boruff, J., Cuijpers, P., Gilbody, S., Ioannidis, J. P. A., Kloda, L. A., McMillan, D., Patten, S. B., Shrier, I., Ziegelstein, R. C., Akena, D. H., Arroll, B., Ayalon, L., . . . Thombs, B. D. (2020). Equivalency of the diagnostic accuracy of the PHQ-8 and PHQ-9: A systematic review and individual participant data meta-analysis. Psychological Medicine, 50(8), 1368–1380.',
+    url: 'https://doi.org/10.1017/S0033291719001314',
   },
 } satisfies Record<string, Source>;
 
@@ -396,6 +416,13 @@ export const PRINCIPLES: Principle[] = [
     body: 'The Big Five describe personality along five broad traits. Goldberg’s 50-item questionnaire, from the free International Personality Item Pool, sorts into those traits as intended, and three of its five scales line up closely with a longer, commercial inventory. It has no published norms, so scores show where you put yourself, not how you compare with anyone.',
     inApp: 'Self has the 50-item questionnaire. Your scores are private unless you share your latest with your partner, who then sees the scores but never your answers. It doesn’t sort anyone into types or compare partners, and whether knowing your scores helps is untested.',
     sources: [R.goldberg1992, R.goldbergEtAl2006, R.gowEtAl2005],
+  },
+  {
+    title: 'Checking in on anxiety and mood',
+    strength: 'Strong for what the questionnaires measure',
+    body: 'The GAD-7 and the PHQ-8 ask how often symptoms of anxiety and depression have bothered you over the last two weeks. In large studies and reviews, a score of 10 or more picked out most people with generalized anxiety disorder or major depression, along with some who had neither. They screen; they don’t diagnose. The PHQ-8 is the PHQ-9 without its question about self-harm, and scores almost exactly the same.',
+    inApp: 'Self has a check-in with both, worded as published. It shows your scores with their published ranges and how they change over time. At 10 or more on either, it suggests talking with a doctor or counselor, and it always says where to find help now. Your scores are private unless you share your latest with your partner, and whether checking in like this helps is untested.',
+    sources: [R.spitzerEtAl2006, R.plummerEtAl2016, R.kroenkeEtAl2001, R.wuEtAl2020, R.kroenkeEtAl2009],
   },
   {
     title: 'Questions that deepen gradually',

@@ -240,8 +240,8 @@ export interface SelfResponse {
   milestones: { id: string; day: string; title: string }[];
 }
 
-/** The questionnaires in Self. */
-export type Instrument = 'big-five';
+/** The questionnaires in Self: the Big Five (#63), and the check-in on anxiety and mood (#65). */
+export type Instrument = 'big-five' | 'check-in';
 
 /** One time you took a questionnaire: its scores, never your answers. */
 export interface SelfResultDTO {

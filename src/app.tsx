@@ -12,6 +12,7 @@ import { Answers } from './pages/Answers';
 import { CategoryPage } from './pages/Category';
 import { Dates } from './pages/Dates';
 import { BigFive, BigFiveTake } from './pages/BigFive';
+import { CheckIn, CheckInTake } from './pages/CheckIn';
 import { Life } from './pages/Life';
 import { LifeYear } from './pages/LifeYear';
 import { Drafts } from './pages/Drafts';
@@ -100,6 +101,8 @@ function PairedApp() {
         <Route path="/self/year/:year" component={LifeYear} />
         <Route path="/self/big-five" component={BigFive} />
         <Route path="/self/big-five/take" component={BigFiveTake} />
+        <Route path="/self/check-in" component={CheckIn} />
+        <Route path="/self/check-in/take" component={CheckInTake} />
         <Route path="/research" component={Research} />
         <Route path="/admin" component={Admin} />
         <Route path="/join/:code" component={Join} />

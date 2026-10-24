@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import type { Instrument, LifeChapterDTO, LifeNoteDTO, QuestionnairesResponse, SelfProfileDTO, SelfResponse, SelfResultDTO } from '../../shared/api';
 import { isBigFiveAnswers, scoreBigFive } from '../../shared/bigFive';
+import { isCheckInAnswers, scoreCheckIn } from '../../shared/checkIn';
 import { isDay } from '../../shared/journal';
 import { isChapterColor, isLifeDay, SELF_LIMITS, type ChapterColor } from '../../shared/self';
 import { zonedNow } from '../../shared/time';
@@ -40,6 +41,7 @@ function checkNote(body: Record<string, unknown>) {
 /** Each questionnaire: whether a set of answers is complete and valid, and how it's scored. */
 const INSTRUMENTS: Record<Instrument, { valid: (answers: unknown) => answers is number[]; score: (answers: number[]) => Record<string, number> }> = {
   'big-five': { valid: isBigFiveAnswers, score: scoreBigFive },
+  'check-in': { valid: isCheckInAnswers, score: scoreCheckIn },
 };
 
 const isInstrument = (value: string): value is Instrument => Object.hasOwn(INSTRUMENTS, value);
@@ -161,7 +163,7 @@ export const selfRoutes = new Hono<HonoEnv>()
     return c.body(null, 204);
   })
 
-  // Questionnaires (#63): yours, and your partner's latest of each they've chosen to share.
+  // Questionnaires (#63, #65): yours, and your partner's latest of each they've chosen to share.
   .get('/questionnaires', async (c) => {
     const { user, partner } = requireAuth(c);
     const db = c.env.DB;

@@ -112,6 +112,13 @@ The Big Five describe personality along five broad traits: extraversion, agreeab
 
 *In the app:* Self has the 50-item questionnaire. Your scores are private unless you choose to share your latest with your partner, who then sees the scores but never your answers. It doesn't sort anyone into types or compare partners. Whether knowing your scores helps you or your relationship is untested.
 
+### 12. Checking in on anxiety and mood
+**Strength:** Strong for what the questionnaires measure; untested as part of the app.
+
+The GAD-7 asks how often seven symptoms of anxiety have bothered you over the last two weeks. It was developed with 2,740 adults in 15 US primary care clinics, 965 of whom also spoke with a mental health professional. At a cut-off of 10, it found 89% of those with generalized anxiety disorder, with 82% specificity, and higher scores went with more impairment in daily life (Spitzer et al., 2006). A review of 12 samples with 5,223 people found it identified generalized anxiety disorder acceptably at cut-offs from 7 to 10 (Plummer et al., 2016). The PHQ-8 asks the same about eight symptoms of depression; it is the PHQ-9 without its question about thoughts of death or self-harm. On the PHQ-9, scores of 5, 10, 15 and 20 mark mild, moderate, moderately severe and severe depression, and a score of 10 or more found major depression with 88% sensitivity and 88% specificity (Kroenke et al., 2001). Across 54 studies with 16,742 people, PHQ-8 and PHQ-9 scores correlated at 0.996, and the PHQ-9's cut-off of 10 also worked best for the PHQ-8, which was at most slightly less sensitive (Wu et al., 2020). In a US telephone survey of 198,678 adults, a PHQ-8 score of 10 or more picked out about as many people as its full diagnostic rules (8.6% against 9.1%) (Kroenke et al., 2009). Both are screening questionnaires: a high score is a reason for a closer look with a professional, not a diagnosis.
+
+*In the app:* Self has a check-in with the GAD-7 and the PHQ-8, worded as published, and leaves out the PHQ-9's question about self-harm. It shows each score with its published range, reading the PHQ-8 on the PHQ-9's, and how your scores change over time. At 10 or more on either, it suggests talking with a doctor or counselor, and it always says where to find help now. Your scores are private unless you choose to share your latest with your partner, who then sees the scores but never your answers. Whether checking in like this helps is untested.
+
 ### Popular ideas we handle with care
 
 - **The "five love languages."** Chapman's (1992) framework makes three core claims: each person has one preferred "language," there are exactly five, and partners are happier when they match. These claims have limited support (Impett et al., 2024), and direct tests are mixed. Matching added little in a study of 67 couples (Bunt & Hazelwood, 2017) but was linked to satisfaction in a study of 100 couples (Mostova et al., 2022). The app doesn't sort people into types.
@@ -261,6 +268,10 @@ Impett, E. A., Park, H. G., & Muise, A. (2024). Popular psychology through a sci
 
 Kardas, M., Kumar, A., & Epley, N. (2022). Overly shallow?: Miscalibrated expectations create a barrier to deeper conversation. *Journal of Personality and Social Psychology, 122*(3), 367–398. https://doi.org/10.1037/pspa0000281
 
+Kroenke, K., Spitzer, R. L., & Williams, J. B. W. (2001). The PHQ-9: Validity of a brief depression severity measure. *Journal of General Internal Medicine, 16*(9), 606–613. https://doi.org/10.1046/j.1525-1497.2001.016009606.x
+
+Kroenke, K., Strine, T. W., Spitzer, R. L., Williams, J. B. W., Berry, J. T., & Mokdad, A. H. (2009). The PHQ-8 as a measure of current depression in the general population. *Journal of Affective Disorders, 114*(1–3), 163–173. https://doi.org/10.1016/j.jad.2008.06.026
+
 Kuperberg, A. (2014). Age at coresidence, premarital cohabitation, and marriage dissolution: 1985–2009. *Journal of Marriage and Family, 76*(2), 352–369. https://doi.org/10.1111/jomf.12092
 
 Lachance-Grzela, M., & Bouchard, G. (2010). Why do women do the lion's share of housework? A decade of research. *Sex Roles, 63*(11–12), 767–780. https://doi.org/10.1007/s11199-010-9797-z
@@ -293,6 +304,8 @@ Papp, L. M., Cummings, E. M., & Goeke-Morey, M. C. (2009). For richer, for poore
 
 Pennebaker, J. W. (1997). Writing about emotional experiences as a therapeutic process. *Psychological Science, 8*(3), 162–166. https://doi.org/10.1111/j.1467-9280.1997.tb00403.x
 
+Plummer, F., Manea, L., Trepel, D., & McMillan, D. (2016). Screening for anxiety disorders with the GAD-7 and GAD-2: A systematic review and diagnostic metaanalysis. *General Hospital Psychiatry, 39*, 24–31. https://doi.org/10.1016/j.genhosppsych.2015.11.005
+
 Prime, H., Muise, A., Jambon, M., Koven, M., Markwell, A., & Wade, M. (2024). A pilot randomized controlled trial of a brief conflict reappraisal intervention for community couples with young children. *Cognitive Therapy and Research, 48*(5), 895–909. https://doi.org/10.1007/s10608-024-10485-x
 
 Rathgeber, M., Bürkner, P.-C., Schiller, E.-M., & Holling, H. (2019). The efficacy of emotionally focused couples therapy and behavioral couples therapy: A meta-analysis. *Journal of Marital and Family Therapy, 45*(3), 447–463. https://doi.org/10.1111/jmft.12336
@@ -311,6 +324,8 @@ Shapiro, A. F., Gottman, J. M., & Carrère, S. (2000). The baby and the marriage
 
 Slatcher, R. B., & Pennebaker, J. W. (2006). How do I love thee? Let me count the words: The social effects of expressive writing. *Psychological Science, 17*(8), 660–664. https://doi.org/10.1111/j.1467-9280.2006.01762.x
 
+Spitzer, R. L., Kroenke, K., Williams, J. B. W., & Löwe, B. (2006). A brief measure for assessing generalized anxiety disorder: The GAD-7. *Archives of Internal Medicine, 166*(10), 1092–1097. https://doi.org/10.1001/archinte.166.10.1092
+
 Sprecher, S., Treger, S., Wondra, J. D., Hilaire, N., & Wallpe, K. (2013). Taking turns: Reciprocal self-disclosure promotes liking in initial interactions. *Journal of Experimental Social Psychology, 49*(5), 860–866. https://doi.org/10.1016/j.jesp.2013.03.017
 
 Stanley, S. M., Bradbury, T. N., & Markman, H. J. (2000). Structural flaws in the bridge from basic research on marriage to interventions for couples. *Journal of Marriage and Family, 62*(1), 256–264. https://doi.org/10.1111/j.1741-3737.2000.00256.x
@@ -326,3 +341,5 @@ Wiebe, S. A., & Johnson, S. M. (2016). A review of the research in emotionally f
 Wieselquist, J., Rusbult, C. E., Foster, C. A., & Agnew, C. R. (1999). Commitment, pro-relationship behavior, and trust in close relationships. *Journal of Personality and Social Psychology, 77*(5), 942–966. https://doi.org/10.1037/0022-3514.77.5.942
 
 Woods, S., Lambert, N., Brown, P., Fincham, F., & May, R. (2015). "I'm so excited for you!" How an enthusiastic responding intervention enhances close relationships. *Journal of Social and Personal Relationships, 32*(1), 24–40. https://doi.org/10.1177/0265407514523545
+
+Wu, Y., Levis, B., Riehm, K. E., Saadat, N., Levis, A. W., Azar, M., Rice, D. B., Boruff, J., Cuijpers, P., Gilbody, S., Ioannidis, J. P. A., Kloda, L. A., McMillan, D., Patten, S. B., Shrier, I., Ziegelstein, R. C., Akena, D. H., Arroll, B., Ayalon, L., . . . Thombs, B. D. (2020). Equivalency of the diagnostic accuracy of the PHQ-8 and PHQ-9: A systematic review and individual participant data meta-analysis. *Psychological Medicine, 50*(8), 1368–1380. https://doi.org/10.1017/S0033291719001314
