@@ -240,6 +240,26 @@ export interface SelfResponse {
   milestones: { id: string; day: string; title: string }[];
 }
 
+/** The questionnaires in Self. */
+export type Instrument = 'big-five';
+
+/** One time you took a questionnaire: its scores, never your answers. */
+export interface SelfResultDTO {
+  id: string;
+  instrument: Instrument;
+  createdAt: number;
+  scores: Record<string, number>;
+}
+
+export interface QuestionnairesResponse {
+  /** Yours, newest first. */
+  mine: SelfResultDTO[];
+  /** Instruments whose latest result you've chosen to show your partner. */
+  sharing: Instrument[];
+  /** Your partner's latest result for each instrument they've chosen to share: scores only. */
+  partner: Omit<SelfResultDTO, 'id'>[];
+}
+
 /** Your private calendar feed of date nights, for Google Calendar or Apple Calendar. */
 export interface CalendarFeedResponse {
   /** The link a calendar app subscribes to; null when it's off. */

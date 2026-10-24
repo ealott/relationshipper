@@ -105,6 +105,13 @@ How couples tell the story of their relationship has been linked with how it goe
 
 *In the app:* a timeline of your milestones, where each of you writes your own memory of each one, and a milestone comes back on Today on its anniversary. Keeping a timeline together is our design; no study has tested whether it helps.
 
+### 11. Knowing yourself: the Big Five
+**Strength:** Moderate for what the questionnaire measures; untested as part of the app.
+
+The Big Five describe personality along five broad traits: extraversion, agreeableness, conscientiousness, emotional stability, and intellect or imagination. Goldberg's (1992) markers for them are part of the International Personality Item Pool, whose items and scales anyone may use without permission or fees, including the 50-item questionnaire (Goldberg et al., 2006). In three Scottish samples of 906 adults in all, the 50 items fell into the five traits as intended; in 207 of them, the extraversion, conscientiousness and emotional stability scales lined up closely with a longer, commercial inventory (the NEO-FFI), and agreeableness and intellect less closely (Gow et al., 2005). The pool publishes no norms, so a score shows where you put yourself on each scale, not how you compare with other people.
+
+*In the app:* Self has the 50-item questionnaire. Your scores are private unless you choose to share your latest with your partner, who then sees the scores but never your answers. It doesn't sort anyone into types or compare partners. Whether knowing your scores helps you or your relationship is untested.
+
 ### Popular ideas we handle with care
 
 - **The "five love languages."** Chapman's (1992) framework makes three core claims: each person has one preferred "language," there are exactly five, and partners are happier when they match. These claims have limited support (Impett et al., 2024), and direct tests are mixed. Matching added little in a study of 67 couples (Bunt & Hazelwood, 2017) but was linked to satisfaction in a study of 100 couples (Mostova et al., 2022). The app doesn't sort people into types.
@@ -224,6 +231,10 @@ Gable, S. L., Gonzaga, G. C., & Strachman, A. (2006). Will you be there for me w
 
 Gable, S. L., Reis, H. T., Impett, E. A., & Asher, E. R. (2004). What do you do when things go right? The intrapersonal and interpersonal benefits of sharing positive events. *Journal of Personality and Social Psychology, 87*(2), 228–245. https://doi.org/10.1037/0022-3514.87.2.228
 
+Goldberg, L. R. (1992). The development of markers for the Big-Five factor structure. *Psychological Assessment, 4*(1), 26–42. https://doi.org/10.1037/1040-3590.4.1.26
+
+Goldberg, L. R., Johnson, J. A., Eber, H. W., Hogan, R., Ashton, M. C., Cloninger, C. R., & Gough, H. G. (2006). The international personality item pool and the future of public-domain personality measures. *Journal of Research in Personality, 40*(1), 84–96. https://doi.org/10.1016/j.jrp.2005.08.007
+
 Gordon, A. M., Impett, E. A., Kogan, A., Oveis, C., & Keltner, D. (2012). To have and to hold: Gratitude promotes relationship maintenance in intimate bonds. *Journal of Personality and Social Psychology, 103*(2), 257–274. https://doi.org/10.1037/a0028723
 
 Gottman, J. M., & DeClaire, J. (2001). *The relationship cure: A five-step guide for building better connections with family, friends, and lovers*. Crown. https://openlibrary.org/books/OL7585797M
@@ -235,6 +246,8 @@ Gottman, J. M., & Levenson, R. W. (1992). Marital processes predictive of later 
 Gottman, J. M., & Levenson, R. W. (2000). The timing of divorce: Predicting when a couple will divorce over a 14-year period. *Journal of Marriage and Family, 62*(3), 737–745. https://doi.org/10.1111/j.1741-3737.2000.00737.x
 
 Gottman, J. M., & Silver, N. (1999). *The seven principles for making marriage work*. Crown. https://openlibrary.org/books/OL382981M
+
+Gow, A. J., Whiteman, M. C., Pattie, A., & Deary, I. J. (2005). Goldberg's 'IPIP' Big-Five factor markers: Internal consistency and concurrent validation in Scotland. *Personality and Individual Differences, 39*(2), 317–329. https://doi.org/10.1016/j.paid.2005.01.011
 
 Hawkins, A. J., Blanchard, V. L., Baldwin, S. A., & Fawcett, E. B. (2008). Does marriage and relationship education work? A meta-analytic study. *Journal of Consulting and Clinical Psychology, 76*(5), 723–734. https://doi.org/10.1037/a0012584
 

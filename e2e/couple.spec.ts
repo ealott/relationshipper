@@ -741,6 +741,7 @@ test('self: a private life calendar, a square for every week', async ({ browser 
   await noa.goto('/');
   await tab(noa, 'Self').click();
   await expect(noa.getByRole('heading', { name: 'Self' })).toBeVisible();
+  await noa.getByRole('link', { name: /^Your life in weeks/ }).click();
   await noa.getByLabel('Your birthday').fill('1990-10-03');
   await noa.getByRole('button', { name: 'Show my life in weeks' }).click();
   await expect(noa.locator('.life-grid rect')).toHaveCount(90 * 52);
@@ -761,7 +762,7 @@ test('self: a private life calendar, a square for every week', async ({ browser 
   await note.getByRole('button', { name: 'Add note' }).click();
   await expect(noa.locator('.life-notes')).toContainText('Walk the Camino');
   await noa.evaluate(() => window.scrollTo(0, 0));
-  await shot(noa, '29-self');
+  await shot(noa, '29-self-life');
 
   // This year, week by week, with a note on this week.
   await noa.getByRole('link', { name: 'Open this year' }).click();
@@ -773,8 +774,13 @@ test('self: a private life calendar, a square for every week', async ({ browser 
   await expect(week.locator('.life-note')).toContainText('Started a life calendar');
   await shot(noa, '30-self-year');
 
+  // Self sums it up.
+  await tab(noa, 'Self').click();
+  await expect(noa.getByRole('link', { name: /^Your life in weeks/ })).toContainText(/Week [\d,]+ of 4,680 · 1 chapter · 1 ahead/);
+  await shot(noa, '31-self');
+
   // Eli has none of it.
-  await eli.goto('/self');
+  await eli.goto('/self/life');
   await expect(eli.getByLabel('Your birthday')).toBeVisible();
   await expect(eli.getByText('College')).toHaveCount(0);
 
@@ -782,4 +788,82 @@ test('self: a private life calendar, a square for every week', async ({ browser 
   await openSettings(noa);
   await expect(noa.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(tab(noa, 'Self')).toHaveAttribute('aria-current', 'page');
+});
+
+test('self: the Big Five, private unless shared', async ({ browser }) => {
+  const stamp = Date.now();
+  const ivy = await signInAs(browser, 'Ivy', stamp);
+  const jon = await signInAs(browser, 'Jon', stamp);
+  await pair(ivy, jon);
+
+  await ivy.goto('/');
+  await tab(ivy, 'Self').click();
+  await ivy.getByRole('link', { name: /^Your personality/ }).click();
+  await ivy.getByRole('button', { name: 'Begin' }).click();
+  const count = ivy.locator('.take .eyebrow');
+  const accurate = ivy.getByRole('radio', { name: 'Moderately accurate' });
+  for (let i = 0; i < 3; i++) {
+    await expect(count).toHaveText(`${i + 1} of 50`);
+    await accurate.click();
+  }
+  await shot(ivy, '32-big-five-take');
+
+  // Answers stay on the device until the last one, so a reload picks up where it left off.
+  await ivy.reload();
+  for (let i = 3; i < 50; i++) {
+    await expect(count).toHaveText(`${i + 1} of 50`);
+    await accurate.click();
+  }
+  expect((await call(ivy, 'GET', '/self/questionnaires')).mine).toEqual([]);
+  await ivy.getByRole('button', { name: 'See your profile' }).click();
+
+  // Every statement answered "Moderately accurate": the reversed ones count as 2, the rest as 4.
+  await expect(ivy.getByRole('heading', { name: 'Your personality' })).toBeVisible();
+  await expect(ivy.locator('.trait__score')).toHaveText(['30', '32', '32', '24', '34']);
+  await expect(ivy.getByRole('img', { name: /^Extraversion: 30/ })).toBeVisible();
+  await shot(ivy, '33-big-five');
+
+  // Jon sees none of it until Ivy shares.
+  expect((await call(jon, 'GET', '/self/questionnaires')).partner).toEqual([]);
+  await jon.goto('/self');
+  await expect(jon.getByRole('link', { name: /^Your personality/ })).toContainText('50 short statements');
+  await expect(jon.getByText('Ivy’s personality')).toHaveCount(0);
+
+  const share = ivy.getByRole('switch', { name: 'Share with Jon' });
+  await expect(share).toHaveAttribute('aria-checked', 'false');
+  await share.click();
+  await expect(share).toHaveAttribute('aria-checked', 'true');
+  await tab(ivy, 'Self').click();
+  await expect(ivy.getByRole('link', { name: /^Your personality/ })).toContainText('shared with Jon');
+
+  // Then only the latest scores, never the answers. Self links straight to them, past Jon's own.
+  await call(jon, 'POST', '/self/questionnaires/big-five', { answers: Array(50).fill(3) });
+  await jon.reload();
+  await jon.getByRole('link', { name: /^Ivy’s personality/ }).click();
+  await expect(jon.locator('#partner')).toBeInViewport();
+  await expect(jon.locator('#partner .trait__score')).toHaveText(['30', '32', '32', '24', '34']);
+  await shot(jon, '34-big-five-partner');
+  const [theirs] = (await call(jon, 'GET', '/self/questionnaires')).partner;
+  expect(Object.keys(theirs).sort()).toEqual(['createdAt', 'instrument', 'scores']);
+
+  // Taken again, it shows what changed, and every result can be deleted.
+  await call(ivy, 'POST', '/self/questionnaires/big-five', { answers: Array(50).fill(5) });
+  await ivy.goto('/self/big-five');
+  await expect(ivy.locator('.trait__score')).toHaveText(['30', '34 +2 since last time', '34 +2 since last time', '18 −6 since last time', '38 +4 since last time']);
+  await expect(ivy.locator('.result-row')).toHaveCount(2);
+  ivy.once('dialog', (dialog) => void dialog.accept());
+  await ivy.locator('.result-row').first().getByRole('button').click();
+  await expect(ivy.locator('.result-row')).toHaveCount(1);
+  await expect(ivy.locator('.trait__score')).toHaveText(['30', '32', '32', '24', '34']);
+
+  // Turned off, Jon sees nothing again.
+  await share.click();
+  await expect(share).toHaveAttribute('aria-checked', 'false');
+  expect((await call(jon, 'GET', '/self/questionnaires')).partner).toEqual([]);
+
+  // The last result can go too.
+  ivy.once('dialog', (dialog) => void dialog.accept());
+  await ivy.locator('.result-row').getByRole('button').click();
+  await expect(ivy.getByRole('link', { name: 'Start' })).toBeVisible();
+  await expect(share).toHaveCount(0);
 });

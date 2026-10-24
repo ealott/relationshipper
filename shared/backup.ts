@@ -26,6 +26,8 @@ export const BACKUP_TABLES = [
   'self_profiles',
   'life_chapters',
   'life_notes',
+  'self_results',
+  'self_shares',
 ] as const;
 
 export type BackupTable = (typeof BACKUP_TABLES)[number];
