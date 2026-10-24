@@ -277,6 +277,14 @@ export const PersonIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** Two gentle waves: how you've been, in Self. */
+export const WavesIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M2 9c2.5-2.5 5-2.5 7.5 0s5 2.5 7.5 0 3.5-1.5 5 0" />
+    <path d="M2 16c2.5-2.5 5-2.5 7.5 0s5 2.5 7.5 0 3.5-1.5 5 0" />
+  </Icon>
+);
+
 export const UsersIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="9" cy="8" r="4" />
