@@ -142,6 +142,14 @@ const R = {
     cite: 'Gable, S. L., Gonzaga, G. C., & Strachman, A. (2006). Will you be there for me when things go right? Supportive responses to positive event disclosures. Journal of Personality and Social Psychology, 91(5), 904–917.',
     url: 'https://doi.org/10.1037/0022-3514.91.5.904',
   },
+  goldberg1992: {
+    cite: 'Goldberg, L. R. (1992). The development of markers for the Big-Five factor structure. Psychological Assessment, 4(1), 26–42.',
+    url: 'https://doi.org/10.1037/1040-3590.4.1.26',
+  },
+  goldbergEtAl2006: {
+    cite: 'Goldberg, L. R., Johnson, J. A., Eber, H. W., Hogan, R., Ashton, M. C., Cloninger, C. R., & Gough, H. G. (2006). The international personality item pool and the future of public-domain personality measures. Journal of Research in Personality, 40(1), 84–96.',
+    url: 'https://doi.org/10.1016/j.jrp.2005.08.007',
+  },
   gordonEtAl2012: {
     cite: 'Gordon, A. M., Impett, E. A., Kogan, A., Oveis, C., & Keltner, D. (2012). To have and to hold: Gratitude promotes relationship maintenance in intimate bonds. Journal of Personality and Social Psychology, 103(2), 257–274.',
     url: 'https://doi.org/10.1037/a0028723',
@@ -165,6 +173,10 @@ const R = {
   gottmanSilver1999: {
     cite: 'Gottman, J. M., & Silver, N. (1999). The seven principles for making marriage work. Crown.',
     url: 'https://openlibrary.org/books/OL382981M',
+  },
+  gowEtAl2005: {
+    cite: "Gow, A. J., Whiteman, M. C., Pattie, A., & Deary, I. J. (2005). Goldberg's 'IPIP' Big-Five factor markers: Internal consistency and concurrent validation in Scotland. Personality and Individual Differences, 39(2), 317–329.",
+    url: 'https://doi.org/10.1016/j.paid.2005.01.011',
   },
   hawkinsEtAl2008: {
     cite: 'Hawkins, A. J., Blanchard, V. L., Baldwin, S. A., & Fawcett, E. B. (2008). Does marriage and relationship education work? A meta-analytic study. Journal of Consulting and Clinical Psychology, 76(5), 723–734.',
@@ -377,6 +389,13 @@ export const PRINCIPLES: Principle[] = [
     body: 'How couples told the story of their relationship, with fondness and a sense of “we”, predicted who stayed together in one small study, though the predictions were never tested on new couples. In an experiment, recalling their own relationship memories raised the warmth people felt toward their partner, measured before and after remembering.',
     inApp: 'The timeline keeps your milestones, with each of your own memories of them, and brings one back on its anniversary. Keeping a timeline together is our design, and no study has tested whether it helps.',
     sources: [R.buehlmanEtAl1992, R.aleaBluck2007],
+  },
+  {
+    title: 'Knowing your personality',
+    strength: 'Moderate for what the questionnaire measures',
+    body: 'The Big Five describe personality along five broad traits. Goldberg’s 50-item questionnaire, from the free International Personality Item Pool, sorts into those traits as intended, and three of its five scales line up closely with a longer, commercial inventory. It has no published norms, so scores show where you put yourself, not how you compare with anyone.',
+    inApp: 'Self has the 50-item questionnaire. Your scores are private unless you share your latest with your partner, who then sees the scores but never your answers. It doesn’t sort anyone into types or compare partners, and whether knowing your scores helps is untested.',
+    sources: [R.goldberg1992, R.goldbergEtAl2006, R.gowEtAl2005],
   },
   {
     title: 'Questions that deepen gradually',

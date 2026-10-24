@@ -20,6 +20,8 @@ export const useBootyCalls = () => useQuery('booty-calls', api.bootyCalls, { ref
 export const useTimeline = () => useQuery('timeline', api.timeline, { refreshInterval: 60_000 });
 /** Self: yours alone. */
 export const useSelf = () => useQuery('self', api.self);
+/** Questionnaires in Self: yours, and your partner's latest of each they've chosen to share. */
+export const useQuestionnaires = () => useQuery('questionnaires', api.questionnaires, { refreshInterval: 60_000 });
 /** Shares its key's prefix with the timeline, so `invalidate('timeline')` refreshes both. */
 export const useMilestone = (id: string) => useQuery(`timeline:${id}`, () => api.milestone(id), { refreshInterval: 30_000 });
 

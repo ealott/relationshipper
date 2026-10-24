@@ -14,8 +14,8 @@ export function LifeYear({ year: param }: { year: string }) {
   const data = self.data;
   const year = Number(param);
   const back = (
-    <a href="/self" class="back-link">
-      <BackIcon size={18} /> Self
+    <a href="/self/life" class="back-link">
+      <BackIcon size={18} /> Your life in weeks
     </a>
   );
   if (self.error && !data) return <main class="page">{back}<ErrorNotice error={self.error} onRetry={self.refresh} /></main>;

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import type { LifeChapterDTO, LifeNoteDTO, SelfProfileDTO, SelfResponse } from '../../shared/api';
+import type { Instrument, LifeChapterDTO, LifeNoteDTO, QuestionnairesResponse, SelfProfileDTO, SelfResponse, SelfResultDTO } from '../../shared/api';
+import { isBigFiveAnswers, scoreBigFive } from '../../shared/bigFive';
 import { isDay } from '../../shared/journal';
 import { isChapterColor, isLifeDay, SELF_LIMITS, type ChapterColor } from '../../shared/self';
 import { zonedNow } from '../../shared/time';
@@ -35,6 +36,28 @@ function checkNote(body: Record<string, unknown>) {
   if (!isLifeDay(body.day)) throw badRequest('Choose a day for the note.');
   return { day: body.day, text: str(body, 'text', { max: SELF_LIMITS.noteMax, label: 'The note' }) };
 }
+
+/** Each questionnaire: whether a set of answers is complete and valid, and how it's scored. */
+const INSTRUMENTS: Record<Instrument, { valid: (answers: unknown) => answers is number[]; score: (answers: number[]) => Record<string, number> }> = {
+  'big-five': { valid: isBigFiveAnswers, score: scoreBigFive },
+};
+
+const isInstrument = (value: string): value is Instrument => Object.hasOwn(INSTRUMENTS, value);
+
+interface ResultRow {
+  id: string;
+  instrument: Instrument;
+  answers: string;
+  created_at: number;
+}
+
+/** Scores only: answers are kept to recompute them, and never leave the server. */
+const toResult = (r: ResultRow): SelfResultDTO => ({
+  id: r.id,
+  instrument: r.instrument,
+  createdAt: r.created_at,
+  scores: INSTRUMENTS[r.instrument].score(JSON.parse(r.answers) as number[]),
+});
 
 async function countOf(db: D1Database, table: 'life_chapters' | 'life_notes', userId: string): Promise<number> {
   return (await db.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE user_id = ?`).bind(userId).first<{ n: number }>())?.n ?? 0;
@@ -135,5 +158,74 @@ export const selfRoutes = new Hono<HonoEnv>()
     const { user } = requireAuth(c);
     const res = await c.env.DB.prepare('DELETE FROM life_notes WHERE id = ? AND user_id = ?').bind(c.req.param('id'), user.id).run();
     if (!res.meta.changes) throw new ApiError(404, 'unknown_note', 'That note isn’t there any more.');
+    return c.body(null, 204);
+  })
+
+  // Questionnaires (#63): yours, and your partner's latest of each they've chosen to share.
+  .get('/questionnaires', async (c) => {
+    const { user, partner } = requireAuth(c);
+    const db = c.env.DB;
+    const [mine, sharing, theirs] = await db.batch([
+      db.prepare('SELECT id, instrument, answers, created_at FROM self_results WHERE user_id = ? ORDER BY created_at DESC').bind(user.id),
+      db.prepare('SELECT instrument FROM self_shares WHERE user_id = ? ORDER BY instrument').bind(user.id),
+      // Only what they share, and only the latest of each.
+      db
+        .prepare(
+          `SELECT r.id, r.instrument, r.answers, r.created_at FROM self_results r
+             JOIN self_shares s ON s.user_id = r.user_id AND s.instrument = r.instrument
+            WHERE r.user_id = ? AND r.created_at = (SELECT MAX(created_at) FROM self_results WHERE user_id = r.user_id AND instrument = r.instrument)`,
+        )
+        .bind(partner?.id ?? ''),
+    ]);
+    return c.json<QuestionnairesResponse>({
+      mine: (mine!.results as unknown as ResultRow[]).filter((r) => isInstrument(r.instrument)).map(toResult),
+      sharing: (sharing!.results as { instrument: string }[]).map((r) => r.instrument).filter(isInstrument),
+      partner: (theirs!.results as unknown as ResultRow[]).filter((r) => isInstrument(r.instrument)).map((r) => {
+        const { id: _id, ...result } = toResult(r);
+        return result;
+      }),
+    });
+  })
+
+  .post('/questionnaires/:instrument', async (c) => {
+    const { user } = requireAuth(c);
+    const instrument = c.req.param('instrument');
+    if (!isInstrument(instrument)) throw new ApiError(404, 'unknown_questionnaire', 'That questionnaire isn’t here.');
+    const body = await readJson(c);
+    if (!INSTRUMENTS[instrument].valid(body.answers)) throw badRequest('Answer every statement first.');
+    const row: ResultRow = { id: randomId(), instrument, answers: JSON.stringify(body.answers), created_at: Date.now() };
+    await c.env.DB.prepare('INSERT INTO self_results (id, user_id, instrument, answers, created_at) VALUES (?, ?, ?, ?, ?)')
+      .bind(row.id, user.id, row.instrument, row.answers, row.created_at)
+      .run();
+    return c.json<SelfResultDTO>(toResult(row), 201);
+  })
+
+  .delete('/questionnaires/results/:id', async (c) => {
+    const { user } = requireAuth(c);
+    const db = c.env.DB;
+    const [deleted] = await db.batch([
+      db.prepare('DELETE FROM self_results WHERE id = ? AND user_id = ?').bind(c.req.param('id'), user.id),
+      // With none left there's nothing to share, so sharing stops instead of waiting, unseen, for the next one.
+      db
+        .prepare('DELETE FROM self_shares WHERE user_id = ? AND NOT EXISTS (SELECT 1 FROM self_results r WHERE r.user_id = self_shares.user_id AND r.instrument = self_shares.instrument)')
+        .bind(user.id),
+    ]);
+    if (!deleted!.meta.changes) throw new ApiError(404, 'unknown_result', 'That result isn’t there any more.');
+    return c.body(null, 204);
+  })
+
+  // Sharing is a choice, never required: your partner sees your latest scores while it's on.
+  .put('/questionnaires/:instrument/share', async (c) => {
+    const { user } = requireAuth(c);
+    const instrument = c.req.param('instrument');
+    if (!isInstrument(instrument)) throw new ApiError(404, 'unknown_questionnaire', 'That questionnaire isn’t here.');
+    const body = await readJson(c);
+    if (typeof body.shared !== 'boolean') throw badRequest('shared must be true or false.');
+    const db = c.env.DB;
+    if (body.shared) {
+      await db.prepare('INSERT INTO self_shares (user_id, instrument, created_at) VALUES (?, ?, ?) ON CONFLICT DO NOTHING').bind(user.id, instrument, Date.now()).run();
+    } else {
+      await db.prepare('DELETE FROM self_shares WHERE user_id = ? AND instrument = ?').bind(user.id, instrument).run();
+    }
     return c.body(null, 204);
   });

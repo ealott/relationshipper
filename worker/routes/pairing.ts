@@ -24,6 +24,8 @@ export function deleteCoupleStatements(db: D1Database, coupleId: string): D1Prep
   return [
     // Before the partners are unpaired, while their feeds can still be found by couple.
     db.prepare('DELETE FROM calendar_feeds WHERE user_id IN (SELECT id FROM users WHERE couple_id = ?)').bind(coupleId),
+    // Sharing in Self was with this partner, so it stops (the results themselves stay).
+    db.prepare('DELETE FROM self_shares WHERE user_id IN (SELECT id FROM users WHERE couple_id = ?)').bind(coupleId),
     db.prepare('UPDATE users SET couple_id = NULL, last_reminded_on = NULL WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM answer_versions WHERE couple_id = ?').bind(coupleId),
     db.prepare('DELETE FROM response_versions WHERE response_id IN (SELECT id FROM responses WHERE couple_id = ?)').bind(coupleId),
@@ -51,6 +53,8 @@ export function deleteUserStatements(db: D1Database, userId: string, coupleId: s
     db.prepare('DELETE FROM life_notes WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM life_chapters WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM self_profiles WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM self_shares WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM self_results WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM identities WHERE user_id = ?').bind(userId),
     db.prepare('DELETE FROM push_subscriptions WHERE user_id = ?').bind(userId),

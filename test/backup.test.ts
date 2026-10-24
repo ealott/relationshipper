@@ -37,6 +37,8 @@ describe('backups', () => {
     await a.client.put('/api/self/profile', { birthday: '1990-10-03' });
     await a.client.post('/api/self/chapters', { title: "College; it's a story", start: '2008-08-25', end: '2012-05-12', color: 'teal' });
     await b.client.post('/api/self/notes', { day: '2031-06-01', text: tricky });
+    await a.client.post('/api/self/questionnaires/big-five', { answers: Array.from({ length: 50 }, (_, i) => (i % 5) + 1) });
+    await a.client.put('/api/self/questionnaires/big-five/share', { shared: true });
 
     await t.ctx.flush(); // notifications update their senders' rows in the background
     const info = await createBackup(t.env);

@@ -3177,3 +3177,158 @@ select.input {
   font-weight: 650;
   color: var(--text-muted);
 }
+
+/* Self: the overview's cards, and the Big Five. */
+.self-card > svg:first-child {
+  flex: none;
+  color: var(--primary);
+}
+
+.big-five {
+  display: grid;
+  gap: 14px;
+  scroll-margin-top: 16px;
+}
+
+.big-five__again {
+  justify-self: start;
+}
+
+.traits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+}
+
+.trait {
+  display: grid;
+  gap: 6px;
+}
+
+.trait__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.trait__name {
+  font-weight: 650;
+}
+
+.trait__score {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.trait__change {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* A track with a marker: neither end is better than the other. */
+.trait__track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+}
+
+.trait__marker {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--surface);
+  background: var(--primary);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  transform: translate(-50%, -50%);
+}
+
+.trait__ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.trait__about {
+  font-size: 14px;
+}
+
+.results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 4px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.result-row__date {
+  font-weight: 600;
+}
+
+/* Taking a questionnaire, one statement at a time. */
+.take {
+  display: grid;
+  gap: 14px;
+}
+
+.take__progress {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+}
+
+.take__progress > span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.2s ease;
+}
+
+.take__statement {
+  font-family: var(--font-serif);
+  font-size: calc(26px * var(--text-scale));
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.take__options {
+  display: grid;
+  gap: 8px;
+}
+
+.take__option {
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.take__option.is-selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
