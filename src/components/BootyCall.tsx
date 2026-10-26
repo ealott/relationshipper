@@ -1,23 +1,36 @@
 import { useState } from 'preact/hooks';
 import type { BootyCallReaction, BootyCallsResponse } from '../../shared/api';
+import { BLANK_IDEAS, BLANK_MAX, capitalized } from '../../shared/blank';
 import { api } from '../api';
 import { relativeTime } from '../lib/format';
 import type { Query } from '../lib/query';
 import { useMe } from '../lib/session';
 import { toast, toastError } from '../lib/toast';
-import { BoogerIcon } from './Icons';
+import { BlankIcon, ShuffleIcon } from './Icons';
 
-/** The answers to a booger: the button, what the sender then sees, and the note for whoever answered. */
-const REACTIONS: { key: BootyCallReaction; label: string; seen: (name: string) => string; done: string }[] = [
-  { key: 'flick', label: 'Booger back', seen: (name) => `${name} boogered back`, done: 'Boogered back.' },
-  { key: 'ew', label: 'Ew', seen: (name) => `${name} said ew`, done: 'You said ew.' },
-  { key: 'bless', label: 'Bless you', seen: (name) => `${name} said bless you`, done: 'You said bless you.' },
+/** The answers: the button, what the sender then sees, and the note for whoever answered. */
+const REACTIONS: { key: BootyCallReaction; label: (word: string) => string; seen: (name: string, word: string) => string; done: (word: string) => string }[] = [
+  { key: 'back', label: (word) => `${capitalized(word)} back`, seen: (name, word) => `${name} sent ${word} back`, done: (word) => `Sent ${word} back.` },
+  { key: 'aww', label: () => 'Aww', seen: (name) => `${name} said aww`, done: () => 'You said aww.' },
+  { key: 'haha', label: () => 'Haha', seen: (name) => `${name} said haha`, done: () => 'You said haha.' },
+  { key: 'ew', label: () => 'Ew', seen: (name) => `${name} said ew`, done: () => 'You said ew.' },
 ];
 
+const seenAs = (reaction: BootyCallReaction | null, name: string, word: string) =>
+  reaction === 'bless' ? `${name} said bless you` : (REACTIONS.find((r) => r.key === reaction)?.seen(name, word) ?? `${name} answered`);
+
+const idea = (not?: string) => {
+  const ideas = BLANK_IDEAS.filter((i) => i !== not);
+  return ideas[Math.floor(Math.random() * ideas.length)]!;
+};
+
+/** What was sent, underlined like a filled-in blank. */
+const Word = ({ word }: { word: string }) => <span class="blank-word">{word}</span>;
+
 /**
- * On Today, while neither of you has turned boogers off (booty calls, in the code, which is how
- * they started): your partner's at the top, waiting for a goofy answer; further down, a way to
- * send one, or how yours was answered.
+ * Fill in the blank on Today, while neither of you has turned it off (booty calls, in the code,
+ * which is how it started): your partner's at the top, waiting for an answer; further down, the
+ * blank to send the next one, or how yours was answered.
  */
 export function BootyCallCard({ query, place }: { query: Query<BootyCallsResponse>; place: 'top' | 'below' }) {
   const me = useMe();
@@ -34,26 +47,36 @@ export function BootyCallCard({ query, place }: { query: Query<BootyCallsRespons
     try {
       query.mutate(await action());
       toast(done);
+      return true;
     } catch (err) {
       toastError(err);
       await query.refresh();
+      return false;
     } finally {
       setBusy(false);
     }
   }
 
+  const blank = data.canAsk && <BlankForm partnerName={partnerName} busy={busy} send={(word) => run(() => api.askBootyCall(word), `Sent ${partnerName} ${word}.`)} />;
+
   if (forMe) {
     return (
       <section class="card bootycall bootycall--asked">
-        <BoogerIcon size={24} />
+        <BlankIcon size={24} />
         <div class="bootycall__text">
-          <p class="bootycall__title">{partnerName} sent you a booger</p>
+          <p class="bootycall__title">
+            {partnerName} sent you <Word word={forMe.word} />
+          </p>
           <p class="muted">Sent {relativeTime(forMe.createdAt)}</p>
         </div>
         <div class="row bootycall__actions">
           {REACTIONS.map((r, i) => (
-            <button class={`btn btn--sm ${i === 0 ? 'btn--primary' : 'btn--ghost'}`} disabled={busy} onClick={() => run(() => api.answerBootyCall(forMe.id, r.key), r.done)}>
-              {r.label}
+            <button
+              class={`btn btn--sm ${i === 0 ? 'btn--primary' : 'btn--ghost'}`}
+              disabled={busy}
+              onClick={() => run(() => api.answerBootyCall(forMe.id, r.key), r.done(forMe.word))}
+            >
+              {r.label(forMe.word)}
             </button>
           ))}
         </div>
@@ -61,44 +84,83 @@ export function BootyCallCard({ query, place }: { query: Query<BootyCallsRespons
     );
   }
 
-  // Yours, for the 12 hours it's open: waiting, then titled like the other cards on Today with
-  // how it was answered, and a way to send the next one.
+  // Yours, for the 12 hours it's open: waiting, then titled with what you sent and how it was
+  // answered, with the blank for the next one.
   if (latest?.fromMe) {
-    const seen = REACTIONS.find((r) => r.key === latest.reaction)?.seen(partnerName) ?? `${partnerName} answered`;
+    const waiting = latest.answeredAt === null;
     return (
-      <section class="card link-card bootycall">
-        <BoogerIcon size={22} />
-        <span class="link-card__text">
-          <span class="link-card__title">{latest.answeredAt === null ? `You sent ${partnerName} a booger` : 'Booger'}</span>
-          <span class="muted">{latest.answeredAt === null ? 'No answer yet.' : `${seen} ${relativeTime(latest.answeredAt)}.`}</span>
-        </span>
-        {latest.answeredAt === null ? (
-          <button class="btn btn--ghost btn--sm" disabled={busy} onClick={() => run(() => api.takeBackBootyCall(latest.id), 'Taken back.')}>
-            Take it back
-          </button>
-        ) : (
-          data.canAsk && (
-            <button class="btn btn--ghost btn--sm" aria-label="Send another booger" disabled={busy} onClick={() => run(api.askBootyCall, `Sent ${partnerName} another booger.`)}>
-              Send another
+      <section class="card bootycall">
+        <div class="bootycall__head">
+          <BlankIcon size={22} />
+          <span class="link-card__text">
+            <span class="link-card__title">
+              {waiting ? (
+                <>
+                  You sent {partnerName} <Word word={latest.word} />
+                </>
+              ) : (
+                capitalized(latest.word)
+              )}
+            </span>
+            <span class="muted">{waiting ? 'No answer yet.' : `${seenAs(latest.reaction, partnerName, latest.word)} ${relativeTime(latest.answeredAt!)}.`}</span>
+          </span>
+          {waiting && (
+            <button class="btn btn--ghost btn--sm" disabled={busy} onClick={() => run(() => api.takeBackBootyCall(latest.id), 'Taken back.')}>
+              Take it back
             </button>
-          )
-        )}
+          )}
+        </div>
+        {blank}
       </section>
     );
   }
 
   // Nothing waiting, or you've just answered theirs: either of you can send the next one.
-  if (!data.canAsk) return null;
+  if (!blank) return null;
+  return <section class="card bootycall">{blank}</section>;
+}
+
+/** The blank itself: "Send Leo ____", a new word each time, or an idea from shuffle. */
+function BlankForm({ partnerName, busy, send }: { partnerName: string; busy: boolean; send: (word: string) => Promise<boolean> }) {
+  const [word, setWord] = useState('');
+  const [placeholder, setPlaceholder] = useState(() => idea());
+
+  async function submit(e: Event) {
+    e.preventDefault();
+    const text = word.trim();
+    if (!text || busy) return;
+    if (await send(text)) {
+      setWord('');
+      setPlaceholder(idea(placeholder));
+    }
+  }
+
   return (
-    <section class="card link-card bootycall">
-      <BoogerIcon size={22} />
-      <span class="link-card__text">
-        <span class="link-card__title">Booger?</span>
-        <span class="muted">Send one to {partnerName}.</span>
-      </span>
-      <button class="btn btn--ghost btn--sm" aria-label="Send a booger" disabled={busy} onClick={() => run(api.askBootyCall, `Sent ${partnerName} a booger.`)}>
-        Send
-      </button>
-    </section>
+    <form class="blank" onSubmit={submit}>
+      <p class="blank__prompt">
+        <BlankIcon size={22} />
+        <span>
+          Send {partnerName} <span class="blank__line" aria-hidden="true" />
+        </span>
+      </p>
+      <div class="blank__row">
+        <input
+          class="input blank__input"
+          value={word}
+          maxLength={BLANK_MAX}
+          placeholder={placeholder}
+          aria-label={`What to send ${partnerName}`}
+          autocomplete="off"
+          enterkeyhint="send"
+          onInput={(e) => setWord(e.currentTarget.value)}
+        />
+        <button type="button" class="icon-button" aria-label="Fill in an idea" title="Fill in an idea" onClick={() => setWord(idea(word))}>
+          <ShuffleIcon size={18} />
+        </button>
+        <button class="btn btn--primary btn--sm" aria-label={`Send to ${partnerName}`} disabled={busy || !word.trim()}>
+          Send
+        </button>
+      </div>
+    </form>
   );
 }

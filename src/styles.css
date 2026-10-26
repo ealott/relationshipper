@@ -14,8 +14,8 @@
   --me: #9d3b55;
   --partner: #4c6a8c;
   --success: #3d7a57;
-  /* Boogers: a goofy green. */
-  --booger: #6b8a2c;
+  /* Fill in the blank: a goofy green. */
+  --blank: #6b8a2c;
   --chart-line: #9d3b55;
   --danger: #b4372f;
   --shadow: 0 1px 2px rgb(60 40 30 / 0.04), 0 8px 24px rgb(60 40 30 / 0.05);
@@ -52,7 +52,7 @@
   --me: #d9768f;
   --partner: #8fadd0;
   --success: #74b98f;
-  --booger: #a6c46b;
+  --blank: #a6c46b;
   --chart-line: #d26f89;
   --danger: #f07c72;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 8px 24px rgb(0 0 0 / 0.25);
@@ -1533,16 +1533,24 @@ select.input {
   grid-column: 1 / -1;
 }
 
-.bootycall > svg:first-child {
+.bootycall > svg:first-child,
+.bootycall__head > svg:first-child,
+.blank__prompt > svg {
   flex: none;
-  color: var(--booger);
+  color: var(--blank);
+}
+
+.bootycall__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .bootycall--asked {
   grid-template-columns: auto 1fr;
   align-items: center;
-  background: color-mix(in srgb, var(--booger) 12%, var(--surface));
-  border-color: color-mix(in srgb, var(--booger) 35%, var(--border));
+  background: color-mix(in srgb, var(--blank) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--blank) 35%, var(--border));
   animation: reveal-in 0.4s ease-out;
 }
 
@@ -1561,6 +1569,65 @@ select.input {
 
 .bootycall__actions {
   grid-column: 1 / -1;
+}
+
+/* Sending it back on a row of its own, then the three short answers side by side. */
+.bootycall--asked .bootycall__actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.bootycall--asked .bootycall__actions > :first-child {
+  grid-column: 1 / -1;
+}
+
+/* What was sent, underlined like a filled-in blank. */
+.blank-word {
+  padding: 0 2px;
+  border-bottom: 2px solid var(--blank);
+}
+
+.blank {
+  display: grid;
+  gap: 10px;
+}
+
+.bootycall__head + .blank {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* Under an answer, the card's icon is already above: keep the space, so the text lines up. */
+.bootycall__head + .blank .blank__prompt > svg {
+  visibility: hidden;
+}
+
+.blank__prompt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-weight: 700;
+}
+
+/* The blank in "Send Leo ____", which the field below fills in. */
+.blank__line {
+  display: inline-block;
+  width: 3.5em;
+  margin-left: 2px;
+  border-bottom: 2px solid var(--text-muted);
+}
+
+.blank__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.blank__input {
+  flex: 1;
+  min-width: 0;
 }
 
 .snuggle.is-popped > svg:first-child {

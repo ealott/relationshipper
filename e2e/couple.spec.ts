@@ -591,54 +591,63 @@ test('our timeline: milestones, both memories, and the day they come back', asyn
   await expect(anniversary).toContainText('Our first kiss');
 });
 
-test('a booger: on for everyone, answered with something goofy, and either can turn them off', async ({ browser }) => {
+test('fill in the blank: a new word each time, sent back or answered, and either can turn it off', async ({ browser }) => {
   const stamp = Date.now();
   const ada = await signInAs(browser, 'Ada', stamp);
   const leo = await signInAs(browser, 'Leo', stamp);
   await pair(ada, leo);
 
-  // On from the start: Ada sends one; Leo answers from the top of Today.
+  // On from the start: Ada fills in the blank; Leo answers from the top of Today.
   await ada.goto('/');
-  const ask = ada.locator('.bootycall');
-  await expect(ask).toContainText('Booger?');
-  await ask.getByRole('button', { name: 'Send a booger' }).click();
-  await expect(ask).toContainText('You sent Leo a booger');
+  const card = ada.locator('.bootycall');
+  await expect(card).toContainText('Send Leo');
+  const send = card.getByRole('button', { name: 'Send to Leo' });
+  await expect(send).toBeDisabled();
+  await card.getByLabel('What to send Leo').fill('a tiny potato');
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await shot(ada, '24-blank');
+  await send.click();
+  await expect(card).toContainText('You sent Leo a tiny potato');
   await leo.goto('/');
   const asked = leo.locator('.bootycall--asked');
-  await expect(asked).toContainText('Ada sent you a booger');
-  await expect(asked.getByRole('button')).toHaveText(['Booger back', 'Ew', 'Bless you']);
+  await expect(asked).toContainText('Ada sent you a tiny potato');
+  await expect(asked.getByRole('button')).toHaveText(['A tiny potato back', 'Aww', 'Haha', 'Ew']);
   await asked.scrollIntoViewIfNeeded();
-  await shot(leo, '24-booger');
-  await asked.getByRole('button', { name: 'Booger back' }).click();
+  await shot(leo, '24-blank-asked');
+  await asked.getByRole('button', { name: 'A tiny potato back' }).click();
   await expect(asked).toHaveCount(0);
   await ada.reload();
-  await expect(ada.locator('.bootycall .link-card__title')).toHaveText('Booger');
-  await expect(ada.locator('.bootycall')).toContainText('Leo boogered back');
-  await ada.locator('.bootycall').scrollIntoViewIfNeeded();
-  await shot(ada, '28-booger-answered');
+  await expect(ada.locator('.bootycall .link-card__title')).toHaveText('A tiny potato');
+  await expect(ada.locator('.bootycall')).toContainText('Leo sent a tiny potato back');
+  await ada.locator('.bootycall').evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await shot(ada, '28-blank-answered');
 
-  // Once it's answered, either of them can send the next one: Leo sends one, Ada says ew, and
-  // Leo sends another from that card.
-  await leo.locator('.bootycall').getByRole('button', { name: 'Send a booger' }).click();
-  await expect(leo.locator('.bootycall')).toContainText('You sent Ada a booger');
+  // Once it's answered, either of them can send the next one, with a new word: Leo sends one,
+  // Ada says aww, and Leo sends another from the blank under her answer, after a shuffle.
+  const leos = leo.locator('.bootycall');
+  await leos.getByLabel('What to send Ada').fill('a forehead kiss');
+  await leos.getByRole('button', { name: 'Send to Ada' }).click();
+  await expect(leos).toContainText('You sent Ada a forehead kiss');
   await ada.reload();
-  await ada.locator('.bootycall--asked').getByRole('button', { name: 'Ew', exact: true }).click();
+  await ada.locator('.bootycall--asked').getByRole('button', { name: 'Aww' }).click();
   await leo.reload();
-  await expect(leo.locator('.bootycall')).toContainText('Ada said ew');
-  await leo.locator('.bootycall').getByRole('button', { name: 'Send another booger' }).click();
-  await expect(leo.locator('.bootycall')).toContainText('You sent Ada a booger');
+  await expect(leos).toContainText('Ada said aww');
+  await leos.getByRole('button', { name: 'Fill in an idea' }).click();
+  await expect(leos.getByLabel('What to send Ada')).not.toHaveValue('');
+  await leos.getByLabel('What to send Ada').fill('one sock');
+  await leos.getByRole('button', { name: 'Send to Ada' }).click();
+  await expect(leos).toContainText('You sent Ada one sock');
 
-  // Either of them can turn them off, which hides them for both.
+  // Either of them can turn it off, which hides it for both.
   await leo.goto('/settings');
-  await leo.getByRole('switch', { name: 'Boogers' }).click();
-  await expect(leo.getByText('Off. Turn them back on to send and get boogers again.')).toBeVisible();
+  await leo.getByRole('switch', { name: 'Fill in the blank' }).click();
+  await expect(leo.getByText('Off. Turn it back on to send and get them again.')).toBeVisible();
   await ada.goto('/settings');
-  await expect(ada.getByText('Leo has turned them off, so the button is hidden for now.')).toBeVisible();
+  await expect(ada.getByText('Leo has turned it off, so it’s hidden for now.')).toBeVisible();
   await tab(ada, 'Today').click();
   await expect(ada.locator('.snuggle')).toBeVisible();
   await expect(ada.locator('.bootycall')).toHaveCount(0);
 });
-
 
 test('past midnight, what you’re writing stays on screen, and you can find it again', async ({ browser }) => {
   const stamp = Date.now();
