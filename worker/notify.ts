@@ -145,17 +145,18 @@ export async function notifyTimeline(
 }
 
 /**
- * A booger (`booty_calls` in the code, which is how they started), or its answer. A lock screen
- * only ever says "booger"; which answer it was is only in the app.
+ * Fill in the blank (`booty_calls` in the code, which is how it started), or its answer. A lock
+ * screen never shows what was sent or how it was answered; those are only in the app.
  */
 export async function notifyBootyCall(
   env: AppEnv,
   { from, partnerId, coupleId, kind }: { from: { name: string }; partnerId: string; coupleId: string; kind: 'asked' | 'answered' },
 ): Promise<void> {
   if (!vapidKeys(env)) return;
+  // Never what was sent: lock screens show the blank, and the app fills it in.
   const copy =
     kind === 'asked'
-      ? { title: `${from.name} sent you a booger`, body: 'Open Relationshipper to answer.' }
-      : { title: `${from.name} answered your booger`, body: 'Open Relationshipper to see.' };
-  await pushToUser(env, partnerId, { ...copy, url: '/', tag: 'booger', badge: await countYourTurn(env.DB, coupleId, partnerId) });
+      ? { title: `${from.name} sent you ____`, body: 'Open Relationshipper to see what.' }
+      : { title: `${from.name} answered your ____`, body: 'Open Relationshipper to see.' };
+  await pushToUser(env, partnerId, { ...copy, url: '/', tag: 'blank', badge: await countYourTurn(env.DB, coupleId, partnerId) });
 }

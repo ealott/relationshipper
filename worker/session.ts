@@ -24,7 +24,7 @@ export interface UserRow {
   notify_partner: number;
   notify_dates: number;
   notify_snuggles: number;
-  /** Boogers are on for everyone unless turned off (the opt-in `booty_calls` column isn't read). */
+  /** Fill in the blank is on for everyone unless turned off (the opt-in `booty_calls` column isn't read). */
   booty_calls_off: number;
   last_reminded_on: string | null;
   last_activity_push_at: number | null;

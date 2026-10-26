@@ -17,7 +17,7 @@ export interface UserDTO {
   notifyDates: boolean;
   /** A notification when your partner sends a snuggle. */
   notifySnuggles: boolean;
-  /** Boogers are on for you: they're on for everyone unless turned off. */
+  /** Fill in the blank is on for you: it's on for everyone unless turned off (booty calls, in the code). */
   bootyCalls: boolean;
   isAdmin: boolean;
 }
@@ -180,13 +180,15 @@ export interface DatesResponse {
   ideas: DateIdeaDTO[];
 }
 
-/** How a booger is answered: booger back ('flick', its first name), ew, or bless you. */
-export type BootyCallReaction = 'flick' | 'ew' | 'bless';
+/** How a blank is answered: sent back, or aww, haha or ew. 'bless' (bless you) is from boogers. */
+export type BootyCallReaction = 'back' | 'aww' | 'haha' | 'ew' | 'bless';
 
-/** A booger (booty calls, in the code, which is how they started). */
+/** Fill in the blank (#67): what one of you sent the other (booty calls, in the code, which is how it started). */
 export interface BootyCallDTO {
   id: string;
   fromMe: boolean;
+  /** What was sent, as typed: "a kiss", "a tiny potato". "a booger" for boogers from before. */
+  word: string;
   createdAt: number;
   /** Null until it's answered, and for boogers answered before they had reactions (#56). */
   reaction: BootyCallReaction | null;
@@ -194,12 +196,12 @@ export interface BootyCallDTO {
 }
 
 export interface BootyCallsResponse {
-  /** Whether each of you has boogers on. The button shows while you both do. */
+  /** Whether each of you has it on. The blank shows on Today while you both do. */
   mine: boolean;
   partner: boolean;
-  /** The latest booger from the last 12 hours, either way, unless it was taken back. */
+  /** The latest one from the last 12 hours, either way, unless it was taken back. */
   latest: BootyCallDTO | null;
-  /** One at a time: true while no booger is waiting for an answer. */
+  /** One at a time: true while nothing is waiting for an answer. */
   canAsk: boolean;
 }
 

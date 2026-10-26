@@ -142,11 +142,11 @@ export const SparkleIcon = (p: IconProps) => (
   </Icon>
 );
 
-/** A drip, for boogers. */
-export const BoogerIcon = (p: IconProps) => (
+/** A cursor over a line, for fill in the blank. */
+export const BlankIcon = (p: IconProps) => (
   <Icon {...p}>
-    <path d="M12 3.5c2.9 3.7 6 7.3 6 10.9a6 6 0 0 1-12 0c0-3.6 3.1-7.2 6-10.9Z" />
-    <path d="M9.4 14.6a2.7 2.7 0 0 0 2.2 2.6" />
+    <path d="M3 20h18" />
+    <path d="M12 4v11M9.5 4h5M9.5 15h5" />
   </Icon>
 );
 

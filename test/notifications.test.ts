@@ -348,37 +348,37 @@ describe('partner activity notifications', () => {
     expect(pushes).toEqual([]);
   });
 
-  it('says only “booger” about a booger, and about its answer', async () => {
+  it('never says what was filled in the blank, or how it was answered', async () => {
     const { a, b } = await pairedCouple(t.env, t.ctx);
     const alexDevice = await subscribe(a.client);
     await subscribe(b.client);
-    const asked = await a.client.post('/api/booty-calls');
+    const asked = await a.client.post('/api/booty-calls', { word: 'a SECRET-WORD' });
     await t.ctx.flush();
-    expect(pushes.map((p) => p.payload)).toEqual([{ title: 'Alex sent you a booger', body: 'Open Relationshipper to answer.', url: '/', tag: 'booger', badge: 0 }]);
+    expect(pushes.map((p) => p.payload)).toEqual([{ title: 'Alex sent you ____', body: 'Open Relationshipper to see what.', url: '/', tag: 'blank', badge: 0 }]);
 
     pushes = [];
-    await b.client.post(`/api/booty-calls/${asked.body.latest.id}/answer`, { reaction: 'flick' });
+    await b.client.post(`/api/booty-calls/${asked.body.latest.id}/answer`, { reaction: 'haha' });
     await t.ctx.flush();
-    expect(pushes.map((p) => [p.payload.title, p.payload.body])).toEqual([['Sam answered your booger', 'Open Relationshipper to see.']]);
+    expect(pushes.map((p) => [p.payload.title, p.payload.body])).toEqual([['Sam answered your ____', 'Open Relationshipper to see.']]);
     expect(pushes[0]!.endpoint).toBe(alexDevice);
-    expect(JSON.stringify(pushes)).not.toContain('flick');
+    expect(JSON.stringify(pushes)).not.toMatch(/SECRET|haha/i);
 
     // Once it's answered, the next one buzzes right away.
     pushes = [];
-    await a.client.post('/api/booty-calls');
+    await a.client.post('/api/booty-calls', { word: 'a hug' });
     await t.ctx.flush();
-    expect(pushes.map((p) => p.payload.title)).toEqual(['Alex sent you a booger']);
+    expect(pushes.map((p) => p.payload.title)).toEqual(['Alex sent you ____']);
 
     // Taking one back and sending it again right away doesn't buzz twice.
     const other = await pairedCouple(t.env, t.ctx);
     await subscribe(other.b.client);
     pushes = [];
-    const first = await other.a.client.post('/api/booty-calls');
+    const first = await other.a.client.post('/api/booty-calls', { word: 'a kiss' });
     await other.a.client.delete(`/api/booty-calls/${first.body.latest.id}`);
-    await other.a.client.post('/api/booty-calls');
+    await other.a.client.post('/api/booty-calls', { word: 'a better kiss' });
     await t.ctx.flush();
     expect(pushes).toHaveLength(1);
-    expect(JSON.stringify(pushes).toLowerCase()).not.toContain('booty');
+    expect(JSON.stringify(pushes).toLowerCase()).not.toMatch(/booty|kiss/);
   });
 
   it('respects the partner’s notification setting', async () => {

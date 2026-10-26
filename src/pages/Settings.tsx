@@ -433,17 +433,17 @@ function Relationship({ saving, update }: { saving: boolean; update: (fn: () => 
       </div>
       <div class="setting">
         <div class="setting__text">
-          <span class="setting__label">Boogers</span>
+          <span class="setting__label">Fill in the blank</span>
           <span class="setting__hint">
             {!me.user.bootyCalls
-              ? `Off. Turn them back on to send and get boogers again.`
+              ? 'Off. Turn it back on to send and get them again.'
               : bootyCalls.data && !bootyCalls.data.partner
-                ? `${me.partner!.name} has turned them off, so the button is hidden for now.`
-                : `A button on Today to send ${me.partner!.name} a booger. Either of you can turn them off.`}
+                ? `${me.partner!.name} has turned it off, so it’s hidden for now.`
+                : `On Today, send ${me.partner!.name} whatever you fill in: sweet, silly or dumb. Either of you can turn it off.`}
           </span>
         </div>
         <Switch
-          label="Boogers"
+          label="Fill in the blank"
           checked={me.user.bootyCalls}
           disabled={saving}
           onChange={(v) =>

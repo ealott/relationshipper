@@ -190,7 +190,7 @@ export const api = {
   writeMemory: (id: string, memory: MemoryInput) => request<MilestoneDTO>('PUT', `/timeline/${enc(id)}/memory`, memory),
 
   bootyCalls: () => request<BootyCallsResponse>('GET', '/booty-calls'),
-  askBootyCall: () => request<BootyCallsResponse>('POST', '/booty-calls', {}),
+  askBootyCall: (word: string) => request<BootyCallsResponse>('POST', '/booty-calls', { word }),
   answerBootyCall: (id: string, reaction: BootyCallReaction) => request<BootyCallsResponse>('POST', `/booty-calls/${enc(id)}/answer`, { reaction }),
   /** Before it's answered. */
   takeBackBootyCall: (id: string) => request<BootyCallsResponse>('DELETE', `/booty-calls/${enc(id)}`),
